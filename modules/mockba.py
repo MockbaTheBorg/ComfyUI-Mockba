@@ -300,6 +300,7 @@ class mbImageLoad:
             mask = 1.0 - torch.from_numpy(mask)
         else:
             mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+        print("Loaded: " + image_path)
         return (image, mask.unsqueeze(0))
 
     @classmethod
@@ -356,6 +357,7 @@ class mbImageLoadURL:
             mask = 1.0 - torch.from_numpy(mask)
         else:
             mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+        print("Loaded: " + image_path)
         return (image, mask.unsqueeze(0))
 
 
@@ -658,6 +660,7 @@ class mbImageToFile:
 
     def mbImageSave(self, image, base_name, id, use_id):
         prefix = folder_paths.get_input_directory()
+        prefix = prefix.replace("\\", "/") + "/"
         if not os.path.exists(prefix):
             os.makedirs(prefix)
         if use_id == "yes":
@@ -667,6 +670,7 @@ class mbImageToFile:
         image_np = 255.0 * image.cpu().numpy().squeeze()
         image_pil = Image.fromarray(image_np.astype(np.uint8))
         image_pil.save(prefix + filename)
+        print("Saved: " + prefix + filename)
         return (
             image,
             id,
@@ -702,6 +706,7 @@ class mbFileToImage:
 
     def mbImageLoad(self, base_name, id, use_id):
         prefix = folder_paths.get_input_directory()
+        prefix = prefix.replace("\\", "/") + "/"
         if use_id == "yes":
             filename = base_name + "_" + str(id) + ".png"
         else:
@@ -711,6 +716,7 @@ class mbFileToImage:
         image_pil = Image.open(prefix + filename)
         image_np = np.array(image_pil).astype(np.float32) / 255.0
         image = torch.from_numpy(image_np).unsqueeze(0)
+        print("Loaded: " + prefix + filename)
         return (
             image,
             id,
@@ -747,6 +753,7 @@ class mbTextToFile:
 
     def mbTextSave(self, text, base_name, id, use_id):
         prefix = folder_paths.get_input_directory()
+        prefix = prefix.replace("\\", "/") + "/"
         if not os.path.exists(prefix):
             os.makedirs(prefix)
         if use_id == "yes":
@@ -755,6 +762,7 @@ class mbTextToFile:
             filename = base_name + ".txt"
         with open(prefix + filename, "w") as f:
             f.write(text)
+        print("Saved: " + prefix + filename)
         return (
             text,
             id,
@@ -793,6 +801,7 @@ class mbFileToText:
         if default != "":
             return (default, id)
         prefix = folder_paths.get_input_directory()
+        prefix = prefix.replace("\\", "/") + "/"
         if use_id == "yes":
             filename = base_name + "_" + str(id) + ".txt"
         else:
@@ -801,6 +810,7 @@ class mbFileToText:
             return ("",)
         with open(prefix + filename, "r") as f:
             text = f.read()
+        print("Loaded: " + prefix + filename)
         return (
             text,
             id,
@@ -830,6 +840,7 @@ class mbTextOrFile:
 
     def mbTextOrFile(self, input, base_name, action):
         prefix = folder_paths.get_input_directory()
+        prefix = prefix.replace("\\", "/") + "/"
         if not os.path.exists(prefix):
             os.makedirs(prefix)
         filename = base_name + ".txt"
@@ -843,6 +854,7 @@ class mbTextOrFile:
             file_text = input + file_text
         elif action == "replace":
             file_text = input
+        print("Loaded: " + prefix + filename)
         return (file_text,)
 
 

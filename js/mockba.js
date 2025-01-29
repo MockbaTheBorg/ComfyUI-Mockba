@@ -1,13 +1,10 @@
-import { api } from "../../scripts/api.js";
 import { app } from "../../scripts/app.js";
+import { ComfyWidgets } from "../../scripts/widgets.js";
 
 app.registerExtension({
 	name: "Comfy.Mockba",
-	loadedGraphNode(node, app) {
 
-	},
-
-	async beforeRegisterNodeDef(nodeType, nodeData, app) {
+	beforeRegisterNodeDef(nodeType, nodeData, app) {
 		if (nodeData.name === 'mb Image Batch' ||
 			nodeData.name === 'mb Select' ||
 			nodeData.name === 'mb Eval' ||
