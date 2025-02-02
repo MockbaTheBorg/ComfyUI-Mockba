@@ -1,10 +1,110 @@
 import { app } from "../../scripts/app.js";
 import { ComfyWidgets } from "../../scripts/widgets.js";
 
+let fixing = false;
+
+function node_info_copy(src, dest, connect_both, copy_shape) {
+	// copy input connections
+	for (let i in src.inputs) {
+		let input = src.inputs[i];
+		if (input.widget !== undefined) {
+			const destWidget = dest.widgets.find(x => x.name === input.widget.name);
+			dest.convertWidgetToInput(destWidget);
+		}
+		if (input.link) {
+			let link = app.graph.links[input.link];
+			let src_node = app.graph.getNodeById(link.origin_id);
+			src_node.connect(link.origin_slot, dest.id, input.name);
+		}
+	}
+
+	// copy output connections
+	if (connect_both) {
+		let output_links = {};
+		for (let i in src.outputs) {
+			let output = src.outputs[i];
+			if (output.links) {
+				let links = [];
+				for (let j in output.links) {
+					links.push(app.graph.links[output.links[j]]);
+				}
+				output_links[output.name] = links;
+			}
+		}
+
+		for (let i in dest.outputs) {
+			let links = output_links[dest.outputs[i].name];
+			if (links) {
+				for (let j in links) {
+					let link = links[j];
+					let target_node = app.graph.getNodeById(link.target_id);
+					dest.connect(parseInt(i), target_node, link.target_slot);
+				}
+			}
+		}
+	}
+
+	if (copy_shape) {
+		dest.color = src.color;
+		dest.bgcolor = src.bgcolor;
+		dest.size = max(src.size, dest.size);
+	}
+
+	app.graph.afterChange();
+}
+
 app.registerExtension({
 	name: "Comfy.Mockba",
 
 	beforeRegisterNodeDef(nodeType, nodeData, app) {
+		if (nodeData.name === "mb Textbox") {
+			const onNodeCreated = nodeType.prototype.onNodeCreated;
+			nodeType.prototype.onNodeCreated = function () {
+				const r = onNodeCreated?.apply(this, arguments);
+				return r;
+			};
+
+			const onExecuted = nodeType.prototype.onExecuted;
+			nodeType.prototype.onExecuted = function (message) {
+				onExecuted?.apply(this, arguments);
+
+				for (const widget of this.widgets) {
+					if (widget.type === "customtext") {
+						widget.value = message.text.join("");
+					}
+				}
+
+				this.onResize?.(this.size);
+			};
+		}
+		if (nodeData.name === 'mb Image Size') {
+			const onNodeCreated = nodeType.prototype.onNodeCreated;
+			nodeType.prototype.onNodeCreated = function () {
+				const r = onNodeCreated?.apply(this, arguments);
+				const iw = ComfyWidgets["INT"](this, "width", ["INT", {}], app).widget;
+				const ih = ComfyWidgets["INT"](this, "height", ["INT", {}], app).widget;
+				return r;
+			};
+
+			const onExecuted = nodeType.prototype.onExecuted;
+			nodeType.prototype.onExecuted = function (message) {
+				onExecuted?.apply(this, arguments);
+
+				for (const widget of this.widgets) {
+					if (widget.name == "width") {
+						console.log(message);
+						widget.value = message.width[0];
+					}
+					if (widget.name == "height") {
+						console.log(message);
+						widget.value = message.height[0];
+					}
+				}
+				document.title = "executed";
+
+				this.onResize?.(this.size);
+			};
+		}
 		if (nodeData.name === 'mb Image Batch' ||
 			nodeData.name === 'mb Select' ||
 			nodeData.name === 'mb Eval' ||
@@ -37,7 +137,7 @@ app.registerExtension({
 						}
 
 						if (nodeData.name != 'mb Eval' && nodeData.name != 'mb Exec') {
-								if (this.outputs[0].type == '*') {
+							if (this.outputs[0].type == '*') {
 								if (link_info.type == '*') {
 									app.graph._nodes_by_id[link_info.target_id].disconnectInput(link_info.target_slot);
 								}
@@ -134,11 +234,20 @@ app.registerExtension({
 					}
 
 				}
+
+				if (nodeData.name == 'mb Exec') {
+					const stackTrace = new Error().stack;
+					if (!fixing && !stackTrace.includes('remove')) {
+						fixing = true;
+						let new_node = LiteGraph.createNode(nodeType.comfyClass);
+						new_node.pos = [this.pos[0], this.pos[1]];
+						app.canvas.graph.add(new_node, false);
+						node_info_copy(this, new_node, true);
+						app.canvas.graph.remove(this);
+						fixing = false;
+					}
+				}
 			}
 		}
 	},
-
-	nodeCreated(node, app) {
-
-	}
 });
