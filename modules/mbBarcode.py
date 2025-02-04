@@ -15,6 +15,8 @@ class mbBarcode:
             "required": {
                 "data": ("STRING", {"default": "123456789"}),
                 "type": (barcode.PROVIDED_BARCODES, {"default": "code128"}),
+                "fontsize": ("INT", {"default": 10}),
+                "textdistance": ("INT", {"default": 4}),
             }
         }
 
@@ -28,10 +30,12 @@ class mbBarcode:
     CATEGORY = "🖖 Mockba/tools"
     DESCRIPTION = "Generates a barcode image from a string."
     
-    def execute(self, data, type):
+    def execute(self, data, type, fontsize, textdistance):
         code = barcode.get_barcode_class(type)
-        my_barcode = code(data, writer=ImageWriter())
-        image = my_barcode.render()
+        writer = ImageWriter()
+        my_barcode = code(data, writer)
+        options = {"font_size": fontsize, "text_distance": textdistance}
+        image = my_barcode.render(options)
 
         image = ImageOps.exif_transpose(image)
         image = image.convert("RGB")
