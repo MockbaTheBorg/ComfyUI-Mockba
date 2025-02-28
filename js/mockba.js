@@ -116,10 +116,6 @@ app.registerExtension({
 				case 'mb Image Batch':
 					input_name = "image";
 					break;
-//				case 'mb Select':
-//				case 'mb Demux':
-//					input_name = "input";
-//					break;
 				case 'mb Eval':
 				case 'mb Exec':
 					input_name = "i";
