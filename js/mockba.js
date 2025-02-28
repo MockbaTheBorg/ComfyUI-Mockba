@@ -107,6 +107,7 @@ app.registerExtension({
 		}
 		if (nodeData.name === 'mb Image Batch' ||
 			nodeData.name === 'mb Select' ||
+			nodeData.name === 'mb Demux' ||
 			nodeData.name === 'mb Eval' ||
 			nodeData.name === 'mb Exec') {
 			var input_name = "input";
@@ -115,9 +116,10 @@ app.registerExtension({
 				case 'mb Image Batch':
 					input_name = "image";
 					break;
-				case 'mb Select':
-					input_name = "input";
-					break;
+//				case 'mb Select':
+//				case 'mb Demux':
+//					input_name = "input";
+//					break;
 				case 'mb Eval':
 				case 'mb Exec':
 					input_name = "i";
@@ -132,7 +134,7 @@ app.registerExtension({
 				if (type == 2) {
 					// connect output
 					if (connected && index == 0) {
-						if (nodeData.name == 'mb Select' && app.graph._nodes_by_id[link_info.target_id]?.type == 'Reroute') {
+						if ((nodeData.name == 'mb Select' || nodeData.name == 'mb Demux') && app.graph._nodes_by_id[link_info.target_id]?.type == 'Reroute') {
 							app.graph._nodes_by_id[link_info.target_id].disconnectInput(link_info.target_slot);
 						}
 
@@ -157,7 +159,7 @@ app.registerExtension({
 					return;
 				} else {
 					// connect input
-					if (nodeData.name == 'mb Select' && app.graph._nodes_by_id[link_info.origin_id].type == 'Reroute')
+					if ((nodeData.name == 'mb Select' || nodeData.name == 'mb Demux') && app.graph._nodes_by_id[link_info.origin_id].type == 'Reroute')
 						this.disconnectInput(link_info.target_slot);
 
 					if (this.inputs[index].name == 'select' ||
@@ -225,7 +227,7 @@ app.registerExtension({
 					}
 				}
 
-				if (nodeData.name == 'mb Select') {
+				if (nodeData.name == 'mb Select' || nodeData.name == 'mb Demux') {
 					if (this.widgets) {
 						this.widgets[0].options.max = select_slot ? this.inputs.length - 2 : this.inputs.length - 1;
 						this.widgets[0].value = Math.min(this.widgets[0].value, this.widgets[0].options.max);

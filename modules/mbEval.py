@@ -22,7 +22,7 @@ class mbEval:
     CATEGORY = "🖖 Mockba/tools"
     DESCRIPTION = "Evaluate a python expression on inputs and return the result."
 
-    def execute(self, code, *args, **kwargs):
+    def execute(self, code, **kwargs):
         for key, value in kwargs.items():
             exec(f"{key} = value")
         if code == "":

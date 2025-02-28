@@ -22,7 +22,7 @@ class mbExec:
     CATEGORY = "🖖 Mockba/tools"
     DESCRIPTION = "Evaluate a python expression on inputs and return the result."
 
-    def execute(self, code, *args, **kwargs):
+    def execute(self, code, **kwargs):
         out = None
         if code == "":
             code = "out = i1"

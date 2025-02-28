@@ -23,7 +23,7 @@ class mbSelect:
     CATEGORY = "🖖 Mockba/tools"
     DESCRIPTION = "Select an output from an arbitrary number of inputs."
 
-    def execute(self, *args, **kwargs):
+    def execute(self, **kwargs):
         selected_index = int(kwargs["select"])
         input_name = f"input{selected_index}"
 

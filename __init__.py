@@ -18,6 +18,7 @@ from .modules.mbBarcode import mbBarcode
 from .modules.mbSelect import mbSelect
 from .modules.mbEval import mbEval
 from .modules.mbExec import mbExec
+from .modules.mbDemux import mbDemux
 from .modules.mbEmptyLatentImage import mbEmptyLatentImage
 from .modules.mbKSampler import mbKSampler
 from .modules.mbCLIPTextEncode import mbCLIPTextEncode
@@ -48,6 +49,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Select": mbSelect,
     "mb Eval": mbEval,
     "mb Exec": mbExec,
+    "mb Demux": mbDemux,
     "mb Empty Latent Image": mbEmptyLatentImage,
     "mb KSampler": mbKSampler,
     "mb CLIP Text Encoder": mbCLIPTextEncode,
@@ -80,6 +82,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Select": "Select",
     "mb Eval": "Eval",
     "mb Exec": "Exec",
+    "mb Demux": "Demux",
     "mb Empty Latent Image": "Empty Latent Image (gpu)",
     "mb KSampler": "KSampler (gpu)",
     "mb CLIP Text Encoder": "CLIP Text Encoder",
