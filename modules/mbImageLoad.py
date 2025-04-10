@@ -66,7 +66,7 @@ class mbImageLoad:
     @classmethod
     def VALIDATE_INPUTS(self, image):
         image_path = folder_paths.get_annotated_filepath(image)
-        if not folder_paths.exists_annotated_filepath(image):
+        if not image_path:
             return "Invalid image file: {}".format(image)
         return True
 
