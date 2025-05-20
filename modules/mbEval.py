@@ -24,9 +24,8 @@ class mbEval:
 
     def execute(self, code, **kwargs):
         for key, value in kwargs.items():
-            exec(f"{key} = value")
+            exec(f"{key} = value", locals(), globals())
         if code == "":
             code = "i1"
         return (eval(code),)
-
 
