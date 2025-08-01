@@ -25,6 +25,21 @@ app.registerExtension({
 				this.onResize?.(this.size);
 			};
 		}
+		if (nodeData.name === "mb Debug") {
+			const onExecuted = nodeType.prototype.onExecuted;
+			nodeType.prototype.onExecuted = function (message) {
+				onExecuted?.apply(this, arguments);
+
+				// Update debug output widget with execution results
+				if (this.widgets && message?.debug_output) {
+					const debugWidget = this.widgets.find(w => w.name === "debug_output");
+					if (debugWidget) {
+						debugWidget.value = message.debug_output[0];
+					}
+					this.onResize?.(this.size);
+				}
+			};
+		}
 		if (nodeData.name === 'mb Image Size') {
 			const onNodeCreated = nodeType.prototype.onNodeCreated;
 			nodeType.prototype.onNodeCreated = function () {
