@@ -24,6 +24,15 @@ class mbExec:
 
     def execute(self, code, **kwargs):
         out = None
+        
+        # Remove hidden marker if present
+        if code.startswith("# __HIDDEN__"):
+            lines = code.split('\n')
+            if len(lines) > 1:
+                code = '\n'.join(lines[1:])  # Remove first line
+            else:
+                code = ""  # Only the marker was present
+        
         if code == "":
             code = "out = i1"
         globals = {}

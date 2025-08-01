@@ -105,6 +105,86 @@ app.registerExtension({
 				this.onResize?.(this.size);
 			};
 		}
+		if (nodeData.name === 'mb Exec') {
+			const onNodeCreated = nodeType.prototype.onNodeCreated;
+			nodeType.prototype.onNodeCreated = function () {
+				const r = onNodeCreated?.apply(this, arguments);
+				
+				// Helper functions for managing hidden state in code
+				const HIDDEN_MARKER = "# __HIDDEN__";
+				
+				const isCodeHidden = (code) => {
+					return code.startsWith(HIDDEN_MARKER);
+				};
+				
+				const addHiddenMarker = (code) => {
+					if (!isCodeHidden(code)) {
+						return code ? HIDDEN_MARKER + "\n" + code : HIDDEN_MARKER;
+					}
+					return code;
+				};
+				
+				const removeHiddenMarker = (code) => {
+					if (isCodeHidden(code)) {
+						return code.substring(HIDDEN_MARKER.length + 1); // +1 for the newline
+					}
+					return code;
+				};
+				
+				// Add toggle button widget
+				const toggleWidget = this.addWidget("button", "Hide Code", "Hide Code", () => {
+					const codeWidget = this.widgets.find(w => w.name === "code");
+					if (codeWidget) {
+						if (codeWidget.type === "hidden") {
+							// Show code widget
+							codeWidget.type = "customtext";
+							codeWidget.value = removeHiddenMarker(codeWidget.value);
+							toggleWidget.name = "Hide Code";
+							this.setSize(this.computeSize());
+						} else {
+							// Hide code widget
+							codeWidget.type = "hidden";
+							codeWidget.value = addHiddenMarker(codeWidget.value);
+							toggleWidget.name = "Show Code";
+							this.setSize(this.computeSize());
+						}
+						this.setDirtyCanvas(true, true);
+					}
+				});
+				
+				// Check initial state based on code content
+				setTimeout(() => {
+					const codeWidget = this.widgets.find(w => w.name === "code");
+					if (codeWidget && isCodeHidden(codeWidget.value)) {
+						// Code should be hidden initially
+						codeWidget.type = "hidden";
+						toggleWidget.name = "Show Code";
+						this.setSize(this.computeSize());
+						this.setDirtyCanvas(true, true);
+					}
+				}, 100);
+				
+				// Override serialize to maintain code widget functionality when hidden
+				const originalSerialize = this.serialize;
+				this.serialize = function() {
+					const data = originalSerialize.apply(this, arguments);
+					// Ensure code widget value is preserved even when hidden
+					const codeWidget = this.widgets.find(w => w.name === "code");
+					if (codeWidget && codeWidget.type === "hidden") {
+						// Find the code widget in serialized data and ensure it's included
+						if (data.widgets_values) {
+							const codeIndex = this.widgets.findIndex(w => w.name === "code");
+							if (codeIndex >= 0) {
+								data.widgets_values[codeIndex] = codeWidget.value;
+							}
+						}
+					}
+					return data;
+				};
+				
+				return r;
+			};
+		}
 		if (nodeData.name === 'mb Image Batch' ||
 			nodeData.name === 'mb Select' ||
 			nodeData.name === 'mb Demux' ||
@@ -233,18 +313,8 @@ app.registerExtension({
 
 				}
 
-				if (nodeData.name == 'mb Exec') {
-					const stackTrace = new Error().stack;
-					if (!fixing && !stackTrace.includes('remove')) {
-						fixing = true;
-						let new_node = LiteGraph.createNode(nodeType.comfyClass);
-						new_node.pos = [this.pos[0], this.pos[1]];
-						app.canvas.graph.add(new_node, false);
-						node_info_copy(this, new_node, true);
-						app.canvas.graph.remove(this);
-						fixing = false;
-					}
-				}
+				// mb Exec handles input management the same way as other dynamic nodes
+				// No special node recreation needed
 			}
 		}
 	},
