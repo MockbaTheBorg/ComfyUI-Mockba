@@ -1,58 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { ComfyWidgets } from "../../scripts/widgets.js";
 
-let fixing = false;
-
-function node_info_copy(src, dest, connect_both, copy_shape) {
-	// copy input connections
-	for (let i in src.inputs) {
-		let input = src.inputs[i];
-		if (input.widget !== undefined) {
-			const destWidget = dest.widgets.find(x => x.name === input.widget.name);
-			dest.convertWidgetToInput(destWidget);
-		}
-		if (input.link) {
-			let link = app.graph.links[input.link];
-			let src_node = app.graph.getNodeById(link.origin_id);
-			src_node.connect(link.origin_slot, dest.id, input.name);
-		}
-	}
-
-	// copy output connections
-	if (connect_both) {
-		let output_links = {};
-		for (let i in src.outputs) {
-			let output = src.outputs[i];
-			if (output.links) {
-				let links = [];
-				for (let j in output.links) {
-					links.push(app.graph.links[output.links[j]]);
-				}
-				output_links[output.name] = links;
-			}
-		}
-
-		for (let i in dest.outputs) {
-			let links = output_links[dest.outputs[i].name];
-			if (links) {
-				for (let j in links) {
-					let link = links[j];
-					let target_node = app.graph.getNodeById(link.target_id);
-					dest.connect(parseInt(i), target_node, link.target_slot);
-				}
-			}
-		}
-	}
-
-	if (copy_shape) {
-		dest.color = src.color;
-		dest.bgcolor = src.bgcolor;
-		dest.size = max(src.size, dest.size);
-	}
-
-	app.graph.afterChange();
-}
-
 app.registerExtension({
 	name: "Comfy.Mockba",
 
@@ -312,9 +260,6 @@ app.registerExtension({
 					}
 
 				}
-
-				// mb Exec handles input management the same way as other dynamic nodes
-				// No special node recreation needed
 			}
 		}
 	},
