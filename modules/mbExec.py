@@ -9,7 +9,7 @@ class mbExec:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "code": ("STRING", {"default": "", "multiline": True}),
+                "code": ("STRING", {"default": "out = i1", "multiline": True}),
             },
             "optional": {
                 "i1": (any_typ,),

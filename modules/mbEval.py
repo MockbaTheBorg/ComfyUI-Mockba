@@ -9,7 +9,7 @@ class mbEval:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "code": ("STRING", {"default": ""}),
+                "code": ("STRING", {"default": "i1"}),
             },
             "optional": {
                 "i1": (any_typ,),
