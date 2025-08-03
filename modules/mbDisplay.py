@@ -126,5 +126,13 @@ class mbDisplay:
         except Exception as e:
             display_text = f"Error: {str(e)}"
         
+        # Check if the display text contains newlines to determine multiline setting
+        has_newlines = '\n' in display_text
+        
         # Return the display text in the UI using the same key as the widget name
-        return {"ui": {"value": [display_text]}}
+        # Include multiline setting based on content
+        return {
+            "ui": {"value": [display_text]},
+            "result": (display_text,),
+            "multiline": has_newlines
+        }

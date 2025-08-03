@@ -47,10 +47,45 @@ app.registerExtension({
 
 				// Update display output widget with execution results
 				if (this.widgets && message?.value) {
-					const displayWidget = this.widgets.find(w => w.name === "value");
-					if (displayWidget) {
-						displayWidget.value = message.value[0];
+					const newValue = message.value[0];
+					const hasNewlines = newValue.includes('\n');
+					
+					// Find and properly remove the old widget
+					const widgetIndex = this.widgets.findIndex(w => w.name === "value");
+					if (widgetIndex >= 0) {
+						const oldWidget = this.widgets[widgetIndex];
+						
+						// Properly dispose of the old widget's DOM elements
+						if (oldWidget.inputEl && oldWidget.inputEl.parentNode) {
+							oldWidget.inputEl.parentNode.removeChild(oldWidget.inputEl);
+						}
+						if (oldWidget.element && oldWidget.element.parentNode) {
+							oldWidget.element.parentNode.removeChild(oldWidget.element);
+						}
+						
+						// Remove from widgets array
+						this.widgets.splice(widgetIndex, 1);
 					}
+					
+					// Create new widget with correct multiline setting
+					const newWidget = ComfyWidgets.STRING(this, "value", [
+						"STRING", 
+						{ multiline: hasNewlines, default: newValue }
+					], app).widget;
+					
+					// Set the value
+					newWidget.value = newValue;
+					
+					// Move widget to correct position if needed
+					if (widgetIndex >= 0 && widgetIndex < this.widgets.length) {
+						const widget = this.widgets.pop();
+						this.widgets.splice(widgetIndex, 0, widget);
+					}
+					
+					// Force node to recompute size and redraw
+					this.setSize(this.computeSize());
+					this.setDirtyCanvas(true, true);
+					
 					this.onResize?.(this.size);
 				}
 			};
