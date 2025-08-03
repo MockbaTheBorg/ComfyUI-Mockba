@@ -40,6 +40,21 @@ app.registerExtension({
 				}
 			};
 		}
+		if (nodeData.name === "mb Display") {
+			const onExecuted = nodeType.prototype.onExecuted;
+			nodeType.prototype.onExecuted = function (message) {
+				onExecuted?.apply(this, arguments);
+
+				// Update display output widget with execution results
+				if (this.widgets && message?.value) {
+					const displayWidget = this.widgets.find(w => w.name === "value");
+					if (displayWidget) {
+						displayWidget.value = message.value[0];
+					}
+					this.onResize?.(this.size);
+				}
+			};
+		}
 		if (nodeData.name === 'mb Image Size') {
 			const onNodeCreated = nodeType.prototype.onNodeCreated;
 			nodeType.prototype.onNodeCreated = function () {

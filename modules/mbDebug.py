@@ -19,7 +19,7 @@ class mbDebug:
     RETURN_TYPES = ()
     RETURN_NAMES = ()
     FUNCTION = "execute"
-    CATEGORY = "🖖 Mockba/tools"
+    CATEGORY = "🖖 Mockba/utility"
     DESCRIPTION = "Shows debug information about the input object in a text widget."
     OUTPUT_NODE = True
 

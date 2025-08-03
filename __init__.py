@@ -27,6 +27,7 @@ from .modules.mbText import mbText
 from .modules.mbTextbox import mbTextbox
 from .modules.mbString import mbString
 from .modules.mbSubmit import mbSubmit
+from .modules.mbDisplay import mbDisplay
 
 # Maps node class names to their corresponding class.
 NODE_CLASS_MAPPINGS = {
@@ -59,6 +60,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Textbox": mbTextbox,
     "mb String": mbString,
     "mb Submit": mbSubmit,
+    "mb Display": mbDisplay,
 }
 
 
@@ -93,6 +95,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Textbox": "Textbox",
     "mb String": "String",
     "mb Submit": "Submit",
+    "mb Display": "Display",
 }
 
 WEB_DIRECTORY = "js"
