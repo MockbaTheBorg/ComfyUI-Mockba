@@ -164,6 +164,16 @@ app.registerExtension({
 					app.queuePrompt(-1); // -1 = add to front of queue
 				});
 
+				// Add reset canvas position button
+				const resetCanvasWidget = this.addWidget("button", "Reset Canvas", "Reset Canvas", () => {
+					// Reset canvas position to 0,0
+					if (app.canvas) {
+						app.canvas.ds.offset = [0, 0];
+						app.canvas.ds.scale = 1;
+						app.canvas.setDirty(true, true);
+					}
+				});
+
 				return r;
 			};
 		}
