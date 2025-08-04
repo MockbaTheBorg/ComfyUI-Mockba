@@ -29,6 +29,7 @@ from .modules.mbString import mbString
 from .modules.mbSubmit import mbSubmit
 from .modules.mbDisplay import mbDisplay
 from .modules.mbDeviceTransfer import mbDeviceTransfer
+from .modules.mbDataTypeConverter import mbDataTypeConverter
 
 # Maps node class names to their corresponding class.
 NODE_CLASS_MAPPINGS = {
@@ -63,6 +64,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Submit": mbSubmit,
     "mb Display": mbDisplay,
     "mb Device Transfer": mbDeviceTransfer,
+    "mb Data Type Converter": mbDataTypeConverter,
 }
 
 
@@ -99,6 +101,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Submit": "Submit",
     "mb Display": "Display",
     "mb Device Transfer": "Device Transfer",
+    "mb Data Type Converter": "Data Type Converter",
 }
 
 WEB_DIRECTORY = "js"

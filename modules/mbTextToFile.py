@@ -11,37 +11,32 @@ class mbTextToFile:
         return {
             "required": {
                 "text": ("STRING", {"default": "text"}),
-                "base_name": ("STRING", {"default": "text"}),
-                "id": ("INT", {"default": 0, "min": 0, "step": 1}),
-                "use_id": (["yes", "no"], {"default": "no"}),
+                "filename": ("STRING", {"default": "output.txt"}),
             },
         }
 
     RETURN_TYPES = (
         "STRING",
-        "INT",
     )
     RETURN_NAMES = (
         "text",
-        "id",
     )
     FUNCTION = "execute"
     CATEGORY = "🖖 Mockba/file"
     DESCRIPTION = "Saves text to a file."
 
-    def execute(self, text, base_name, id, use_id):
+    def execute(self, text, filename):
         prefix = folder_paths.get_input_directory()
         prefix = prefix.replace("\\", "/") + "/"
         if not os.path.exists(prefix):
             os.makedirs(prefix)
-        if use_id == "yes":
-            filename = base_name + "_" + str(id) + ".txt"
-        else:
-            filename = base_name + ".txt"
-        with open(prefix + filename, "w") as f:
+        
+        # Ensure .txt extension if not present
+        if not filename.endswith('.txt'):
+            filename = filename + '.txt'
+            
+        filepath = prefix + filename
+        with open(filepath, "w") as f:
             f.write(text)
-        print("Saved: " + prefix + filename)
-        return (
-            text,
-            id,
-        )
+        print("Saved: " + filepath)
+        return (text,)
