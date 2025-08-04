@@ -11,7 +11,7 @@ class mbTextOrFile:
         return {
             "required": {
                 "input": ("STRING", {"default": "", "multiline": True}),
-                "base_name": ("STRING", {"default": "filename"}),
+                "filename": ("STRING", {"default": "filename.txt"}),
                 "action": (["append", "prepend", "replace"], {"default": "append"}),
             }
         }
@@ -22,15 +22,20 @@ class mbTextOrFile:
     CATEGORY = "🖖 Mockba/file"
     DESCRIPTION = "Loads text from a file or uses the entered value."
 
-    def execute(self, input, base_name, action):
+    def execute(self, input, filename, action):
         prefix = folder_paths.get_input_directory()
         prefix = prefix.replace("\\", "/") + "/"
         if not os.path.exists(prefix):
             os.makedirs(prefix)
-        filename = base_name + ".txt"
-        if not os.path.exists(prefix + filename):
+            
+        # Ensure .txt extension if not present
+        if not filename.endswith('.txt'):
+            filename = filename + '.txt'
+            
+        filepath = prefix + filename
+        if not os.path.exists(filepath):
             return (input,)
-        with open(prefix + filename, "r") as f:
+        with open(filepath, "r") as f:
             file_text = f.read()
         if action == "append":
             file_text = file_text + input
@@ -38,5 +43,5 @@ class mbTextOrFile:
             file_text = input + file_text
         elif action == "replace":
             file_text = input
-        print("Loaded: " + prefix + filename)
+        print("Loaded: " + filepath)
         return (file_text,)
