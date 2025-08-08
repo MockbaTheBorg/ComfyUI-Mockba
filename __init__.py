@@ -28,11 +28,13 @@ from .modules.mbTextbox import mbTextbox
 from .modules.mbString import mbString
 from .modules.mbSubmit import mbSubmit
 from .modules.mbDisplay import mbDisplay
+from .modules.mbValue import mbValue
 from .modules.mbDeviceTransfer import mbDeviceTransfer
 from .modules.mbDataTypeConverter import mbDataTypeConverter
 
 # Maps node class names to their corresponding class.
 NODE_CLASS_MAPPINGS = {
+    # === Image Processing ===
     "mb Image Batch": mbImageBatch,
     "mb Image Flip": mbImageFlip,
     "mb Image Rotate": mbImageRotate,
@@ -40,36 +42,48 @@ NODE_CLASS_MAPPINGS = {
     "mb Image Dither": mbImageDither,
     "mb Image Dimensions": mbImageDimensions,
     "mb Image Size": mbImageSize,
+    "mb Image Preview": mbImagePreview,
+    
+    # === File Operations ===
     "mb Image Load": mbImageLoad,
     "mb Image Load from URL": mbImageLoadURL,
-    "mb Image Preview": mbImagePreview,
     "mb Image to File": mbImageToFile,
     "mb File to Image": mbFileToImage,
     "mb Text to File": mbTextToFile,
     "mb File to Text": mbFileToText,
     "mb Text or File": mbTextOrFile,
-    "mb Debug": mbDebug,
-    "mb Barcode": mbBarcode,
-    "mb Select": mbSelect,
-    "mb Eval": mbEval,
-    "mb Exec": mbExec,
-    "mb Demux": mbDemux,
-    "mb Empty Latent Image": mbEmptyLatentImage,
-    "mb KSampler": mbKSampler,
-    "mb CLIP Text Encoder": mbCLIPTextEncode,
-    "mb Hash Generator": mbHashGenerator,
+    
+    # === Text Processing ===
     "mb Text": mbText,
     "mb Textbox": mbTextbox,
     "mb String": mbString,
-    "mb Submit": mbSubmit,
-    "mb Display": mbDisplay,
+    "mb CLIP Text Encoder": mbCLIPTextEncode,
+    
+    # === Generation & Sampling ===
+    "mb Empty Latent Image": mbEmptyLatentImage,
+    "mb KSampler": mbKSampler,
+    "mb Barcode": mbBarcode,
+    
+    # === Data Management ===
+    "mb Select": mbSelect,
+    "mb Demux": mbDemux,
     "mb Device Transfer": mbDeviceTransfer,
     "mb Data Type Converter": mbDataTypeConverter,
+    "mb Hash Generator": mbHashGenerator,
+    
+    # === Development & Debugging ===
+    "mb Debug": mbDebug,
+    "mb Display": mbDisplay,
+    "mb Value": mbValue,
+    "mb Submit": mbSubmit,
+    "mb Eval": mbEval,
+    "mb Exec": mbExec,
 }
 
 
 # Maps node class names to their corresponding display names.
 NODE_DISPLAY_NAME_MAPPINGS = {
+    # === Image Processing ===
     "mb Image Batch": "Image Batch",
     "mb Image Flip": "Image Flip",
     "mb Image Rotate": "Image Rotate",
@@ -77,31 +91,42 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Image Dither": "Image Dither",
     "mb Image Dimensions": "Image Dimensions",
     "mb Image Size": "Image Size",
+    "mb Image Preview": "Image Preview",
+    
+    # === File Operations ===
     "mb Image Load": "Image Load",
     "mb Image Load from URL": "Image Load from URL",
-    "mb Image Preview": "Image Preview",
     "mb Image to File": "Image to File",
     "mb File to Image": "File to Image",
     "mb Text to File": "Text to File",
     "mb File to Text": "File to Text",
     "mb Text or File": "Text or File",
-    "mb Debug": "Debug",
-    "mb Barcode": "Barcode",
-    "mb Select": "Select",
-    "mb Eval": "Eval",
-    "mb Exec": "Exec",
-    "mb Demux": "Demux",
-    "mb Empty Latent Image": "Empty Latent Image (gpu)",
-    "mb KSampler": "KSampler (gpu)",
-    "mb CLIP Text Encoder": "CLIP Text Encoder",
-    "mb Hash Generator": "Hash Generator",
+    
+    # === Text Processing ===
     "mb Text": "Text",
     "mb Textbox": "Textbox",
     "mb String": "String",
-    "mb Submit": "Submit",
-    "mb Display": "Display",
+    "mb CLIP Text Encoder": "CLIP Text Encoder",
+    
+    # === Generation & Sampling ===
+    "mb Empty Latent Image": "Empty Latent Image (gpu)",
+    "mb KSampler": "KSampler (gpu)",
+    "mb Barcode": "Barcode",
+    
+    # === Data Management ===
+    "mb Select": "Select",
+    "mb Demux": "Demux",
     "mb Device Transfer": "Device Transfer",
     "mb Data Type Converter": "Data Type Converter",
+    "mb Hash Generator": "Hash Generator",
+    
+    # === Development & Debugging ===
+    "mb Debug": "Debug",
+    "mb Display": "Display",
+    "mb Value": "Value",
+    "mb Submit": "Submit",
+    "mb Eval": "Eval",
+    "mb Exec": "Exec",
 }
 
 WEB_DIRECTORY = "js"

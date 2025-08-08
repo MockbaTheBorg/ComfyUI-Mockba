@@ -1,60 +1,174 @@
+"""
+File to Image Loader Node for ComfyUI
+Loads images from files with support for single images and batch loading.
+"""
+
+# Standard library imports
 import os
-import folder_paths
+
+# Third-party imports
 import torch
 import numpy as np
 from PIL import Image, ImageOps
 
-# Loads an image from a file.
+# ComfyUI imports
+import folder_paths
+
+# Local imports
+from .common import CATEGORIES
+
+
 class mbFileToImage:
+    """Load images from files with automatic format handling and batch support."""
+    
+    # Class constants
+    DEFAULT_FILENAME = "image"
+    SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff"]
+    DEFAULT_EXTENSION = ".png"
+    
+    # Default image dimensions for fallback
+    DEFAULT_WIDTH = 512
+    DEFAULT_HEIGHT = 512
+    DEFAULT_CHANNELS = 3
+    
+    # Image processing constants
+    IMAGE_NORMALIZE_FACTOR = 255.0
+    
     def __init__(self):
+        """Initialize the file to image loader node."""
         pass
 
     @classmethod
-    def INPUT_TYPES(self):
+    def INPUT_TYPES(cls):
+        """Define input types for image file loading."""
         return {
             "required": {
-                "base_name": ("STRING", {"default": "image"}),
-                "id": ("INT", {"default": 0, "min": 0, "step": 1}),
-                "use_id": (["yes", "no"], {"default": "no"}),
+                "filename": ("STRING", {
+                    "default": cls.DEFAULT_FILENAME,
+                    "tooltip": "Base filename for image(s) to load (extension optional)"
+                }),
+                "load_mode": (["single", "batch"], {
+                    "default": "single",
+                    "tooltip": "Single: load one image, Batch: load sequentially numbered images"
+                }),
             }
         }
 
-    RETURN_TYPES = (
-        "IMAGE",
-        "INT",
-    )
-    RETURN_NAMES = (
-        "image",
-        "id",
-    )
-    FUNCTION = "execute"
-    CATEGORY = "🖖 Mockba/file"
-    DESCRIPTION = "Loads an image from a file."
-    
-    def execute(self, base_name, id, use_id):
-        prefix = folder_paths.get_input_directory().replace("\\", "/") + "/"
-    
-        def load_image(filename):
-            image_pil = Image.open(filename).convert("RGB")
-            image_np = np.array(image_pil).astype(np.float32) / 255.0
-            return torch.from_numpy(image_np).permute(2, 0, 1).unsqueeze(0)
-    
-        if use_id == "no":
-            filename = f"{prefix}{base_name}.png"
-            if not os.path.exists(filename):
-                return (torch.zeros(1, 512, 512, 3), id)
-            image = load_image(filename).permute(0, 2, 3, 1)
-        else:
-            image = []
-            i = 0
-            while True:
-                filename = f"{prefix}{base_name}_{i}.png"
-                if not os.path.exists(filename):
-                    break
-                image.append(load_image(filename).permute(0, 2, 3, 1))
-                i += 1
-            if i == 0:
-                return (torch.zeros(1, 512, 512, 3), id)
-            image = torch.cat(image, dim=0)
+    # Node metadata
+    RETURN_TYPES = ("IMAGE", "INT")
+    RETURN_NAMES = ("image", "count")
+    FUNCTION = "load_image_from_file"
+    CATEGORY = CATEGORIES["FILE_OPS"]
+    DESCRIPTION = "Load images from files with support for single images and batch loading of sequentially numbered files."
 
-        return (image, id)
+    def load_image_from_file(self, filename, load_mode):
+        """
+        Load image(s) from file(s).
+        
+        Args:
+            filename: Base filename for image(s) to load
+            load_mode: "single" for one image, "batch" for multiple numbered images
+            
+        Returns:
+            tuple: (image_tensor, count) where count is number of images loaded
+        """
+        try:
+            if load_mode == "single":
+                image_tensor, count = self._load_single_image(filename)
+            else:  # batch mode
+                image_tensor, count = self._load_batch_images(filename)
+            
+            return (image_tensor, count)
+            
+        except Exception as e:
+            error_msg = f"Failed to load image from file: {str(e)}"
+            print(error_msg)
+            # Return default fallback image
+            fallback_image = self._create_fallback_image()
+            return (fallback_image, 0)
+
+    def _load_single_image(self, base_filename):
+        """Load a single image file."""
+        filepath = self._find_image_file(base_filename)
+        
+        if filepath is None:
+            print(f"Image file not found: {base_filename}")
+            fallback_image = self._create_fallback_image()
+            return fallback_image, 0
+        
+        try:
+            image_tensor = self._load_and_process_image(filepath)
+            return image_tensor, 1
+        except Exception as e:
+            print(f"Error loading image {filepath}: {str(e)}")
+            fallback_image = self._create_fallback_image()
+            return fallback_image, 0
+
+    def _load_batch_images(self, base_filename):
+        """Load multiple sequentially numbered images."""
+        images = []
+        i = 0
+        
+        while True:
+            numbered_filename = f"{base_filename}_{i}"
+            filepath = self._find_image_file(numbered_filename)
+            
+            if filepath is None:
+                break
+                
+            try:
+                image_tensor = self._load_and_process_image(filepath)
+                images.append(image_tensor)
+                i += 1
+            except Exception as e:
+                print(f"Error loading image {filepath}: {str(e)}")
+                break
+        
+        if len(images) == 0:
+            print(f"No batch images found for: {base_filename}_*")
+            fallback_image = self._create_fallback_image()
+            return fallback_image, 0
+        
+        # Concatenate all images into batch
+        batch_tensor = torch.cat(images, dim=0)
+        return batch_tensor, len(images)
+
+    def _find_image_file(self, base_filename):
+        """Find image file with supported extension."""
+        input_dir = folder_paths.get_input_directory().replace("\\", "/") + "/"
+        
+        # If filename already has extension, try it directly
+        if any(base_filename.lower().endswith(ext) for ext in self.SUPPORTED_EXTENSIONS):
+            filepath = input_dir + base_filename
+            if os.path.exists(filepath):
+                return filepath
+        else:
+            # Try with each supported extension
+            for ext in self.SUPPORTED_EXTENSIONS:
+                filepath = input_dir + base_filename + ext
+                if os.path.exists(filepath):
+                    return filepath
+        
+        return None
+
+    def _load_and_process_image(self, filepath):
+        """Load and process image file into ComfyUI tensor format."""
+        # Load image and convert to RGB
+        image_pil = Image.open(filepath)
+        image_pil = ImageOps.exif_transpose(image_pil)  # Handle EXIF rotation
+        image_pil = image_pil.convert("RGB")
+        
+        # Convert to numpy array and normalize
+        image_np = np.array(image_pil).astype(np.float32) / self.IMAGE_NORMALIZE_FACTOR
+        
+        # Convert to tensor in ComfyUI format [batch, height, width, channels]
+        image_tensor = torch.from_numpy(image_np).unsqueeze(0)
+        
+        return image_tensor
+
+    def _create_fallback_image(self):
+        """Create a default fallback image when loading fails."""
+        fallback_tensor = torch.zeros(
+            1, self.DEFAULT_HEIGHT, self.DEFAULT_WIDTH, self.DEFAULT_CHANNELS
+        )
+        return fallback_tensor

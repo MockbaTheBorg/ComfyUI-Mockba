@@ -1,32 +1,262 @@
-import torch
+"""
+Advanced Image Dithering Node for ComfyUI
+Converts images to dithered output using various professional algorithms including error diffusion,
+ordered dithering, and halftone patterns with support for both monochrome and color modes.
+"""
+
+# Third-party imports
 import numpy as np
+import torch
 from PIL import Image
 
-# Converts an image to black and white using various dithering methods
+# Local imports
+from .common import CATEGORIES
+
+
 class mbImageDither:
+    """Apply professional dithering algorithms to images with extensive method and parameter control."""
+    
+    # Class constants
+    DITHERING_METHODS = [
+        "Floyd-Steinberg", "Jarvis-Judice-Ninke", "Stucki", "Atkinson",
+        "Bayer 2x2", "Bayer 4x4", "Bayer 8x8",
+        "Halftone", "Newspaper", "Magazine", 
+        "Random", "None (Threshold)"
+    ]
+    
+    COLOR_MODES = ["Black & White", "Color"]
+    
+    # Default values
+    DEFAULT_METHOD = "Floyd-Steinberg"
+    DEFAULT_COLOR_MODE = "Black & White"
+    DEFAULT_THRESHOLD = 0.5
+    DEFAULT_DOT_SIZE = 4
+    
+    # Processing constants
+    GRAYSCALE_WEIGHTS = [0.299, 0.587, 0.114]  # Standard RGB to grayscale conversion
+    
+    # Halftone screen angles for professional CMYK-style separation
+    CMYK_SCREEN_ANGLES = [15, 75, 0, 45]  # Cyan, Magenta, Yellow, Black equivalents
+    
     def __init__(self):
+        """Initialize the image dithering node."""
         pass
 
     @classmethod
-    def INPUT_TYPES(self):
+    def INPUT_TYPES(cls):
+        """Define input types for image dithering."""
         return {
             "required": {
-                "image": ("IMAGE",),
-                "method": (["Floyd-Steinberg", "Jarvis-Judice-Ninke", "Stucki", "Atkinson", "Bayer 2x2", "Bayer 4x4", "Bayer 8x8", "Halftone", "Newspaper", "Magazine", "Random", "None (Threshold)"], {"default": "Floyd-Steinberg"}),
-                "color_mode": (["Black & White", "Color"], {"default": "Black & White"}),
-                "threshold": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "dot_size": ("INT", {"default": 4, "min": 2, "max": 16, "step": 1}),
+                "image": ("IMAGE", {
+                    "tooltip": "Input image to apply dithering effects"
+                }),
+                "method": (cls.DITHERING_METHODS, {
+                    "default": cls.DEFAULT_METHOD,
+                    "tooltip": "Dithering algorithm to apply"
+                }),
+                "color_mode": (cls.COLOR_MODES, {
+                    "default": cls.DEFAULT_COLOR_MODE,
+                    "tooltip": "Output as black & white or preserve color information"
+                }),
+                "threshold": ("FLOAT", {
+                    "default": cls.DEFAULT_THRESHOLD,
+                    "min": 0.0,
+                    "max": 1.0,
+                    "step": 0.01,
+                    "tooltip": "Threshold value for pixel decisions (0.0 = black, 1.0 = white)"
+                }),
+                "dot_size": ("INT", {
+                    "default": cls.DEFAULT_DOT_SIZE,
+                    "min": 2,
+                    "max": 16,
+                    "step": 1,
+                    "tooltip": "Dot size for halftone patterns (larger = coarser pattern)"
+                }),
+            },
+            "optional": {
+                "custom_angle": ("FLOAT", {
+                    "default": 45.0,
+                    "min": 0.0,
+                    "max": 360.0,
+                    "step": 1.0,
+                    "tooltip": "Custom screen angle for halftone patterns (degrees)"
+                }),
+                "enhance_contrast": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "Apply contrast enhancement before dithering"
+                }),
             }
         }
 
+    # Node metadata
     RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
-    FUNCTION = "dither"
-    CATEGORY = "🖖 Mockba/image"
-    DESCRIPTION = "Converts an image to black and white or applies color dithering using various methods."
+    RETURN_NAMES = ("dithered_image",)
+    FUNCTION = "apply_dithering"
+    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    DESCRIPTION = "Apply professional dithering algorithms including Floyd-Steinberg, Bayer, and halftone patterns with color/monochrome support."
 
-    def floyd_steinberg_dither(self, image_array, threshold=0.5):
-        """Floyd-Steinberg error diffusion dithering"""
+    def apply_dithering(self, image, method, color_mode, threshold, dot_size, custom_angle=45.0, enhance_contrast=False):
+        """
+        Apply selected dithering method to input image.
+        
+        Args:
+            image: Input image tensor
+            method: Dithering algorithm to use
+            color_mode: Black & White or Color output
+            threshold: Threshold for pixel decisions
+            dot_size: Size for halftone dots
+            custom_angle: Custom screen angle for halftone
+            enhance_contrast: Whether to enhance contrast before dithering
+            
+        Returns:
+            tuple: (dithered_image_tensor,)
+        """
+        try:
+            # Process each image in the batch
+            dithered_batch = []
+            
+            for i in range(image.shape[0]):
+                single_image = image[i]
+                dithered_image = self._process_single_image(
+                    single_image, method, color_mode, threshold, 
+                    dot_size, custom_angle, enhance_contrast
+                )
+                dithered_batch.append(dithered_image)
+            
+            # Concatenate batch results
+            result_tensor = torch.cat(dithered_batch, dim=0)
+            
+            print(f"Applied {method} dithering in {color_mode} mode to {len(dithered_batch)} image(s)")
+            
+            return (result_tensor,)
+            
+        except Exception as e:
+            error_msg = f"Dithering failed: {str(e)}"
+            print(error_msg)
+            # Return original image on error
+            return (image,)
+
+    def _process_single_image(self, image_tensor, method, color_mode, threshold, dot_size, custom_angle, enhance_contrast):
+        """Process a single image with the specified dithering method."""
+        # Convert tensor to numpy
+        image_np = image_tensor.cpu().numpy()
+        
+        # Enhance contrast if requested
+        if enhance_contrast:
+            image_np = self._enhance_contrast(image_np)
+        
+        # Apply dithering based on color mode
+        if color_mode == "Black & White":
+            result_np = self._apply_monochrome_dithering(image_np, method, threshold, dot_size, custom_angle)
+        else:  # Color mode
+            result_np = self._apply_color_dithering(image_np, method, threshold, dot_size, custom_angle)
+        
+        # Convert back to tensor
+        return torch.from_numpy(result_np).unsqueeze(0)
+
+    def _enhance_contrast(self, image_np):
+        """Apply contrast enhancement to image."""
+        # Simple contrast stretch
+        min_val = np.min(image_np)
+        max_val = np.max(image_np)
+        
+        if max_val > min_val:
+            enhanced = (image_np - min_val) / (max_val - min_val)
+        else:
+            enhanced = image_np
+        
+        return enhanced
+
+    def _apply_monochrome_dithering(self, image_np, method, threshold, dot_size, custom_angle):
+        """Apply dithering in black and white mode."""
+        # Convert to grayscale if needed
+        if len(image_np.shape) == 3:
+            gray_image = self._rgb_to_grayscale(image_np)
+        else:
+            gray_image = image_np
+        
+        # Apply selected dithering method
+        if method == "Floyd-Steinberg":
+            result = self._floyd_steinberg_dither(gray_image, threshold)
+        elif method == "Jarvis-Judice-Ninke":
+            result = self._jarvis_judice_ninke_dither(gray_image, threshold)
+        elif method == "Stucki":
+            result = self._stucki_dither(gray_image, threshold)
+        elif method == "Atkinson":
+            result = self._atkinson_dither(gray_image, threshold)
+        elif method == "Bayer 2x2":
+            result = self._bayer_dither(gray_image, 2)
+        elif method == "Bayer 4x4":
+            result = self._bayer_dither(gray_image, 4)
+        elif method == "Bayer 8x8":
+            result = self._bayer_dither(gray_image, 8)
+        elif method == "Halftone":
+            result = self._halftone_dither(gray_image, dot_size, custom_angle)
+        elif method == "Newspaper":
+            result = self._halftone_dither(gray_image, 6, 45)  # Newspaper settings
+        elif method == "Magazine":
+            result = self._halftone_dither(gray_image, 3, 45)  # Magazine settings
+        elif method == "Random":
+            result = self._random_dither(gray_image, threshold)
+        else:  # "None (Threshold)"
+            result = self._threshold_dither(gray_image, threshold)
+        
+        # Convert to 3-channel for ComfyUI compatibility
+        return np.stack([result, result, result], axis=-1)
+
+    def _apply_color_dithering(self, image_np, method, threshold, dot_size, custom_angle):
+        """Apply dithering in color mode."""
+        # Ensure 3 channels
+        if len(image_np.shape) == 2:
+            image_np = np.stack([image_np, image_np, image_np], axis=-1)
+        
+        h, w, c = image_np.shape
+        result = np.zeros_like(image_np)
+        
+        # Apply dithering to each channel
+        for channel in range(c):
+            channel_data = image_np[:, :, channel]
+            
+            if method == "Floyd-Steinberg":
+                result[:, :, channel] = self._floyd_steinberg_dither(channel_data, threshold)
+            elif method == "Jarvis-Judice-Ninke":
+                result[:, :, channel] = self._jarvis_judice_ninke_dither(channel_data, threshold)
+            elif method == "Stucki":
+                result[:, :, channel] = self._stucki_dither(channel_data, threshold)
+            elif method == "Atkinson":
+                result[:, :, channel] = self._atkinson_dither(channel_data, threshold)
+            elif method == "Bayer 2x2":
+                result[:, :, channel] = self._bayer_dither(channel_data, 2)
+            elif method == "Bayer 4x4":
+                result[:, :, channel] = self._bayer_dither(channel_data, 4)
+            elif method == "Bayer 8x8":
+                result[:, :, channel] = self._bayer_dither(channel_data, 8)
+            elif method == "Halftone":
+                # Use different screen angles for professional color separation
+                angle = self.CMYK_SCREEN_ANGLES[channel % len(self.CMYK_SCREEN_ANGLES)]
+                result[:, :, channel] = self._halftone_dither(channel_data, dot_size, angle)
+            elif method == "Newspaper":
+                angle = self.CMYK_SCREEN_ANGLES[channel % len(self.CMYK_SCREEN_ANGLES)]
+                result[:, :, channel] = self._halftone_dither(channel_data, 6, angle)
+            elif method == "Magazine":
+                angle = self.CMYK_SCREEN_ANGLES[channel % len(self.CMYK_SCREEN_ANGLES)]
+                result[:, :, channel] = self._halftone_dither(channel_data, 3, angle)
+            elif method == "Random":
+                result[:, :, channel] = self._random_dither(channel_data, threshold)
+            else:  # "None (Threshold)"
+                result[:, :, channel] = self._threshold_dither(channel_data, threshold)
+        
+        return result
+
+    def _rgb_to_grayscale(self, image_np):
+        """Convert RGB image to grayscale using standard weights."""
+        return (self.GRAYSCALE_WEIGHTS[0] * image_np[:, :, 0] + 
+                self.GRAYSCALE_WEIGHTS[1] * image_np[:, :, 1] + 
+                self.GRAYSCALE_WEIGHTS[2] * image_np[:, :, 2])
+
+    # Dithering algorithm implementations
+    def _floyd_steinberg_dither(self, image_array, threshold=0.5):
+        """Floyd-Steinberg error diffusion dithering."""
         img = image_array.copy().astype(np.float32)
         h, w = img.shape
         
@@ -49,8 +279,8 @@ class mbImageDither:
         
         return np.clip(img, 0, 1)
 
-    def jarvis_judice_ninke_dither(self, image_array, threshold=0.5):
-        """Jarvis-Judice-Ninke error diffusion dithering"""
+    def _jarvis_judice_ninke_dither(self, image_array, threshold=0.5):
+        """Jarvis-Judice-Ninke error diffusion dithering."""
         img = image_array.copy().astype(np.float32)
         h, w = img.shape
         
@@ -75,8 +305,8 @@ class mbImageDither:
         
         return np.clip(img, 0, 1)
 
-    def stucki_dither(self, image_array, threshold=0.5):
-        """Stucki error diffusion dithering"""
+    def _stucki_dither(self, image_array, threshold=0.5):
+        """Stucki error diffusion dithering."""
         img = image_array.copy().astype(np.float32)
         h, w = img.shape
         
@@ -101,8 +331,8 @@ class mbImageDither:
         
         return np.clip(img, 0, 1)
 
-    def atkinson_dither(self, image_array, threshold=0.5):
-        """Atkinson error diffusion dithering"""
+    def _atkinson_dither(self, image_array, threshold=0.5):
+        """Atkinson error diffusion dithering."""
         img = image_array.copy().astype(np.float32)
         h, w = img.shape
         
@@ -127,30 +357,30 @@ class mbImageDither:
         
         return np.clip(img, 0, 1)
 
-    def bayer_dither(self, image_array, matrix_size=2):
-        """Bayer ordered dithering"""
+    def _bayer_dither(self, image_array, matrix_size=2):
+        """Bayer ordered dithering."""
         # Bayer matrices
-        bayer_2x2 = np.array([[0, 2], [3, 1]]) / 4.0
-        bayer_4x4 = np.array([
-            [0, 8, 2, 10],
-            [12, 4, 14, 6],
-            [3, 11, 1, 9],
-            [15, 7, 13, 5]
-        ]) / 16.0
-        bayer_8x8 = np.array([
-            [0, 32, 8, 40, 2, 34, 10, 42],
-            [48, 16, 56, 24, 50, 18, 58, 26],
-            [12, 44, 4, 36, 14, 46, 6, 38],
-            [60, 28, 52, 20, 62, 30, 54, 22],
-            [3, 35, 11, 43, 1, 33, 9, 41],
-            [51, 19, 59, 27, 49, 17, 57, 25],
-            [15, 47, 7, 39, 13, 45, 5, 37],
-            [63, 31, 55, 23, 61, 29, 53, 21]
-        ]) / 64.0
+        bayer_matrices = {
+            2: np.array([[0, 2], [3, 1]]) / 4.0,
+            4: np.array([
+                [0, 8, 2, 10],
+                [12, 4, 14, 6],
+                [3, 11, 1, 9],
+                [15, 7, 13, 5]
+            ]) / 16.0,
+            8: np.array([
+                [0, 32, 8, 40, 2, 34, 10, 42],
+                [48, 16, 56, 24, 50, 18, 58, 26],
+                [12, 44, 4, 36, 14, 46, 6, 38],
+                [60, 28, 52, 20, 62, 30, 54, 22],
+                [3, 35, 11, 43, 1, 33, 9, 41],
+                [51, 19, 59, 27, 49, 17, 57, 25],
+                [15, 47, 7, 39, 13, 45, 5, 37],
+                [63, 31, 55, 23, 61, 29, 53, 21]
+            ]) / 64.0
+        }
         
-        matrix_map = {2: bayer_2x2, 4: bayer_4x4, 8: bayer_8x8}
-        bayer_matrix = matrix_map[matrix_size]
-        
+        bayer_matrix = bayer_matrices[matrix_size]
         h, w = image_array.shape
         result = np.zeros_like(image_array)
         
@@ -161,284 +391,55 @@ class mbImageDither:
         
         return result
 
-    def random_dither(self, image_array, threshold=0.5):
-        """Random threshold dithering"""
+    def _halftone_dither(self, image_array, dot_size=4, angle=45):
+        """Professional halftone dithering with rotation support."""
         h, w = image_array.shape
-        random_thresholds = np.random.random((h, w)) * 0.5 + (threshold - 0.25)
-        return (image_array > random_thresholds).astype(np.float32)
-
-    def threshold_dither(self, image_array, threshold=0.5):
-        """Simple threshold (no dithering)"""
-        return (image_array > threshold).astype(np.float32)
-
-    def halftone_dither(self, image_array, dot_size=4, angle=45, offset_x=0, offset_y=0):
-        """Halftone dithering - simulates print media dot patterns with angle and offset control"""
-        h, w = image_array.shape
-        result = np.ones_like(image_array)  # Start with white background
+        result = np.ones_like(image_array)
         
         # Convert angle to radians
         angle_rad = np.radians(angle)
         cos_angle = np.cos(angle_rad)
         sin_angle = np.sin(angle_rad)
         
-        # Create rotated grid by transforming coordinates
         for y in range(h):
             for x in range(w):
-                # Apply inverse rotation to find which halftone cell this pixel belongs to
-                # Add offset to shift the entire grid
-                transformed_x = (x + offset_x) * cos_angle + (y + offset_y) * sin_angle
-                transformed_y = -(x + offset_x) * sin_angle + (y + offset_y) * cos_angle
+                # Apply rotation transformation
+                transformed_x = x * cos_angle + y * sin_angle
+                transformed_y = -x * sin_angle + y * cos_angle
                 
-                # Find the halftone cell center
+                # Find halftone cell center
                 cell_x = int(transformed_x // dot_size) * dot_size + dot_size // 2
                 cell_y = int(transformed_y // dot_size) * dot_size + dot_size // 2
                 
-                # Transform cell center back to image coordinates
+                # Transform back to image coordinates
                 real_cell_x = cell_x * cos_angle - cell_y * sin_angle
                 real_cell_y = cell_x * sin_angle + cell_y * cos_angle
                 
-                # Sample the image brightness around this cell center
-                sample_x = int(np.clip(real_cell_x - offset_x, 0, w - 1))
-                sample_y = int(np.clip(real_cell_y - offset_y, 0, h - 1))
+                # Sample image brightness
+                sample_x = int(np.clip(real_cell_x, 0, w - 1))
+                sample_y = int(np.clip(real_cell_y, 0, h - 1))
+                avg_brightness = image_array[sample_y, sample_x]
                 
-                # Get average brightness in a small area around the sample point
-                sample_size = max(1, dot_size // 3)
-                x_start = max(0, sample_x - sample_size)
-                x_end = min(w, sample_x + sample_size + 1)
-                y_start = max(0, sample_y - sample_size)
-                y_end = min(h, sample_y + sample_size + 1)
-                
-                if x_start < x_end and y_start < y_end:
-                    avg_brightness = np.mean(image_array[y_start:y_end, x_start:x_end])
-                else:
-                    avg_brightness = image_array[sample_y, sample_x]
-                
-                # Calculate distance from current pixel to cell center
+                # Calculate dot radius based on brightness
                 dx = transformed_x - cell_x
                 dy = transformed_y - cell_y
                 distance_from_center = np.sqrt(dx * dx + dy * dy)
                 
-                # Calculate dot radius based on brightness (darker = larger dots)
-                max_radius = dot_size * 0.4  # Slightly smaller than half to prevent overlap
+                max_radius = dot_size * 0.4
                 dot_radius = max_radius * (1.0 - avg_brightness)
                 
-                # Set pixel based on whether it's inside the dot
-                if distance_from_center <= dot_radius:
-                    result[y, x] = 0.0  # Black dot
-                else:
-                    result[y, x] = 1.0  # White background
+                result[y, x] = 0.0 if distance_from_center <= dot_radius else 1.0
         
         return result
 
-    def newspaper_dither(self, image_array, dot_size=6):
-        """Newspaper-style halftone (lower quality, larger dots)"""
-        return self.halftone_dither(image_array, dot_size, angle=45, offset_x=0, offset_y=0)
+    def _random_dither(self, image_array, threshold=0.5):
+        """Random threshold dithering."""
+        h, w = image_array.shape
+        random_thresholds = np.random.random((h, w)) * 0.5 + (threshold - 0.25)
+        return (image_array > random_thresholds).astype(np.float32)
 
-    def magazine_dither(self, image_array, dot_size=3):
-        """Magazine-style halftone (higher quality, smaller dots)"""
-        return self.halftone_dither(image_array, dot_size, angle=45, offset_x=0, offset_y=0)
+    def _threshold_dither(self, image_array, threshold=0.5):
+        """Simple threshold (no dithering)."""
+        return (image_array > threshold).astype(np.float32)
 
-    # Color dithering methods - apply dithering per channel
-    def floyd_steinberg_color_dither(self, image_array, threshold=0.5):
-        """Floyd-Steinberg error diffusion for color images"""
-        if len(image_array.shape) == 2:
-            return self.floyd_steinberg_dither(image_array, threshold)
-        
-        h, w, c = image_array.shape
-        result = np.zeros_like(image_array)
-        
-        for channel in range(c):
-            result[:, :, channel] = self.floyd_steinberg_dither(image_array[:, :, channel], threshold)
-        
-        return result
-
-    def jarvis_judice_ninke_color_dither(self, image_array, threshold=0.5):
-        """JJN error diffusion for color images"""
-        if len(image_array.shape) == 2:
-            return self.jarvis_judice_ninke_dither(image_array, threshold)
-        
-        h, w, c = image_array.shape
-        result = np.zeros_like(image_array)
-        
-        for channel in range(c):
-            result[:, :, channel] = self.jarvis_judice_ninke_dither(image_array[:, :, channel], threshold)
-        
-        return result
-
-    def stucki_color_dither(self, image_array, threshold=0.5):
-        """Stucki error diffusion for color images"""
-        if len(image_array.shape) == 2:
-            return self.stucki_dither(image_array, threshold)
-        
-        h, w, c = image_array.shape
-        result = np.zeros_like(image_array)
-        
-        for channel in range(c):
-            result[:, :, channel] = self.stucki_dither(image_array[:, :, channel], threshold)
-        
-        return result
-
-    def atkinson_color_dither(self, image_array, threshold=0.5):
-        """Atkinson error diffusion for color images"""
-        if len(image_array.shape) == 2:
-            return self.atkinson_dither(image_array, threshold)
-        
-        h, w, c = image_array.shape
-        result = np.zeros_like(image_array)
-        
-        for channel in range(c):
-            result[:, :, channel] = self.atkinson_dither(image_array[:, :, channel], threshold)
-        
-        return result
-
-    def bayer_color_dither(self, image_array, matrix_size=2):
-        """Bayer ordered dithering for color images"""
-        if len(image_array.shape) == 2:
-            return self.bayer_dither(image_array, matrix_size)
-        
-        h, w, c = image_array.shape
-        result = np.zeros_like(image_array)
-        
-        for channel in range(c):
-            result[:, :, channel] = self.bayer_dither(image_array[:, :, channel], matrix_size)
-        
-        return result
-
-    def random_color_dither(self, image_array, threshold=0.5):
-        """Random threshold dithering for color images"""
-        if len(image_array.shape) == 2:
-            return self.random_dither(image_array, threshold)
-        
-        h, w, c = image_array.shape
-        result = np.zeros_like(image_array)
-        
-        for channel in range(c):
-            result[:, :, channel] = self.random_dither(image_array[:, :, channel], threshold)
-        
-        return result
-
-    def threshold_color_dither(self, image_array, threshold=0.5):
-        """Simple threshold for color images"""
-        if len(image_array.shape) == 2:
-            return self.threshold_dither(image_array, threshold)
-        
-        h, w, c = image_array.shape
-        result = np.zeros_like(image_array)
-        
-        for channel in range(c):
-            result[:, :, channel] = self.threshold_dither(image_array[:, :, channel], threshold)
-        
-        return result
-
-    def halftone_color_dither(self, image_array, dot_size=4, angle=45):
-        """Halftone dithering for color images with professional CMYK-style screen angles"""
-        if len(image_array.shape) == 2:
-            return self.halftone_dither(image_array, dot_size, angle)
-        
-        h, w, c = image_array.shape
-        result = np.zeros_like(image_array)
-        
-        # Professional CMYK screen angles and offsets to prevent moiré patterns
-        # These are industry-standard angles used in commercial printing
-        screen_settings = [
-            {"angle": 15, "offset_x": 0, "offset_y": 0},      # Cyan equivalent (Red channel)
-            {"angle": 75, "offset_x": dot_size//3, "offset_y": 0},  # Magenta equivalent (Green channel)  
-            {"angle": 0, "offset_x": dot_size//2, "offset_y": dot_size//3},   # Yellow equivalent (Blue channel)
-        ]
-        
-        # If we have more than 3 channels, use additional angles
-        if c > 3:
-            screen_settings.append({"angle": 45, "offset_x": dot_size//4, "offset_y": dot_size//2})
-        
-        for channel in range(c):
-            settings = screen_settings[channel % len(screen_settings)]
-            result[:, :, channel] = self.halftone_dither(
-                image_array[:, :, channel], 
-                dot_size, 
-                settings["angle"],
-                settings["offset_x"],
-                settings["offset_y"]
-            )
-        
-        return result
-
-    def dither(self, image, method, color_mode, threshold, dot_size):
-        def convert_to_dithered_tensor(image_tensor, method, color_mode, threshold, dot_size):
-            image_np = image_tensor.cpu().numpy().squeeze()
-            
-            if color_mode == "Black & White":
-                # Convert to grayscale first
-                if len(image_np.shape) == 3:
-                    # Convert RGB to grayscale
-                    image_gray = 0.299 * image_np[:, :, 0] + 0.587 * image_np[:, :, 1] + 0.114 * image_np[:, :, 2]
-                else:
-                    image_gray = image_np
-                
-                # Apply selected dithering method
-                if method == "Floyd-Steinberg":
-                    result = self.floyd_steinberg_dither(image_gray, threshold)
-                elif method == "Jarvis-Judice-Ninke":
-                    result = self.jarvis_judice_ninke_dither(image_gray, threshold)
-                elif method == "Stucki":
-                    result = self.stucki_dither(image_gray, threshold)
-                elif method == "Atkinson":
-                    result = self.atkinson_dither(image_gray, threshold)
-                elif method == "Bayer 2x2":
-                    result = self.bayer_dither(image_gray, 2)
-                elif method == "Bayer 4x4":
-                    result = self.bayer_dither(image_gray, 4)
-                elif method == "Bayer 8x8":
-                    result = self.bayer_dither(image_gray, 8)
-                elif method == "Halftone":
-                    result = self.halftone_dither(image_gray, dot_size, angle=45, offset_x=0, offset_y=0)
-                elif method == "Newspaper":
-                    result = self.newspaper_dither(image_gray)
-                elif method == "Magazine":
-                    result = self.magazine_dither(image_gray)
-                elif method == "Random":
-                    result = self.random_dither(image_gray, threshold)
-                else:  # "None (Threshold)"
-                    result = self.threshold_dither(image_gray, threshold)
-                
-                # Convert back to 3-channel for ComfyUI compatibility
-                result_3d = np.stack([result, result, result], axis=-1)
-                
-            else:  # Color mode
-                # Ensure we have 3 channels
-                if len(image_np.shape) == 2:
-                    image_np = np.stack([image_np, image_np, image_np], axis=-1)
-                
-                # Apply color dithering method
-                if method == "Floyd-Steinberg":
-                    result_3d = self.floyd_steinberg_color_dither(image_np, threshold)
-                elif method == "Jarvis-Judice-Ninke":
-                    result_3d = self.jarvis_judice_ninke_color_dither(image_np, threshold)
-                elif method == "Stucki":
-                    result_3d = self.stucki_color_dither(image_np, threshold)
-                elif method == "Atkinson":
-                    result_3d = self.atkinson_color_dither(image_np, threshold)
-                elif method == "Bayer 2x2":
-                    result_3d = self.bayer_color_dither(image_np, 2)
-                elif method == "Bayer 4x4":
-                    result_3d = self.bayer_color_dither(image_np, 4)
-                elif method == "Bayer 8x8":
-                    result_3d = self.bayer_color_dither(image_np, 8)
-                elif method == "Halftone":
-                    result_3d = self.halftone_color_dither(image_np, dot_size)
-                elif method == "Newspaper":
-                    result_3d = self.halftone_color_dither(image_np, 6)  # Newspaper dot size
-                elif method == "Magazine":
-                    result_3d = self.halftone_color_dither(image_np, 3)  # Magazine dot size
-                elif method == "Random":
-                    result_3d = self.random_color_dither(image_np, threshold)
-                else:  # "None (Threshold)"
-                    result_3d = self.threshold_color_dither(image_np, threshold)
-            
-            return torch.from_numpy(result_3d).unsqueeze(0)
-
-        dithered_tensor = torch.empty(0)
-        for i in range(image.shape[0]):
-            dithered_tensor = torch.cat((dithered_tensor, convert_to_dithered_tensor(image[i], method, color_mode, threshold, dot_size)), dim=0)
-    
-        return (dithered_tensor,)
 

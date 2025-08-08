@@ -1,5 +1,15 @@
 import torch
 
+# Centralized category definitions for all nodes
+CATEGORIES = {
+    "IMAGE_PROCESSING": "🖖 Mockba/image",
+    "FILE_OPS": "🖖 Mockba/files", 
+    "TEXT_PROCESSING": "🖖 Mockba/text",
+    "GENERATION": "🖖 Mockba/generation",
+    "DATA_MANAGEMENT": "🖖 Mockba/data",
+    "DEVELOPMENT": "🖖 Mockba/dev"
+}
+
 # A proxy class that always returns True when compared to any other object.
 class AlwaysEqualProxy(str):
     def __eq__(self, _):

@@ -1,45 +1,115 @@
+"""
+Barcode Generation Node for ComfyUI
+Generates various barcode formats from text input with customizable styling.
+"""
+
+# Standard library imports
 import torch
 import numpy as np
+
+# Third-party imports
 import barcode
 from barcode.writer import ImageWriter
 from PIL import Image, ImageOps
 
-# Generates a barcode image from a string
+# Local imports
+from .common import CATEGORIES
+
+
 class mbBarcode:
+    """Generate barcode images from text data with various format options."""
+    
+    # Class constants
+    DEFAULT_DATA = "123456789"
+    DEFAULT_TYPE = "code128"
+    DEFAULT_FONT_SIZE = 10
+    DEFAULT_TEXT_DISTANCE = 4
+    
+    # Input validation ranges
+    FONT_SIZE_RANGE = {"min": 8, "max": 72}
+    TEXT_DISTANCE_RANGE = {"min": 1, "max": 20}
+    
     def __init__(self):
+        """Initialize the barcode generator node."""
         pass
 
     @classmethod
-    def INPUT_TYPES(self):
+    def INPUT_TYPES(cls):
+        """Define input types and validation."""
         return {
             "required": {
-                "data": ("STRING", {"default": "123456789"}),
-                "type": (barcode.PROVIDED_BARCODES, {"default": "code128"}),
-                "fontsize": ("INT", {"default": 10}),
-                "textdistance": ("INT", {"default": 4}),
+                "data": ("STRING", {
+                    "default": cls.DEFAULT_DATA,
+                    "tooltip": "Text data to encode in barcode"
+                }),
+                "type": (barcode.PROVIDED_BARCODES, {
+                    "default": cls.DEFAULT_TYPE,
+                    "tooltip": "Barcode format type"
+                }),
+                "fontsize": ("INT", {
+                    "default": cls.DEFAULT_FONT_SIZE,
+                    **cls.FONT_SIZE_RANGE,
+                    "tooltip": "Font size for barcode text"
+                }),
+                "textdistance": ("INT", {
+                    "default": cls.DEFAULT_TEXT_DISTANCE,
+                    **cls.TEXT_DISTANCE_RANGE,
+                    "tooltip": "Distance between barcode and text"
+                }),
             }
         }
 
-    RETURN_TYPES = (
-        "IMAGE",
-    )
-    RETURN_NAMES = (
-        "image",
-    )
-    FUNCTION = "execute"
-    CATEGORY = "🖖 Mockba/tools"
-    DESCRIPTION = "Generates a barcode image from a string."
-    
-    def execute(self, data, type, fontsize, textdistance):
-        code = barcode.get_barcode_class(type)
+    # Node metadata
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "generate_barcode"
+    CATEGORY = CATEGORIES["GENERATION"]
+    DESCRIPTION = "Generate barcode images from text with customizable formatting options."
+
+    def generate_barcode(self, data, type, fontsize, textdistance):
+        """
+        Generate a barcode image from input data.
+        
+        Args:
+            data: Text to encode
+            type: Barcode format
+            fontsize: Font size for text
+            textdistance: Space between barcode and text
+            
+        Returns:
+            tuple: Generated barcode image as tensor
+        """
+        try:
+            # Generate barcode
+            barcode_image = self._create_barcode(data, type, fontsize, textdistance)
+            
+            # Convert to ComfyUI tensor format
+            tensor_image = self._convert_to_tensor(barcode_image)
+            
+            return (tensor_image,)
+            
+        except Exception as e:
+            raise RuntimeError(f"Barcode generation failed: {str(e)}")
+
+    def _create_barcode(self, data, barcode_type, fontsize, textdistance):
+        """Create barcode using the barcode library."""
+        code_class = barcode.get_barcode_class(barcode_type)
         writer = ImageWriter()
-        my_barcode = code(data, writer)
-        options = {"font_size": fontsize, "text_distance": textdistance}
-        image = my_barcode.render(options)
+        barcode_obj = code_class(data, writer)
+        
+        options = {
+            "font_size": fontsize,
+            "text_distance": textdistance
+        }
+        
+        return barcode_obj.render(options)
 
-        image = ImageOps.exif_transpose(image)
+    def _convert_to_tensor(self, pil_image):
+        """Convert PIL image to ComfyUI tensor format."""
+        # Handle image orientation and convert to RGB
+        image = ImageOps.exif_transpose(pil_image)
         image = image.convert("RGB")
-        image = np.array(image).astype(np.float32) / 255.0
-        image = torch.from_numpy(image)[None,]
-
-        return (image,)
+        
+        # Convert to tensor format expected by ComfyUI
+        image_array = np.array(image).astype(np.float32) / 255.0
+        return torch.from_numpy(image_array)[None,]

@@ -90,6 +90,47 @@ app.registerExtension({
 				}
 			};
 		}
+		if (nodeData.name === "mb Value") {
+			const onExecuted = nodeType.prototype.onExecuted;
+			nodeType.prototype.onExecuted = function (message) {
+				onExecuted?.apply(this, arguments);
+
+				// Update node title based on the input value
+				if (message && message.value !== undefined) {
+					const value = message.value[0];
+					let displayTitle = "Value";
+					
+					try {
+						if (typeof value === 'number') {
+							const valueType = Number.isInteger(value) ? 'INT' : 'FLOAT';
+							displayTitle = `${valueType}: ${value}`;
+						} else if (typeof value === 'string') {
+							const displayStr = value.length > 25 ? value.substring(0, 25) + "..." : value;
+							displayTitle = `STRING: ${displayStr}`;
+						} else if (Array.isArray(value)) {
+							displayTitle = `LIST: [${value.length} items]`;
+						} else if (value && typeof value === 'object' && value.shape) {
+							displayTitle = `TENSOR: ${JSON.stringify(value.shape)}`;
+						} else if (typeof value === 'boolean') {
+							displayTitle = `BOOLEAN: ${value}`;
+						} else if (value === null) {
+							displayTitle = `NULL: null`;
+						} else if (value && typeof value === 'object') {
+							const typeName = value.constructor ? value.constructor.name : 'OBJECT';
+							displayTitle = `${typeName.toUpperCase()}: <object>`;
+						} else {
+							const typeName = typeof value;
+							displayTitle = `${typeName.toUpperCase()}: ${value}`;
+						}
+					} catch (e) {
+						displayTitle = "UNKNOWN: <error>";
+					}
+					
+					this.title = displayTitle;
+					this.setDirtyCanvas(true, true);
+				}
+			};
+		}
 		if (nodeData.name === 'mb Image Size') {
 			const onNodeCreated = nodeType.prototype.onNodeCreated;
 			nodeType.prototype.onNodeCreated = function () {
