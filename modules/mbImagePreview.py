@@ -18,7 +18,7 @@ import folder_paths
 from comfy.cli_args import args
 
 # Local imports
-from .common import CATEGORIES, any_typ
+from .common import CATEGORIES, any_typ, create_text_image, convert_pil_to_tensor, mask_to_image
 
 
 class mbImagePreview:
@@ -55,116 +55,9 @@ class mbImagePreview:
     DESCRIPTION = "Previews and bridges input images, creates dynamic-sized text images for non-tensor inputs, and displays masks as grayscale images."
     OUTPUT_NODE = True
 
-    def create_text_image(self, text, font_size=20, margin=20, max_width=1200, min_width=100):
-        """
-        Creates an image with text content that automatically sizes to fit the text.
-        
-        Args:
-            text: The text to render in the image
-            font_size: Font size for the text
-            margin: Margin around the text
-            max_width: Maximum width for the image
-            min_width: Minimum width for the image (for very short text)
-            
-        Returns:
-            PIL Image object
-        """
-        # Try to use a default font, fall back to default if not available
-        try:
-            font = ImageFont.truetype("DejaVuSans.ttf", font_size)
-        except:
-            try:
-                font = ImageFont.truetype("arial.ttf", font_size)
-            except:
-                font = ImageFont.load_default()
-        
-        # Split text into lines, respecting existing newlines
-        text_str = str(text)
-        if '\n' in text_str:
-            initial_lines = text_str.split('\n')
-        else:
-            initial_lines = [text_str]
-        
-        # Further split long lines to fit within max_width
-        lines = []
-        available_width = max_width - (2 * margin)
-        
-        for line in initial_lines:
-            if not line:  # Handle empty lines
-                lines.append("")
-                continue
-                
-            words = line.split()
-            if not words:
-                lines.append("")
-                continue
-                
-            current_line = ""
-            for word in words:
-                test_line = current_line + " " + word if current_line else word
-                bbox = font.getbbox(test_line)
-                text_width = bbox[2] - bbox[0]
-                
-                if text_width <= available_width:
-                    current_line = test_line
-                else:
-                    if current_line:
-                        lines.append(current_line)
-                    current_line = word
-            
-            if current_line:
-                lines.append(current_line)
-        
-        # Calculate actual dimensions needed
-        line_height = font_size + 5
-        
-        # Find the maximum line width
-        max_line_width = 0
-        for line in lines:
-            if line:  # Skip empty lines for width calculation
-                bbox = font.getbbox(line)
-                line_width = bbox[2] - bbox[0]
-                max_line_width = max(max_line_width, line_width)
-        
-        # Calculate final image dimensions
-        width = max(min_width, min(max_width, max_line_width + (2 * margin)))
-        height = len(lines) * line_height + (2 * margin)
-        
-        # Create image with calculated dimensions
-        img = Image.new('RGB', (width, height), color='white')
-        draw = ImageDraw.Draw(img)
-        
-        # Draw each line
-        y_position = margin
-        for line in lines:
-            draw.text((margin, y_position), line, fill='black', font=font)
-            y_position += line_height
-        
-        return img
-
-    def convert_to_tensor(self, img):
-        """
-        Converts a PIL Image to a tensor format expected by ComfyUI.
-        
-        Args:
-            img: PIL Image object
-            
-        Returns:
-            torch.Tensor in the format expected by ComfyUI
-        """
-        # Convert PIL image to numpy array
-        img_array = np.array(img).astype(np.float32) / 255.0
-        
-        # Convert to torch tensor and ensure correct dimensions [batch, height, width, channels]
-        tensor = torch.from_numpy(img_array)
-        if len(tensor.shape) == 3:
-            tensor = tensor.unsqueeze(0)  # Add batch dimension
-        
-        return tensor
-
     def convert_mask_to_image(self, mask):
         """
-        Converts a mask tensor to a grayscale image tensor.
+        Converts a mask tensor to a grayscale image tensor using global utility.
         
         Args:
             mask: Mask tensor (typically 2D or 3D)
@@ -180,26 +73,18 @@ class mbImagePreview:
         if mask.max() > 1.0:
             mask = mask / mask.max()
         
-        # Handle different mask dimensions
+        # Ensure mask has the right dimensions for the global function
+        # The global mask_to_image expects at least 3D tensor [batch, height, width]
         if len(mask.shape) == 2:
-            # 2D mask: add batch and channel dimensions
-            mask = mask.unsqueeze(0).unsqueeze(-1)  # [H, W] -> [1, H, W, 1]
-        elif len(mask.shape) == 3:
-            if mask.shape[0] == 1:
-                # [1, H, W] -> [1, H, W, 1]
-                mask = mask.unsqueeze(-1)
-            else:
-                # [B, H, W] -> [B, H, W, 1]
-                mask = mask.unsqueeze(-1)
-        elif len(mask.shape) == 4 and mask.shape[-1] == 1:
-            # Already in correct format [B, H, W, 1]
-            pass
-        else:
-            # Flatten to 2D and treat as single mask
-            mask = mask.view(-1, mask.shape[-1]).unsqueeze(0).unsqueeze(-1)
+            # 2D mask: add batch dimension [H, W] -> [1, H, W]
+            mask = mask.unsqueeze(0)
+        elif len(mask.shape) == 4:
+            # 4D mask: remove channel dimension if it's 1 [B, H, W, 1] -> [B, H, W]
+            if mask.shape[-1] == 1:
+                mask = mask.squeeze(-1)
         
-        # Convert to 3-channel grayscale (RGB with same values)
-        grayscale_image = mask.repeat(1, 1, 1, 3)
+        # Use the global mask_to_image function
+        grayscale_image = mask_to_image(mask)
         
         return grayscale_image
 
@@ -278,10 +163,10 @@ class mbImagePreview:
                     text_content = str(images)
                 
                 # Create text image with dynamic sizing
-                text_img = self.create_text_image(text_content)
+                text_img = create_text_image(text_content)
                 
                 # Convert to tensor format
-                images = self.convert_to_tensor(text_img)
+                images = convert_pil_to_tensor(text_img)
             elif is_tensor and self.is_mask_tensor(images):
                 # Handle mask input - convert to grayscale image
                 images = self.convert_mask_to_image(images)

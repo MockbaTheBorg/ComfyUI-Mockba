@@ -9,13 +9,13 @@ import os
 # Third-party imports
 import torch
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageDraw, ImageFont
 
 # ComfyUI imports
 import folder_paths
 
 # Local imports
-from .common import CATEGORIES
+from .common import CATEGORIES, create_text_image, convert_pil_to_tensor
 
 
 class mbFileToImage:
@@ -59,7 +59,7 @@ class mbFileToImage:
     RETURN_NAMES = ("image", "count")
     FUNCTION = "load_image_from_file"
     CATEGORY = CATEGORIES["FILE_OPS"]
-    DESCRIPTION = "Load images from files with support for single images and batch loading of sequentially numbered files."
+    DESCRIPTION = "Load images from files with support for single images and batch loading of sequentially numbered files. Returns error image with message if file not found."
 
     def load_image_from_file(self, filename, load_mode):
         """
@@ -83,26 +83,28 @@ class mbFileToImage:
         except Exception as e:
             error_msg = f"Failed to load image from file: {str(e)}"
             print(error_msg)
-            # Return default fallback image
-            fallback_image = self._create_fallback_image()
-            return (fallback_image, 0)
+            # Return error image with message
+            error_image = self._create_error_image(error_msg)
+            return (error_image, 0)
 
     def _load_single_image(self, base_filename):
         """Load a single image file."""
         filepath = self._find_image_file(base_filename)
         
         if filepath is None:
-            print(f"Image file not found: {base_filename}")
-            fallback_image = self._create_fallback_image()
-            return fallback_image, 0
+            error_msg = f"Image file not found: {base_filename}"
+            print(error_msg)
+            error_image = self._create_error_image(error_msg)
+            return error_image, 0
         
         try:
             image_tensor = self._load_and_process_image(filepath)
             return image_tensor, 1
         except Exception as e:
-            print(f"Error loading image {filepath}: {str(e)}")
-            fallback_image = self._create_fallback_image()
-            return fallback_image, 0
+            error_msg = f"Error loading image {filepath}: {str(e)}"
+            print(error_msg)
+            error_image = self._create_error_image(error_msg)
+            return error_image, 0
 
     def _load_batch_images(self, base_filename):
         """Load multiple sequentially numbered images."""
@@ -125,9 +127,10 @@ class mbFileToImage:
                 break
         
         if len(images) == 0:
-            print(f"No batch images found for: {base_filename}_*")
-            fallback_image = self._create_fallback_image()
-            return fallback_image, 0
+            error_msg = f"No batch images found for: {base_filename}_*"
+            print(error_msg)
+            error_image = self._create_error_image(error_msg)
+            return error_image, 0
         
         # Concatenate all images into batch
         batch_tensor = torch.cat(images, dim=0)
@@ -163,6 +166,32 @@ class mbFileToImage:
         
         # Convert to tensor in ComfyUI format [batch, height, width, channels]
         image_tensor = torch.from_numpy(image_np).unsqueeze(0)
+        
+        return image_tensor
+
+    def _create_error_image(self, error_message, width=512, height=512):
+        """
+        Create a black and white error image with the error message using global utilities.
+        
+        Args:
+            error_message: The error message to display
+            width: Image width in pixels
+            height: Image height in pixels
+            
+        Returns:
+            torch.Tensor: Error image tensor in ComfyUI format
+        """
+        # Use the global text image creation function
+        img = create_text_image(error_message, font_size=20, margin=20, max_width=width, min_width=min(width, 200))
+        
+        # If the generated image is different size than requested, resize or recreate
+        if img.size != (width, height):
+            # If it's a different size, let's stick with the auto-sized version
+            # or we could resize it to fit the requested dimensions
+            pass
+        
+        # Convert to ComfyUI tensor format using global function
+        image_tensor = convert_pil_to_tensor(img)
         
         return image_tensor
 
