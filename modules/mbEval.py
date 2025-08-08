@@ -50,11 +50,11 @@ class mbEval:
         }
 
     # Node metadata
-    RETURN_TYPES = (any_typ,)
-    RETURN_NAMES = ("result",)
+    RETURN_TYPES = (any_typ, "STRING")
+    RETURN_NAMES = ("result", "error")
     FUNCTION = "evaluate_expression"
     CATEGORY = CATEGORIES["DEVELOPMENT"]
-    DESCRIPTION = "Evaluate Python expressions on inputs with access to safe built-in functions and mathematical operations."
+    DESCRIPTION = "Evaluate Python expressions on inputs with access to safe built-in functions and mathematical operations. Returns error message if evaluation fails."
 
     def evaluate_expression(self, code, **kwargs):
         """
@@ -65,7 +65,7 @@ class mbEval:
             **kwargs: Variable number of input variables (i1, i2, etc.)
             
         Returns:
-            tuple: Result of expression evaluation
+            tuple: (Result of expression evaluation, Error message or None)
         """
         try:
             # Prepare execution environment
@@ -77,13 +77,14 @@ class mbEval:
             # Evaluate expression safely
             result = self._safe_evaluate(expression_code, execution_env)
             
-            return (result,)
+            return (result, None)
             
         except Exception as e:
             error_msg = f"Expression evaluation failed: {str(e)}"
             print(error_msg)
-            # Return first available input as fallback
-            return self._get_fallback_result(kwargs)
+            # Return first available input as fallback with error message
+            fallback_result = self._get_fallback_result(kwargs)
+            return (fallback_result[0], error_msg)
 
     def _prepare_execution_environment(self, input_vars):
         """Prepare safe execution environment with input variables."""

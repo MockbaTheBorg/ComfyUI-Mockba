@@ -52,11 +52,11 @@ class mbExec:
         }
 
     # Node metadata
-    RETURN_TYPES = (any_typ,)
-    RETURN_NAMES = ("out",)
+    RETURN_TYPES = (any_typ, "STRING")
+    RETURN_NAMES = ("out", "error")
     FUNCTION = "execute_code"
     CATEGORY = CATEGORIES["DEVELOPMENT"]
-    DESCRIPTION = "Execute Python code on inputs with access to safe built-in functions. Set 'out' variable to return result."
+    DESCRIPTION = "Execute Python code on inputs with access to safe built-in functions. Set 'out' variable to return result. Returns error message if execution fails."
 
     def execute_code(self, code, **kwargs):
         """
@@ -67,7 +67,7 @@ class mbExec:
             **kwargs: Variable number of input variables (i1, i2, etc.)
             
         Returns:
-            tuple: Value of 'out' variable after code execution
+            tuple: (Value of 'out' variable after code execution, Error message or None)
         """
         try:
             # Prepare execution environment
@@ -79,13 +79,14 @@ class mbExec:
             # Execute code safely
             result = self._safe_execute(execution_code, globals_env, locals_env)
             
-            return (result,)
+            return (result, None)
             
         except Exception as e:
             error_msg = f"Code execution failed: {str(e)}"
             print(error_msg)
-            # Return first available input as fallback
-            return self._get_fallback_result(kwargs)
+            # Return first available input as fallback with error message
+            fallback_result = self._get_fallback_result(kwargs)
+            return (fallback_result[0], error_msg)
 
     def _prepare_execution_environment(self, input_vars):
         """Prepare safe execution environment with input variables."""
