@@ -24,6 +24,19 @@ any_typ = AlwaysEqualProxy("*")
 
 # Functions
 def mask_to_image(mask):
+    """
+    Converts a mask tensor to an image tensor format expected by ComfyUI.
+    
+    Takes a mask tensor and reshapes it to have 3 color channels (RGB) by expanding
+    the single channel mask to all three channels, creating a grayscale image representation.
+    
+    Args:
+        mask: Input mask tensor with shape [..., height, width]
+        
+    Returns:
+        torch.Tensor: Image tensor with shape [batch, height, width, 3] where the mask
+                     values are replicated across all 3 color channels
+    """
     result = mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])).movedim(1, -1).expand(-1, -1, -1, 3)
     return result
 
