@@ -5,7 +5,6 @@ Converts tensor data types for memory optimization and performance tuning with d
 
 # Standard library imports
 import torch
-import numpy as np
 
 # Local imports
 from .common import any_typ, CATEGORIES

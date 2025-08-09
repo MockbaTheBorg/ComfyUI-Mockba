@@ -10,7 +10,7 @@ import random
 # Third-party imports
 import numpy as np
 import torch
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 # ComfyUI imports

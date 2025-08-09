@@ -4,7 +4,6 @@ Shows information about any input type with automatic formatting and multiline d
 """
 
 # Standard library imports
-import torch
 import numpy as np
 from pprint import pformat
 

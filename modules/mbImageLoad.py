@@ -4,7 +4,6 @@ Loads images from files with support for multiple formats, subfolders, and advan
 """
 
 # Standard library imports
-import hashlib
 import os
 
 # Third-party imports

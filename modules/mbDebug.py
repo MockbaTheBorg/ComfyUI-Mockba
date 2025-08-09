@@ -4,7 +4,6 @@ Displays comprehensive debug information about any input object.
 """
 
 # Standard library imports
-import torch
 from pprint import pformat
 
 # Local imports

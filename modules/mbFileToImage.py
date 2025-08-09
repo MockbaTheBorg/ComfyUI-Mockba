@@ -9,7 +9,7 @@ import os
 # Third-party imports
 import torch
 import numpy as np
-from PIL import Image, ImageOps, ImageDraw, ImageFont
+from PIL import Image, ImageOps
 
 # ComfyUI imports
 import folder_paths

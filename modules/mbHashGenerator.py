@@ -6,7 +6,6 @@ Generates various types of hashes using seeds and base strings with configurable
 # Standard library imports
 import base64
 import hashlib
-import hmac
 import secrets
 import time
 

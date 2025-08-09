@@ -10,7 +10,6 @@ import numpy as np
 # Third-party imports
 import barcode
 from barcode.writer import ImageWriter
-from PIL import Image, ImageOps
 
 # Local imports
 from .common import CATEGORIES, convert_pil_to_tensor

@@ -7,7 +7,6 @@ ordered dithering, and halftone patterns with support for both monochrome and co
 # Third-party imports
 import numpy as np
 import torch
-from PIL import Image
 
 # Local imports
 from .common import CATEGORIES
