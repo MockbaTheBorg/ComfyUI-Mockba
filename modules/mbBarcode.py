@@ -13,7 +13,7 @@ from barcode.writer import ImageWriter
 from PIL import Image, ImageOps
 
 # Local imports
-from .common import CATEGORIES
+from .common import CATEGORIES, convert_pil_to_tensor
 
 
 class mbBarcode:
@@ -84,7 +84,7 @@ class mbBarcode:
             barcode_image = self._create_barcode(data, type, fontsize, textdistance)
             
             # Convert to ComfyUI tensor format
-            tensor_image = self._convert_to_tensor(barcode_image)
+            tensor_image = convert_pil_to_tensor(barcode_image)
             
             return (tensor_image,)
             
@@ -103,13 +103,3 @@ class mbBarcode:
         }
         
         return barcode_obj.render(options)
-
-    def _convert_to_tensor(self, pil_image):
-        """Convert PIL image to ComfyUI tensor format."""
-        # Handle image orientation and convert to RGB
-        image = ImageOps.exif_transpose(pil_image)
-        image = image.convert("RGB")
-        
-        # Convert to tensor format expected by ComfyUI
-        image_array = np.array(image).astype(np.float32) / 255.0
-        return torch.from_numpy(image_array)[None,]

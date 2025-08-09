@@ -19,36 +19,25 @@ class mbSubmit:
         """Define input types for workflow submission."""
         return {
             "required": {},
-            "optional": {
-                "input": (any_typ, {
-                    "tooltip": "Optional data to pass through the node"
-                }),
-            }
         }
 
     # Node metadata
-    RETURN_TYPES = (any_typ,)
-    RETURN_NAMES = ("output",)
+    RETURN_TYPES = ()
+    RETURN_NAMES = ()
     FUNCTION = "submit_workflow"
     CATEGORY = CATEGORIES["DEVELOPMENT"]
-    DESCRIPTION = "Workflow submission node with optional data passthrough. Submission handled by JavaScript interface."
+    DESCRIPTION = "Workflow submission node with button interface. Submission handled by JavaScript interface."
     OUTPUT_NODE = True
 
-    def submit_workflow(self, input=None):
+    def submit_workflow(self):
         """
-        Handle workflow submission with optional data passthrough.
+        Handle workflow submission trigger.
         
-        Args:
-            input: Optional data to pass through the node
-            
-        Returns:
-            tuple: Passthrough data or None
-            
         Note:
             Actual workflow submission is handled by JavaScript interface.
-            This node primarily serves as a passthrough with submission UI.
+            This node serves as a UI trigger point for submission buttons.
         """
         # This node doesn't perform actual submission in Python
         # The submission functionality is handled by JavaScript buttons
-        # This function just passes through the input data
-        return (input,)
+        # This function just serves as a trigger point
+        return ()
