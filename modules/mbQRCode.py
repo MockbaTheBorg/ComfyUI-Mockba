@@ -20,8 +20,8 @@ class mbQRCode:
     DEFAULT_ERROR_CORRECTION = "M"
     DEFAULT_BOX_SIZE = 10
     DEFAULT_BORDER = 4
-    DEFAULT_FILL_COLOR = "black"
-    DEFAULT_BACK_COLOR = "white"
+    DEFAULT_FILL_COLOR = "#000000"
+    DEFAULT_BACK_COLOR = "#FFFFFF"
     
     # Error correction mapping
     ERROR_CORRECTION_MAP = {
@@ -68,16 +68,16 @@ class mbQRCode:
                     **cls.BORDER_RANGE,
                     "tooltip": "Border size in boxes"
                 }),
+                "foreground_color": ("STRING", {
+                    "default": cls.DEFAULT_FILL_COLOR,
+                    "tooltip": "Foreground color in hex format (e.g., #000000)"
+                }),
+                "background_color": ("STRING", {
+                    "default": cls.DEFAULT_BACK_COLOR,
+                    "tooltip": "Background color in hex format (e.g., #FFFFFF)"
+                }),
             },
             "optional": {
-                "fill_color": ("STRING", {
-                    "default": cls.DEFAULT_FILL_COLOR,
-                    "tooltip": "Fill color for QR code (color name or hex)"
-                }),
-                "back_color": ("STRING", {
-                    "default": cls.DEFAULT_BACK_COLOR,
-                    "tooltip": "Background color for QR code (color name or hex)"
-                }),
             }
         }
 
@@ -88,7 +88,7 @@ class mbQRCode:
     CATEGORY = CATEGORIES["GENERATION"]
     DESCRIPTION = "Generate QR code images from text with customizable error correction and styling."
 
-    def generate_qrcode(self, data, version, error_correction, box_size, border, fill_color=None, back_color=None):
+    def generate_qrcode(self, data, version, error_correction, box_size, border, foreground_color, background_color):
         """
         Generate a QR code image from input data.
         
@@ -98,8 +98,8 @@ class mbQRCode:
             error_correction: Error correction level (L/M/Q/H)
             box_size: Size of each box in pixels
             border: Border size in boxes
-            fill_color: Fill color for QR code
-            back_color: Background color for QR code
+            foreground_color: Foreground color in hex format
+            background_color: Background color in hex format
             
         Returns:
             tuple: Generated QR code image as tensor
@@ -108,8 +108,7 @@ class mbQRCode:
             # Generate QR code
             qr_image = self._create_qrcode(
                 data, version, error_correction, box_size, border, 
-                fill_color or self.DEFAULT_FILL_COLOR,
-                back_color or self.DEFAULT_BACK_COLOR
+                foreground_color, background_color
             )
             
             # Convert to ComfyUI tensor format
@@ -120,7 +119,7 @@ class mbQRCode:
         except Exception as e:
             raise RuntimeError(f"QR code generation failed: {str(e)}")
 
-    def _create_qrcode(self, data, version, error_correction, box_size, border, fill_color, back_color):
+    def _create_qrcode(self, data, version, error_correction, box_size, border, foreground_color, background_color):
         """Create QR code using the qrcode library."""
         # Create QR code instance
         qr = qrcode.QRCode(
@@ -134,8 +133,8 @@ class mbQRCode:
         qr.add_data(data)
         qr.make(fit=True)
         
-        # Create image with custom colors
-        qr_image = qr.make_image(fill_color=fill_color, back_color=back_color)
+        # Create with custom colors
+        qr_image = qr.make_image(fill_color=foreground_color, back_color=background_color)
         
         # Convert from 1-bit mode to RGB mode for proper tensor conversion
         if qr_image.mode != 'RGB':
