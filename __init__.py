@@ -15,6 +15,7 @@ from .modules.mbFileToText import mbFileToText
 from .modules.mbTextOrFile import mbTextOrFile
 from .modules.mbDebug import mbDebug
 from .modules.mbBarcode import mbBarcode
+from .modules.mbQRCode import mbQRCode
 from .modules.mbSelect import mbSelect
 from .modules.mbEval import mbEval
 from .modules.mbExec import mbExec
@@ -63,6 +64,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Empty Latent Image": mbEmptyLatentImage,
     "mb KSampler": mbKSampler,
     "mb Barcode": mbBarcode,
+    "mb QR Code": mbQRCode,
     
     # === Data Management ===
     "mb Select": mbSelect,
@@ -112,6 +114,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Empty Latent Image": "Empty Latent Image (gpu)",
     "mb KSampler": "KSampler (gpu)",
     "mb Barcode": "Barcode",
+    "mb QR Code": "QR Code",
     
     # === Data Management ===
     "mb Select": "Select",
