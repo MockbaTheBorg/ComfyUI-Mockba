@@ -3,10 +3,6 @@ Barcode Generation Node for ComfyUI
 Generates various barcode formats from text input with customizable styling.
 """
 
-# Standard library imports
-import torch
-import numpy as np
-
 # Third-party imports
 import barcode
 from barcode.writer import ImageWriter
