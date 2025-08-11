@@ -268,6 +268,145 @@ app.registerExtension({
 				return r;
 			};
 		}
+		if (nodeData.name === "mb Color Mask") {
+			const onNodeCreated = nodeType.prototype.onNodeCreated;
+			nodeType.prototype.onNodeCreated = function () {
+				const r = onNodeCreated?.apply(this, arguments);
+				
+				// Add color picker button
+				const pickColorButton = this.addWidget("button", "Pick Color", "Pick Color", () => {
+					this.startColorPicking();
+				});
+				
+				// Color picking functionality
+				this.startColorPicking = function() {
+					// Create variables to store references for proper cleanup
+					let isPickingActive = true;
+					
+					// Change cursor to indicate picking mode - use a more aggressive approach
+					const originalBodyCursor = document.body.style.cursor;
+					const originalDocumentCursor = document.documentElement.style.cursor;
+					document.body.style.cursor = 'crosshair !important';
+					document.documentElement.style.cursor = 'crosshair !important';
+					
+					// Add a global style to override all cursor styles during picking
+					const cursorStyle = document.createElement('style');
+					cursorStyle.textContent = '* { cursor: crosshair !important; }';
+					document.head.appendChild(cursorStyle);
+					
+					// Find all image elements in the page (ComfyUI image previews)
+					const imageElements = document.querySelectorAll('img, canvas');
+					const originalPointerEvents = [];
+					
+					// Store original pointer events and make images clickable
+					imageElements.forEach((img, index) => {
+						originalPointerEvents[index] = img.style.pointerEvents;
+						img.style.pointerEvents = 'auto';
+					});
+					
+					// Create a temporary canvas for color sampling
+					const tempCanvas = document.createElement('canvas');
+					const tempCtx = tempCanvas.getContext('2d');
+					
+					const pickColor = (event) => {
+						if (!isPickingActive) return;
+						
+						const target = event.target;
+						
+						// Check if clicked on an image or canvas
+						if (target.tagName === 'IMG' || target.tagName === 'CANVAS') {
+							event.preventDefault();
+							event.stopPropagation();
+							
+							let imageData;
+							let x, y;
+							
+							if (target.tagName === 'IMG') {
+								// For IMG elements, draw to temporary canvas and sample
+								const rect = target.getBoundingClientRect();
+								x = Math.floor((event.clientX - rect.left) * (target.naturalWidth / rect.width));
+								y = Math.floor((event.clientY - rect.top) * (target.naturalHeight / rect.height));
+								
+								tempCanvas.width = target.naturalWidth;
+								tempCanvas.height = target.naturalHeight;
+								tempCtx.drawImage(target, 0, 0);
+								imageData = tempCtx.getImageData(x, y, 1, 1);
+							} else if (target.tagName === 'CANVAS') {
+								// For CANVAS elements, sample directly
+								const rect = target.getBoundingClientRect();
+								x = Math.floor((event.clientX - rect.left) * (target.width / rect.width));
+								y = Math.floor((event.clientY - rect.top) * (target.height / rect.height));
+								
+								const ctx = target.getContext('2d');
+								imageData = ctx.getImageData(x, y, 1, 1);
+							}
+							
+							if (imageData) {
+								const data = imageData.data;
+								const r = data[0];
+								const g = data[1];
+								const b = data[2];
+								const hexColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+								
+								// Update color widget
+								const colorWidget = this.widgets.find(w => w.name === "color");
+								if (colorWidget) {
+									colorWidget.value = hexColor;
+									this.setDirtyCanvas(true, true);
+								}
+								
+								// Clean up immediately after successful color pick
+								stopColorPicking();
+								return; // Exit the function to prevent further processing
+							}
+						}
+						
+						// If we clicked on something that's not an image/canvas, also stop picking
+						stopColorPicking();
+					};
+					
+					const cancelPicking = (event) => {
+						if (event.key === 'Escape') {
+							stopColorPicking();
+						}
+					};
+					
+					// Centralized cleanup function
+					const stopColorPicking = () => {
+						if (!isPickingActive) return;
+						isPickingActive = false;
+						
+						// Remove global cursor style
+						if (cursorStyle.parentNode) {
+							cursorStyle.parentNode.removeChild(cursorStyle);
+						}
+						
+						// Restore original cursors
+						document.body.style.cursor = originalBodyCursor;
+						document.documentElement.style.cursor = originalDocumentCursor;
+						
+						// Restore original pointer events
+						imageElements.forEach((img, index) => {
+							img.style.pointerEvents = originalPointerEvents[index];
+						});
+						
+						// Remove all event listeners
+						document.removeEventListener('click', pickColor, true);
+						document.removeEventListener('keydown', cancelPicking);
+					};
+					
+					// Add event listeners - delay to avoid catching the button click
+					setTimeout(() => {
+						if (isPickingActive) {
+							document.addEventListener('click', pickColor.bind(this), true);
+							document.addEventListener('keydown', cancelPicking.bind(this));
+						}
+					}, 100); // Small delay to let the button click finish
+				};
+				
+				return r;
+			};
+		}
 		if (nodeData.name === 'mb Image Batch' ||
 			nodeData.name === 'mb Select' ||
 			nodeData.name === 'mb Demux' ||

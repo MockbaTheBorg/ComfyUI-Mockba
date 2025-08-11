@@ -5,6 +5,7 @@ from .modules.mbImageSubtract import mbImageSubtract
 from .modules.mbImageDither import mbImageDither
 from .modules.mbImageDimensions import mbImageDimensions
 from .modules.mbImageSize import mbImageSize
+from .modules.mbColorMask import mbColorMask
 from .modules.mbImageLoad import mbImageLoad
 from .modules.mbImageLoadURL import mbImageLoadURL
 from .modules.mbImagePreview import mbImagePreview
@@ -43,6 +44,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Image Dither": mbImageDither,
     "mb Image Dimensions": mbImageDimensions,
     "mb Image Size": mbImageSize,
+    "mb Color Mask": mbColorMask,
     "mb Image Preview": mbImagePreview,
     
     # === File Operations ===
@@ -93,6 +95,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Image Dither": "Image Dither",
     "mb Image Dimensions": "Image Dimensions",
     "mb Image Size": "Image Size",
+    "mb Color Mask": "Color Mask",
     "mb Image Preview": "Image Preview",
     
     # === File Operations ===
