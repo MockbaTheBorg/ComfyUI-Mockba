@@ -1,11 +1,13 @@
 from .modules.mbImageBatch import mbImageBatch
 from .modules.mbImageFlip import mbImageFlip
 from .modules.mbImageRotate import mbImageRotate
+from .modules.mbImageCenterRotate import mbImageCenterRotate
 from .modules.mbImageSubtract import mbImageSubtract
 from .modules.mbImageDither import mbImageDither
 from .modules.mbImageDimensions import mbImageDimensions
 from .modules.mbImageSize import mbImageSize
 from .modules.mbColorMask import mbColorMask
+from .modules.mbColorPicker import mbColorPicker
 from .modules.mbImageLoad import mbImageLoad
 from .modules.mbImageLoadURL import mbImageLoadURL
 from .modules.mbImagePreview import mbImagePreview
@@ -41,11 +43,13 @@ NODE_CLASS_MAPPINGS = {
     "mb Image Batch": mbImageBatch,
     "mb Image Flip": mbImageFlip,
     "mb Image Rotate": mbImageRotate,
+    "mb Image Center Rotate": mbImageCenterRotate,
     "mb Image Subtract": mbImageSubtract,
     "mb Image Dither": mbImageDither,
     "mb Image Dimensions": mbImageDimensions,
     "mb Image Size": mbImageSize,
     "mb Color Mask": mbColorMask,
+    "mb Color Picker": mbColorPicker,
     "mb Image Preview": mbImagePreview,
     
     # === File Operations ===
@@ -93,11 +97,13 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Image Batch": "Image Batch",
     "mb Image Flip": "Image Flip",
     "mb Image Rotate": "Image Rotate",
+    "mb Image Center Rotate": "Image Center Rotate",
     "mb Image Subtract": "Image Subtract",
     "mb Image Dither": "Image Dither",
     "mb Image Dimensions": "Image Dimensions",
     "mb Image Size": "Image Size",
     "mb Color Mask": "Color Mask",
+    "mb Color Picker": "Color Picker",
     "mb Image Preview": "Image Preview",
     
     # === File Operations ===
