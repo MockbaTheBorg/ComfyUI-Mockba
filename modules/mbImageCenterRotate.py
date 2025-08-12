@@ -19,7 +19,7 @@ class mbImageCenterRotate:
     """Rotate images by arbitrary floating-point angles around their center."""
     
     # Class constants
-    SIZE_MODE_OPTIONS = ["crop", "expand"]
+    SIZE_MODE_OPTIONS = ["crop", "expand", "contract"]
     DEFAULT_SIZE_MODE = "crop"
     DEFAULT_ANGLE = 0.0
     DEFAULT_FILL_COLOR = "#000000"
@@ -45,7 +45,7 @@ class mbImageCenterRotate:
                 }),
                 "size_mode": (cls.SIZE_MODE_OPTIONS, {
                     "default": cls.DEFAULT_SIZE_MODE,
-                    "tooltip": "Crop to original size or expand canvas to fit rotated image"
+                    "tooltip": "crop: maintain size, expand: fit all content, contract: no empty areas"
                 }),
                 "fill_color": ("STRING", {
                     "default": cls.DEFAULT_FILL_COLOR,
@@ -59,7 +59,7 @@ class mbImageCenterRotate:
     RETURN_NAMES = ("image", "mask")
     FUNCTION = "rotate_image"
     CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
-    DESCRIPTION = "Rotate images by arbitrary floating-point angles around their center with cropping or expansion options. Returns inverted mask for outpainting."
+    DESCRIPTION = "Rotate images by arbitrary floating-point angles around their center with crop, expand, or contract options. Returns inverted mask for outpainting."
 
     def rotate_image(self, image, angle, size_mode, fill_color):
         """
@@ -68,7 +68,7 @@ class mbImageCenterRotate:
         Args:
             image: Input image tensor in ComfyUI format [batch, height, width, channels]
             angle: Rotation angle in degrees (negative = counterclockwise, positive = clockwise)
-            size_mode: "crop" to maintain original size, "expand" to fit rotated image
+            size_mode: "crop" to maintain original size, "expand" to fit rotated image, "contract" to remove empty areas
             fill_color: Fill color in #RRGGBB format (e.g., "#000000" for black)
             
         Returns:
@@ -118,7 +118,7 @@ class mbImageCenterRotate:
                 # For cropped mode, create a mask that shows which areas are fill (for outpainting)
                 mask = self._create_crop_mask(height, width, angle, device)
                 
-            else:  # expand
+            elif size_mode == "expand":
                 # Rotate and expand canvas to fit (invert angle for correct direction)
                 rotated_pil = pil_img.rotate(
                     -angle, 
@@ -128,6 +128,17 @@ class mbImageCenterRotate:
                 )
                 # For expanded mode, create a mask that shows the fill areas (for outpainting)
                 mask = self._create_expand_mask(height, width, angle, rotated_pil.size, device)
+                
+            else:  # contract
+                # Rotate and expand first, then crop to remove empty areas
+                rotated_pil = pil_img.rotate(
+                    -angle, 
+                    resample=Image.BICUBIC, 
+                    expand=True,
+                    fillcolor=fill_rgb
+                )
+                # Contract to remove empty areas and create corresponding mask
+                rotated_pil, mask = self._create_contract_result(height, width, angle, rotated_pil, device)
             
             # Convert back to tensor format
             rotated_np = np.array(rotated_pil).astype(np.float32) / 255.0
@@ -215,6 +226,59 @@ class mbImageCenterRotate:
             mask = invalid_mask.float()
         
         return mask
+
+    def _create_contract_result(self, orig_height, orig_width, angle, rotated_pil, device):
+        """Create contracted image and mask by cropping to remove all empty areas."""
+        new_width, new_height = rotated_pil.size
+        
+        # Convert angle to radians (invert for correct coordinate transformation)
+        angle_rad = math.radians(-angle)
+        
+        # Calculate the maximum rectangle that fits inside the rotated image without empty areas
+        # This is the inscribed rectangle of the original image after rotation
+        cos_a = abs(math.cos(angle_rad))
+        sin_a = abs(math.sin(angle_rad))
+        
+        # Calculate the dimensions of the largest rectangle that fits entirely within the rotated original image
+        # Using the formula for inscribed rectangle in a rotated rectangle
+        if cos_a == 0:  # 90 or 270 degrees
+            contracted_width = orig_height
+            contracted_height = orig_width
+        elif sin_a == 0:  # 0 or 180 degrees
+            contracted_width = orig_width
+            contracted_height = orig_height
+        else:
+            # For other angles, calculate the inscribed rectangle
+            # This ensures no fill areas are visible
+            w_factor = (orig_width * cos_a + orig_height * sin_a)
+            h_factor = (orig_height * cos_a + orig_width * sin_a)
+            
+            # The contracted dimensions are the original dimensions scaled down
+            # to fit entirely within the rotated bounds
+            scale_w = orig_width / w_factor
+            scale_h = orig_height / h_factor
+            scale = min(scale_w, scale_h)
+            
+            contracted_width = int(orig_width * scale)
+            contracted_height = int(orig_height * scale)
+        
+        # Ensure minimum size
+        contracted_width = max(1, contracted_width)
+        contracted_height = max(1, contracted_height)
+        
+        # Calculate crop bounds centered in the expanded image
+        left = (new_width - contracted_width) // 2
+        top = (new_height - contracted_height) // 2
+        right = left + contracted_width
+        bottom = top + contracted_height
+        
+        # Crop the image to remove empty areas
+        contracted_pil = rotated_pil.crop((left, top, right, bottom))
+        
+        # For contract mode, there should be no empty areas, so mask is all zeros
+        mask = torch.zeros((contracted_height, contracted_width), dtype=torch.float32, device=device)
+        
+        return contracted_pil, mask
 
     def _create_expand_mask(self, orig_height, orig_width, angle, new_size, device):
         """Create an inverted mask for expanded rotation showing fill areas for outpainting."""
