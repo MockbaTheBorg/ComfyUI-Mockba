@@ -33,6 +33,7 @@ from .modules.mbDisplay import mbDisplay
 from .modules.mbValue import mbValue
 from .modules.mbDeviceTransfer import mbDeviceTransfer
 from .modules.mbDataTypeConverter import mbDataTypeConverter
+from .modules.mbTensorChannel4to3 import mbTensorChannel4to3
 
 # Maps node class names to their corresponding class.
 NODE_CLASS_MAPPINGS = {
@@ -73,6 +74,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Demux": mbDemux,
     "mb Device Transfer": mbDeviceTransfer,
     "mb Data Type Converter": mbDataTypeConverter,
+    "mb Tensor Channel 4 to 3": mbTensorChannel4to3,
     "mb Hash Generator": mbHashGenerator,
     
     # === Development & Debugging ===
@@ -124,6 +126,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Demux": "Demux",
     "mb Device Transfer": "Device Transfer",
     "mb Data Type Converter": "Data Type Converter",
+    "mb Tensor Channel 4 to 3": "Tensor Channel 4 to 3",
     "mb Hash Generator": "Hash Generator",
     
     # === Development & Debugging ===
