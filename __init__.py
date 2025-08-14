@@ -37,6 +37,7 @@ from .modules.mbDeviceTransfer import mbDeviceTransfer
 from .modules.mbDataTypeConverter import mbDataTypeConverter
 from .modules.mbTensorChannel4to3 import mbTensorChannel4to3
 from .modules.mbMaskInvertIfEmpty import mbMaskInvertIfEmpty
+from .modules.mbFilmEffect import mbFilmEffect
 
 # Maps node class names to their corresponding class.
 NODE_CLASS_MAPPINGS = {
@@ -52,6 +53,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Color Mask": mbColorMask,
     "mb Color Picker": mbColorPicker,
     "mb Mask Invert If Empty": mbMaskInvertIfEmpty,
+    "mb Film Effect": mbFilmEffect,
     "mb Image Preview": mbImagePreview,
     
     # === File Operations ===
@@ -107,6 +109,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Color Mask": "Color Mask",
     "mb Color Picker": "Color Picker",
     "mb Mask Invert If Empty": "Mask Invert If Empty",
+    "mb Film Effect": "Film Effect",
     "mb Image Preview": "Image Preview",
     
     # === File Operations ===

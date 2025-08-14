@@ -1,2 +1,3 @@
 python-barcode
 qrcode[pil]
+piexif

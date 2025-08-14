@@ -5,10 +5,17 @@ Saves images to files with support for multiple formats and batch processing.
 
 # Standard library imports
 import os
+import random
+from datetime import datetime
 
 # Third-party imports
 import numpy as np
 from PIL import Image
+from PIL.PngImagePlugin import PngInfo
+try:
+    import piexif
+except Exception:
+    piexif = None
 
 # ComfyUI imports
 import folder_paths
@@ -56,6 +63,25 @@ class mbImageToFile:
                     "default": "single",
                     "tooltip": "Single: save as one file, Batch: save each image separately with numbers"
                 }),
+                "jpeg_quality": ("INT", {
+                    "default": 95,
+                    "min": 1,
+                    "max": 100,
+                    "tooltip": "JPEG quality (1-100). Lower values add compression artifacts that help disguise AI generation."
+                }),
+                # Metadata options
+                "remove_ai_metadata": ("BOOLEAN", {
+                    "default": True,
+                    "tooltip": "Strip AI metadata (PNG text, prompts). On by default."
+                }),
+                "embed_exif": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "Embed realistic camera EXIF (JPEG/WebP/TIFF)."
+                }),
+                "exif_profile": (["random_camera", "dslr_camera", "mobile_phone", "film_vintage"], {
+                    "default": "random_camera",
+                    "tooltip": "Choose a camera profile for EXIF when embedding."
+                }),
             },
         }
 
@@ -66,7 +92,7 @@ class mbImageToFile:
     CATEGORY = CATEGORIES["FILE_OPS"]
     DESCRIPTION = "Save images to files with support for multiple formats (PNG, JPEG, WebP, BMP, TIFF) and batch processing."
 
-    def save_image_to_file(self, image, filename, format, save_mode):
+    def save_image_to_file(self, image, filename, format, save_mode, jpeg_quality, remove_ai_metadata, embed_exif, exif_profile):
         """
         Save image(s) to file(s).
         
@@ -88,9 +114,9 @@ class mbImageToFile:
             
             # Save images based on mode
             if save_mode == "single" or image.shape[0] == 1:
-                count = self._save_single_image(image, filename, file_extension, format, output_dir)
+                count = self._save_single_image(image, filename, file_extension, format, output_dir, jpeg_quality, remove_ai_metadata, embed_exif, exif_profile)
             else:  # batch mode
-                count = self._save_batch_images(image, filename, file_extension, format, output_dir)
+                count = self._save_batch_images(image, filename, file_extension, format, output_dir, jpeg_quality, remove_ai_metadata, embed_exif, exif_profile)
             
             return (image, count)
             
@@ -116,7 +142,7 @@ class mbImageToFile:
         }
         return extension_map.get(format, ".png")
 
-    def _save_single_image(self, image, base_filename, extension, format, output_dir):
+    def _save_single_image(self, image, base_filename, extension, format, output_dir, jpeg_quality, remove_ai_metadata, embed_exif, exif_profile):
         """Save a single image (or first image from batch)."""
         # Use first image if batch
         img_tensor = image[0] if image.shape[0] > 1 else image.squeeze(0)
@@ -126,11 +152,11 @@ class mbImageToFile:
         filepath = output_dir + filename
         
         # Save image
-        self._save_image_tensor(img_tensor, filepath, format)
+        self._save_image_tensor(img_tensor, filepath, format, jpeg_quality, remove_ai_metadata, embed_exif, exif_profile)
         
         return 1
 
-    def _save_batch_images(self, image, base_filename, extension, format, output_dir):
+    def _save_batch_images(self, image, base_filename, extension, format, output_dir, jpeg_quality, remove_ai_metadata, embed_exif, exif_profile):
         """Save multiple images from batch with numbered filenames."""
         count = 0
         
@@ -141,7 +167,7 @@ class mbImageToFile:
             
             # Save image
             try:
-                self._save_image_tensor(img_tensor, filepath, format)
+                self._save_image_tensor(img_tensor, filepath, format, jpeg_quality, remove_ai_metadata, embed_exif, exif_profile)
                 count += 1
             except Exception as e:
                 print(f"Error saving image {numbered_filename}: {str(e)}")
@@ -160,7 +186,7 @@ class mbImageToFile:
         
         return base_filename + extension
 
-    def _save_image_tensor(self, img_tensor, filepath, format):
+    def _save_image_tensor(self, img_tensor, filepath, format, jpeg_quality, remove_ai_metadata, embed_exif, exif_profile):
         """Convert tensor to PIL image and save with specified format."""
         # Convert tensor to numpy array and denormalize
         image_np = (self.IMAGE_DENORMALIZE_FACTOR * img_tensor.cpu().numpy()).astype(np.uint8)
@@ -182,15 +208,29 @@ class mbImageToFile:
             image_pil = Image.fromarray(image_np, 'RGB')
         
         # Save with format-specific options
-        save_kwargs = self._get_save_kwargs(format)
-        image_pil.save(filepath, format=format, **save_kwargs)
+        save_kwargs = self._get_save_kwargs(format, jpeg_quality)
+
+        # PNG metadata stripping: default behavior adds nothing; ensure no pnginfo when remove_ai_metadata
+        if format == "PNG":
+            if remove_ai_metadata:
+                image_pil.save(filepath, format=format, **save_kwargs)
+            else:
+                image_pil.save(filepath, format=format, **save_kwargs)
+        else:
+            # EXIF embedding for JPEG/WebP/TIFF if requested and library available
+            if embed_exif and piexif is not None and format in ("JPEG", "WebP", "TIFF"):
+                exif_bytes = self._build_exif_bytes(exif_profile)
+                if exif_bytes:
+                    # Pillow expects 'exif' bytes param
+                    save_kwargs["exif"] = exif_bytes
+            image_pil.save(filepath, format=format, **save_kwargs)
         
         print(f"Image saved: {filepath}")
 
-    def _get_save_kwargs(self, format):
+    def _get_save_kwargs(self, format, jpeg_quality=95):
         """Get format-specific save parameters."""
         if format == "JPEG":
-            return {"quality": self.JPEG_QUALITY, "optimize": True}
+            return {"quality": max(1, min(100, jpeg_quality)), "optimize": True}
         elif format == "WebP":
             return {"quality": self.WEBP_QUALITY, "method": 6}
         elif format == "PNG":
@@ -199,3 +239,84 @@ class mbImageToFile:
             return {"compression": "lzw"}
         else:
             return {}
+
+    # ------------------------ EXIF helpers ------------------------
+    def _build_exif_bytes(self, profile: str):
+        """Build EXIF bytes using a realistic camera profile. Returns None if piexif missing."""
+        if piexif is None:
+            print("piexif not available; skipping EXIF embedding")
+            return None
+
+        profiles = self._exif_profiles()
+        if profile == "random_camera":
+            profile = random.choice(list(profiles.keys()))
+        data = profiles.get(profile)
+        if not data:
+            return None
+
+        now_str = datetime.now().strftime("%Y:%m:%d %H:%M:%S")
+        make, model, lens, fl, fnum, iso, exp = (
+            data["make"], data["model"], data["lens"], data["focal_length"], data["f_number"], data["iso"], data["exposure_time"]
+        )
+
+        zeroth_ifd = {
+            piexif.ImageIFD.Make: make,
+            piexif.ImageIFD.Model: model,
+            piexif.ImageIFD.Software: data.get("software", "Adobe Lightroom Classic 13.0"),
+            piexif.ImageIFD.DateTime: now_str,
+        }
+        exif_ifd = {
+            piexif.ExifIFD.ExposureTime: self._to_rational(exp),
+            piexif.ExifIFD.FNumber: self._to_rational(fnum),
+            piexif.ExifIFD.ISOSpeedRatings: int(iso),
+            piexif.ExifIFD.LensModel: lens,
+            piexif.ExifIFD.FocalLength: self._to_rational(fl),
+            piexif.ExifIFD.DateTimeOriginal: now_str,
+            piexif.ExifIFD.DateTimeDigitized: now_str,
+        }
+        exif_dict = {"0th": zeroth_ifd, "Exif": exif_ifd, "GPS": {}, "1st": {}}
+        return piexif.dump(exif_dict)
+
+    def _to_rational(self, value):
+        """Convert float to rational tuple for EXIF."""
+        try:
+            from fractions import Fraction
+            frac = Fraction(value).limit_denominator(10000)
+            return (frac.numerator, frac.denominator)
+        except Exception:
+            return (int(value * 100), 100)
+
+    def _exif_profiles(self):
+        """Predefined camera profiles for EXIF embedding."""
+        return {
+            "dslr_camera": {
+                "make": "Canon",
+                "model": "EOS 5D Mark IV",
+                "lens": "EF24-70mm f/2.8L II USM",
+                "focal_length": 50.0,
+                "f_number": 4.0,
+                "iso": 200,
+                "exposure_time": 1/125,
+                "software": "Adobe Lightroom Classic 13.0",
+            },
+            "mobile_phone": {
+                "make": "Apple",
+                "model": "iPhone 14 Pro",
+                "lens": "iPhone 14 Pro back triple camera 6.86mm f/1.78",
+                "focal_length": 6.86,
+                "f_number": 1.78,
+                "iso": 80,
+                "exposure_time": 1/120,
+                "software": "16.6",
+            },
+            "film_vintage": {
+                "make": "Nikon",
+                "model": "FM2 (digitized)",
+                "lens": "AI-S 50mm f/1.8",
+                "focal_length": 50.0,
+                "f_number": 5.6,
+                "iso": 400,
+                "exposure_time": 1/250,
+                "software": "Adobe Photoshop CS6",
+            },
+        }
