@@ -40,115 +40,115 @@ from .modules.mbValue import mbValue
 
 # Maps node class names to their corresponding class.
 NODE_CLASS_MAPPINGS = {
-    # === Image Processing ===
-    "mb Image Batch": mbImageBatch,
-    "mb Image Flip": mbImageFlip,
-    "mb Image Rotate": mbImageRotate,
-    "mb Image Center Rotate": mbImageCenterRotate,
-    "mb Image Subtract": mbImageSubtract,
-    "mb Image Dither": mbImageDither,
-    "mb Image Size": mbImageSize,
-    "mb Image Film Effect": mbImageFilmEffect,
-    "mb Image Preview": mbImagePreview,
+    # === Data Management ===
+    "mb Data Type Converter": mbDataTypeConverter,
+    "mb Demux": mbDemux,
+    "mb Device Transfer": mbDeviceTransfer,
+    "mb Hash Generator": mbHashGenerator,
+    "mb Select": mbSelect,
+    "mb Tensor Channel 4 to 3": mbTensorChannel4to3,
     
-    # === Mask Processing ===
-    "mb Mask from Color": mbMaskFromColor,
-    "mb Mask Invert If Empty": mbMaskInvertIfEmpty,
-
+    # === Development & Debugging ===
+    "mb Color Picker": mbColorPicker,
+    "mb Debug": mbDebug,
+    "mb Display": mbDisplay,
+    "mb Eval": mbEval,
+    "mb Exec": mbExec,
+    "mb Submit": mbSubmit,
+    "mb Value": mbValue,
+    
     # === File Operations ===
+    "mb File to Image": mbFileToImage,
+    "mb File to Text": mbFileToText,
     "mb Image Load": mbImageLoad,
     "mb Image Load from URL": mbImageLoadURL,
     "mb Image to File": mbImageToFile,
-    "mb File to Image": mbFileToImage,
-    "mb Text to File": mbTextToFile,
-    "mb File to Text": mbFileToText,
     "mb Text or File": mbTextOrFile,
-    
-    # === Text Processing ===
-    "mb Text": mbText,
-    "mb Textbox": mbTextbox,
-    "mb String": mbString,
-    "mb CLIP Text Encoder": mbCLIPTextEncode,
+    "mb Text to File": mbTextToFile,
     
     # === Generation & Sampling ===
+    "mb Barcode": mbBarcode,
     "mb Empty Latent Image": mbEmptyLatentImage,
     "mb KSampler": mbKSampler,
-    "mb Barcode": mbBarcode,
     "mb QR Code": mbQRCode,
     
-    # === Data Management ===
-    "mb Select": mbSelect,
-    "mb Demux": mbDemux,
-    "mb Device Transfer": mbDeviceTransfer,
-    "mb Data Type Converter": mbDataTypeConverter,
-    "mb Tensor Channel 4 to 3": mbTensorChannel4to3,
-    "mb Hash Generator": mbHashGenerator,
+    # === Image Processing ===
+    "mb Image Batch": mbImageBatch,
+    "mb Image Center Rotate": mbImageCenterRotate,
+    "mb Image Dither": mbImageDither,
+    "mb Image Film Effect": mbImageFilmEffect,
+    "mb Image Flip": mbImageFlip,
+    "mb Image Preview": mbImagePreview,
+    "mb Image Rotate": mbImageRotate,
+    "mb Image Size": mbImageSize,
+    "mb Image Subtract": mbImageSubtract,
     
-    # === Development & Debugging ===
-    "mb Debug": mbDebug,
-    "mb Display": mbDisplay,
-    "mb Value": mbValue,
-    "mb Submit": mbSubmit,
-    "mb Eval": mbEval,
-    "mb Exec": mbExec,
-    "mb Color Picker": mbColorPicker,
+    # === Mask Processing ===
+    "mb Mask from Color": mbMaskFromColor,
+    "mb Mask Invert if Empty": mbMaskInvertIfEmpty,
+
+    # === Text Processing ===
+    "mb CLIP Text Encoder": mbCLIPTextEncode,
+    "mb String": mbString,
+    "mb Text": mbText,
+    "mb Textbox": mbTextbox,
 }
 
 
 # Maps node class names to their corresponding display names.
 NODE_DISPLAY_NAME_MAPPINGS = {
-    # === Image Processing ===
-    "mb Image Batch": "Image Batch",
-    "mb Image Flip": "Image Flip",
-    "mb Image Rotate": "Image Rotate",
-    "mb Image Center Rotate": "Image Center Rotate",
-    "mb Image Subtract": "Image Subtract",
-    "mb Image Dither": "Image Dither",
-    "mb Image Size": "Image Size",
-    "mb Image Film Effect": "Image Film Effect",
-    "mb Image Preview": "Image Preview",
+    # === Data Management ===
+    "mb Data Type Converter": "Data Type Converter",
+    "mb Demux": "Demux",
+    "mb Device Transfer": "Device Transfer",
+    "mb Hash Generator": "Hash Generator",
+    "mb Select": "Select",
+    "mb Tensor Channel 4 to 3": "Tensor Channel 4 to 3",
     
-    # === Mask Processing ===
-    "mb Mask from Color": "Mask from Color",
-    "mb Mask Invert If Empty": "Mask Invert if Empty",
-
+    # === Development & Debugging ===
+    "mb Color Picker": "Color Picker",
+    "mb Debug": "Debug",
+    "mb Display": "Display",
+    "mb Eval": "Eval",
+    "mb Exec": "Exec",
+    "mb Submit": "Submit",
+    "mb Value": "Value",
+    
     # === File Operations ===
+    "mb File to Image": "File to Image",
+    "mb File to Text": "File to Text",
     "mb Image Load": "Image Load",
     "mb Image Load from URL": "Image Load from URL",
     "mb Image to File": "Image to File",
-    "mb File to Image": "File to Image",
-    "mb Text to File": "Text to File",
-    "mb File to Text": "File to Text",
     "mb Text or File": "Text or File",
-    
-    # === Text Processing ===
-    "mb Text": "Text",
-    "mb Textbox": "Textbox",
-    "mb String": "String",
-    "mb CLIP Text Encoder": "CLIP Text Encoder",
+    "mb Text to File": "Text to File",
     
     # === Generation & Sampling ===
+    "mb Barcode": "Barcode",
     "mb Empty Latent Image": "Empty Latent Image (gpu)",
     "mb KSampler": "KSampler (gpu)",
-    "mb Barcode": "Barcode",
     "mb QR Code": "QR Code",
     
-    # === Data Management ===
-    "mb Select": "Select",
-    "mb Demux": "Demux",
-    "mb Device Transfer": "Device Transfer",
-    "mb Data Type Converter": "Data Type Converter",
-    "mb Tensor Channel 4 to 3": "Tensor Channel 4 to 3",
-    "mb Hash Generator": "Hash Generator",
+    # === Image Processing ===
+    "mb Image Batch": "Image Batch",
+    "mb Image Center Rotate": "Image Center Rotate",
+    "mb Image Dither": "Image Dither",
+    "mb Image Film Effect": "Image Film Effect",
+    "mb Image Flip": "Image Flip",
+    "mb Image Preview": "Image Preview",
+    "mb Image Rotate": "Image Rotate",
+    "mb Image Size": "Image Size",
+    "mb Image Subtract": "Image Subtract",
     
-    # === Development & Debugging ===
-    "mb Debug": "Debug",
-    "mb Display": "Display",
-    "mb Value": "Value",
-    "mb Submit": "Submit",
-    "mb Eval": "Eval",
-    "mb Exec": "Exec",
-    "mb Color Picker": "Color Picker",
+    # === Mask Processing ===
+    "mb Mask from Color": "Mask from Color",
+    "mb Mask Invert if Empty": "Mask Invert if Empty",
+
+    # === Text Processing ===
+    "mb CLIP Text Encoder": "CLIP Text Encoder",
+    "mb String": "String",
+    "mb Text": "Text",
+    "mb Textbox": "Textbox",
 }
 
 WEB_DIRECTORY = "js"
