@@ -1,5 +1,5 @@
 """
-Color Mask Generation Node for ComfyUI
+Mask from Color Node for ComfyUI
 Generates a mask for pixels matching a specific color in an input image.
 """
 
@@ -10,7 +10,7 @@ import torch
 from .common import CATEGORIES
 
 
-class mbColorMask:
+class mbMaskFromColor:
     """Generate a mask for pixels matching a specific color in an input image."""
     
     # Class constants
@@ -54,11 +54,11 @@ class mbColorMask:
     # Node metadata
     RETURN_TYPES = ("MASK",)
     RETURN_NAMES = ("mask",)
-    FUNCTION = "generate_color_mask"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    FUNCTION = "create_mask_from_color"
+    CATEGORY = CATEGORIES["MASK"]
     DESCRIPTION = "Generate a mask for pixels matching a specific color with optional tolerance."
 
-    def generate_color_mask(self, image, color, tolerance, pick_color=None):
+    def create_mask_from_color(self, image, color, tolerance, pick_color=None):
         """
         Generate a mask for pixels matching the specified color.
         

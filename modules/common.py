@@ -9,7 +9,8 @@ CATEGORIES = {
     "TEXT_PROCESSING": "🖖 Mockba/text",
     "GENERATION": "🖖 Mockba/generation",
     "DATA_MANAGEMENT": "🖖 Mockba/data",
-    "DEVELOPMENT": "🖖 Mockba/dev"
+    "DEVELOPMENT": "🖖 Mockba/dev",
+    "MASK": "🖖 Mockba/mask"
 }
 
 # A proxy class that always returns True when compared to any other object.

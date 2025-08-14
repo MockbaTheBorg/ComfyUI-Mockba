@@ -1,5 +1,5 @@
 """
-Film Effect Node for ComfyUI
+Image Film Effect Node for ComfyUI
 Adds realistic film grain, vignette, and other film-like effects to images.
 """
 
@@ -13,7 +13,7 @@ from PIL import Image, ImageFilter, ImageEnhance
 from .common import CATEGORIES
 
 
-class mbFilmEffect:
+class mbImageFilmEffect:
     """Add realistic film grain, vignette, and film-like effects to images."""
     
     # Class constants

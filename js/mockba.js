@@ -1,7 +1,7 @@
 import { app } from "../../scripts/app.js";
 import { ComfyWidgets } from "../../scripts/widgets.js";
 
-// Shared color picking functionality for mb Color Mask and mb Color Picker
+// Shared color picking functionality for Mask from Color and Color Picker nodes
 const ColorPickerUtils = {
 	startColorPicking: function(node) {
 		// Create variables to store references for proper cleanup
