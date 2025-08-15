@@ -13,7 +13,7 @@ import numpy as np
 import torch
 from PIL import Image
 import requests
-from transformers import AutoImageProcessor, AutoModelForImageClassification
+from transformers import AutoImageProcessor, AutoModelForImageClassification, BeitImageProcessor, BeitForImageClassification
 
 # Local imports
 from .common import CATEGORIES
@@ -25,9 +25,10 @@ class mbAIDetector:
     # Model constants
     DEFAULT_MODEL = "umm-maybe/AI-image-detector"
     MODELS = [
-        "umm-maybe/AI-image-detector",
-        "Organika/sdxl-detector", 
-        "saltanat/anime-ai-detect"
+        "umm-maybe/AI-image-detector",    # General AI image detector
+        "Organika/sdxl-detector",         # SDXL-specific detector
+        "TimKond/diffusion-detection",    # Stable Diffusion v1.x detector (trained on Realistic Vision v1.4)
+        "saltanat/anime-ai-detect"       # Anime AI detector
     ]
     
     # Cache for loaded models
@@ -108,6 +109,11 @@ class mbAIDetector:
                 # This model typically has [human, ai] labels
                 human_prob = float(probs[0])
                 ai_prob = float(probs[1])
+            elif "diffusion-detection" in model:
+                # TimKond/diffusion-detection: [real, generated] labels
+                # Label 0: real images, Label 1: generated/AI images
+                human_prob = float(probs[0])
+                ai_prob = float(probs[1])
             else:
                 # Most models have [ai, human] or similar ordering
                 # We'll check the model config for label mapping
@@ -180,9 +186,15 @@ class mbAIDetector:
         try:
             print(f"Loading AI detection model: {model_name}")
             
-            # Load processor and model
-            processor = AutoImageProcessor.from_pretrained(model_name)
-            model = AutoModelForImageClassification.from_pretrained(model_name)
+            # Handle different model architectures
+            if "diffusion-detection" in model_name:
+                # TimKond/diffusion-detection uses BEiT architecture
+                processor = BeitImageProcessor.from_pretrained(model_name)
+                model = BeitForImageClassification.from_pretrained(model_name)
+            else:
+                # Standard transformers models
+                processor = AutoImageProcessor.from_pretrained(model_name)
+                model = AutoModelForImageClassification.from_pretrained(model_name)
             
             # Set to evaluation mode
             model.eval()
