@@ -9,6 +9,9 @@ import numpy as np
 import math
 from PIL import Image, ImageFilter, ImageEnhance
 
+# Use numeric value for LANCZOS to avoid version compatibility issues
+LANCZOS = 1  # PIL.Image.LANCZOS constant value
+
 # Local imports
 from .common import CATEGORIES
 
@@ -66,6 +69,18 @@ class mbImageFilmEffect:
                     "max": 50,
                     "tooltip": "Add subtle dust spots and imperfections"
                 }),
+                "dead_pixels": ("INT", {
+                    "default": 0,
+                    "min": 0,
+                    "max": 30,
+                    "tooltip": "Add dead/stuck pixels (0 = none, 30 = many)"
+                }),
+                "seed": ("INT", {
+                    "default": 0,
+                    "min": 0,
+                    "max": 999999,
+                    "tooltip": "Seed for dust spots and dead pixel positioning"
+                }),
             }
         }
 
@@ -76,7 +91,7 @@ class mbImageFilmEffect:
     CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
     DESCRIPTION = "Add realistic film grain, vignette, and other film-like effects to make images look like analog photography."
 
-    def apply_film_effects(self, image, film_type, grain_strength, vignette_strength, contrast_boost, color_shift, dust_spots):
+    def apply_film_effects(self, image, film_type, grain_strength, vignette_strength, contrast_boost, color_shift, dust_spots, dead_pixels, seed):
         """
         Apply film effects to the input image.
         
@@ -88,6 +103,8 @@ class mbImageFilmEffect:
             contrast_boost: Contrast enhancement (0-50)
             color_shift: Color temperature shift (0-50)
             dust_spots: Number of dust spots/imperfections (0-50)
+            dead_pixels: Number of dead/stuck pixels (0-30)
+            seed: Seed for dust spots and dead pixel positioning
             
         Returns:
             tuple: Image with film effects applied
@@ -123,7 +140,10 @@ class mbImageFilmEffect:
                     pil_img = self._apply_color_shift(pil_img, color_shift, film_type)
                 
                 if dust_spots > 0:
-                    pil_img = self._add_dust_spots(pil_img, dust_spots)
+                    pil_img = self._add_dust_spots(pil_img, dust_spots, seed)
+                
+                if dead_pixels > 0:
+                    pil_img = self._add_dead_pixels(pil_img, dead_pixels, seed)
                 
                 # Convert back to tensor
                 img_np = np.array(pil_img).astype(np.float32) / 255.0
@@ -184,7 +204,7 @@ class mbImageFilmEffect:
         # Resize grain to image dimensions
         from PIL import Image as PILImage
         grain_img = PILImage.fromarray((grain_pattern * 255).astype(np.uint8), mode='L')
-        grain_img = grain_img.resize((w, h), PILImage.LANCZOS)
+        grain_img = grain_img.resize((w, h), LANCZOS)
         grain_array = np.array(grain_img).astype(np.float32) / 255.0
         
         # Apply grain to image
@@ -197,7 +217,7 @@ class mbImageFilmEffect:
             for c in range(min(3, img_array.shape[2])):
                 channel_grain = np.sin(xx * (1.1 + c * 0.2)) * np.cos(yy * (0.8 + c * 0.15))
                 channel_grain = PILImage.fromarray(((channel_grain + 1) * 127.5).astype(np.uint8), mode='L')
-                channel_grain = channel_grain.resize((w, h), PILImage.LANCZOS)
+                channel_grain = channel_grain.resize((w, h), LANCZOS)
                 channel_grain = np.array(channel_grain).astype(np.float32) / 255.0
                 img_array[:, :, c] += (channel_grain - 0.5) * color_grain_strength
         
@@ -303,7 +323,7 @@ class mbImageFilmEffect:
         img_array = np.clip(img_array, 0, 255).astype(np.uint8)
         return Image.fromarray(img_array)
 
-    def _add_dust_spots(self, img, spot_count):
+    def _add_dust_spots(self, img, spot_count, seed):
         """Add subtle dust spots and imperfections."""
         if spot_count <= 0:
             return img
@@ -311,8 +331,8 @@ class mbImageFilmEffect:
         img_array = np.array(img).astype(np.float32)
         h, w = img_array.shape[:2]
         
-        # Generate deterministic dust spots based on image dimensions
-        np.random.seed(hash((h, w)) % (2**32))
+        # Generate deterministic dust spots based on seed and image dimensions
+        np.random.seed((seed + hash((h, w))) % (2**32))
         
         num_spots = int(spot_count / 2)  # Reduce actual number
         
@@ -336,6 +356,67 @@ class mbImageFilmEffect:
                         
                         # Darker spot (dust reduces light)
                         img_array[py, px] *= (1 - opacity)
+        
+        img_array = np.clip(img_array, 0, 255).astype(np.uint8)
+        return Image.fromarray(img_array)
+
+    def _add_dead_pixels(self, img, dead_pixel_count, seed):
+        """Add dead/stuck pixel simulation."""
+        if dead_pixel_count <= 0:
+            return img
+        
+        img_array = np.array(img).astype(np.float32)
+        h, w = img_array.shape[:2]
+        
+        # Generate deterministic dead pixels based on seed and image dimensions
+        # Use a different seed offset to ensure dead pixels don't overlap with dust spots
+        np.random.seed((seed * 2 + 1000 + hash((h, w))) % (2**32))
+        
+        for i in range(dead_pixel_count):
+            # Random position for dead pixel
+            x = np.random.randint(0, w)
+            y = np.random.randint(0, h)
+            
+            # Type of dead pixel
+            pixel_type = np.random.choice(['dead', 'stuck_red', 'stuck_green', 'stuck_blue', 'stuck_white'])
+            
+            if pixel_type == 'dead':
+                # Dead pixel - completely black
+                img_array[y, x] = [0, 0, 0]
+            elif pixel_type == 'stuck_red':
+                # Stuck red pixel
+                img_array[y, x] = [255, 0, 0]
+            elif pixel_type == 'stuck_green':
+                # Stuck green pixel
+                img_array[y, x] = [0, 255, 0]
+            elif pixel_type == 'stuck_blue':
+                # Stuck blue pixel
+                img_array[y, x] = [0, 0, 255]
+            elif pixel_type == 'stuck_white':
+                # Stuck white pixel - always on
+                img_array[y, x] = [255, 255, 255]
+            
+            # Occasionally create small clusters (2-4 adjacent dead pixels)
+            if np.random.random() < 0.3:  # 30% chance for clusters
+                cluster_size = np.random.randint(1, 4)
+                for _ in range(cluster_size):
+                    # Adjacent pixel within 2 pixels
+                    offset_x = np.random.randint(-2, 3)
+                    offset_y = np.random.randint(-2, 3)
+                    cluster_x = np.clip(x + offset_x, 0, w - 1)
+                    cluster_y = np.clip(y + offset_y, 0, h - 1)
+                    
+                    # Same type of dead pixel for the cluster
+                    if pixel_type == 'dead':
+                        img_array[cluster_y, cluster_x] = [0, 0, 0]
+                    elif pixel_type == 'stuck_red':
+                        img_array[cluster_y, cluster_x] = [255, 0, 0]
+                    elif pixel_type == 'stuck_green':
+                        img_array[cluster_y, cluster_x] = [0, 255, 0]
+                    elif pixel_type == 'stuck_blue':
+                        img_array[cluster_y, cluster_x] = [0, 0, 255]
+                    elif pixel_type == 'stuck_white':
+                        img_array[cluster_y, cluster_x] = [255, 255, 255]
         
         img_array = np.clip(img_array, 0, 255).astype(np.uint8)
         return Image.fromarray(img_array)
