@@ -1,3 +1,4 @@
+from .modules.mbAIBypass import mbAIBypass
 from .modules.mbAIDetector import mbAIDetector
 from .modules.mbBarcode import mbBarcode
 from .modules.mbCLIPTextEncode import mbCLIPTextEncode
@@ -51,6 +52,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Tensor Channel 4 to 3": mbTensorChannel4to3,
     
     # === Development & Debugging ===
+    "mb AI Bypass": mbAIBypass,
     "mb AI Detector": mbAIDetector,
     "mb Color Picker": mbColorPicker,
     "mb Debug": mbDebug,
@@ -76,6 +78,7 @@ NODE_CLASS_MAPPINGS = {
     "mb QR Code": mbQRCode,
     
     # === Image Processing ===
+    "mb AI Bypass": mbAIBypass,
     "mb AI Detector": mbAIDetector,
     "mb Image Batch": mbImageBatch,
     "mb Image Center Rotate": mbImageCenterRotate,
@@ -111,6 +114,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Tensor Channel 4 to 3": "Tensor Channel 4 to 3",
     
     # === Development & Debugging ===
+    "mb AI Bypass": "AI Bypass",
     "mb Color Picker": "Color Picker",
     "mb Debug": "Debug",
     "mb Display": "Display",
@@ -135,6 +139,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb QR Code": "QR Code",
     
     # === Image Processing ===
+    "mb AI Bypass": "AI Bypass",
     "mb AI Detector": "AI Detector",
     "mb Image Batch": "Image Batch",
     "mb Image Center Rotate": "Image Center Rotate",

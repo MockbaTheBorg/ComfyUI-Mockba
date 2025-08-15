@@ -37,31 +37,31 @@ class mbImageFilmEffect:
                     "tooltip": "Type of film to simulate"
                 }),
                 "grain_strength": ("INT", {
-                    "default": 30,
+                    "default": 40,
                     "min": 0,
                     "max": 100,
                     "tooltip": "Film grain intensity (0 = no grain, 100 = heavy grain)"
                 }),
                 "vignette_strength": ("INT", {
-                    "default": 20,
+                    "default": 35,
                     "min": 0,
                     "max": 100,
                     "tooltip": "Vignette darkness around edges (0 = none, 100 = heavy)"
                 }),
                 "contrast_boost": ("INT", {
-                    "default": 15,
+                    "default": 20,
                     "min": 0,
                     "max": 50,
                     "tooltip": "Film-like contrast enhancement"
                 }),
                 "color_shift": ("INT", {
-                    "default": 10,
+                    "default": 50,
                     "min": 0,
                     "max": 50,
                     "tooltip": "Color temperature/tint shift typical of film"
                 }),
                 "dust_spots": ("INT", {
-                    "default": 5,
+                    "default": 15,
                     "min": 0,
                     "max": 50,
                     "tooltip": "Add subtle dust spots and imperfections"
