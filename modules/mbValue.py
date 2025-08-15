@@ -1,6 +1,7 @@
 """
 Value Display Node for ComfyUI
 A node that displays any value in its title without outputs, created collapsed by default.
+Supports custom Python formatting strings for value display.
 """
 
 # Local imports
@@ -22,6 +23,13 @@ class mbValue:
                 "value": (any_typ, {
                     "tooltip": "Any value to display in the node title"
                 })
+            },
+            "optional": {
+                "format": ("STRING", {
+                    "default": "",
+                    "multiline": False,
+                    "tooltip": "Python format string to format the value (e.g., '{:.2f}', '{:04d}', etc.). Leave empty for default formatting."
+                })
             }
         }
 
@@ -30,17 +38,27 @@ class mbValue:
     RETURN_NAMES = ()
     FUNCTION = "display_value"
     CATEGORY = CATEGORIES["DEVELOPMENT"]
-    DESCRIPTION = "Display any value in the node title without producing outputs. Useful for debugging and monitoring values in workflows."
+    DESCRIPTION = "Display any value in the node title without producing outputs. Supports custom Python formatting strings for value display. Useful for debugging and monitoring values in workflows."
     OUTPUT_NODE = True
 
     @classmethod
-    def get_title(cls, value=None, **kwargs):
+    def get_title(cls, value=None, format=None, **kwargs):
         """Return dynamic title based on input value."""
         if value is None:
             return "mbValue"
         
         # Handle different value types for display
         try:
+            # Apply custom format if provided
+            if format and format.strip():
+                try:
+                    formatted_value = format.format(value)
+                    return f"mbValue: {formatted_value}"
+                except (ValueError, TypeError, KeyError) as e:
+                    # If formatting fails, show error and fallback to default
+                    return f"mbValue: <format error: {str(e)}>"
+            
+            # Default formatting
             if isinstance(value, (int, float)):
                 return f"mbValue: {value}"
             elif isinstance(value, str):
@@ -58,22 +76,31 @@ class mbValue:
         except Exception:
             return "mbValue: <unknown>"
 
-    def display_value(self, value):
+    def display_value(self, value, format=None):
         """Process the input value (no output)."""
+        # Apply custom format if provided
+        display_value = value
+        if format and format.strip():
+            try:
+                display_value = format.format(value)
+            except (ValueError, TypeError, KeyError) as e:
+                display_value = f"<format error: {str(e)}>"
+        
         # Return the value in a format that JavaScript can access
-        return {"ui": {"value": [value]}}
+        return {"ui": {"value": [display_value]}}
 
     @classmethod
-    def IS_CHANGED(cls, value, **kwargs):
+    def IS_CHANGED(cls, value, format=None, **kwargs):
         """Force update when value changes."""
         try:
             # Create a hash-like representation for change detection
+            format_str = format or ""
             if isinstance(value, (int, float, str, bool)):
-                return str(value)
+                return f"{str(value)}_{format_str}"
             elif hasattr(value, 'shape'):  # For tensors/arrays
-                return f"{value.shape}_{hash(str(value.flatten()[:10]) if hasattr(value, 'flatten') else str(value))}"
+                return f"{value.shape}_{hash(str(value.flatten()[:10]) if hasattr(value, 'flatten') else str(value))}_{format_str}"
             else:
-                return str(hash(str(value)))
+                return f"{str(hash(str(value)))}_{format_str}"
         except Exception:
             import time
             return str(time.time())  # Fallback to timestamp
