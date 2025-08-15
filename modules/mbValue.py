@@ -29,6 +29,10 @@ class mbValue:
                     "default": "",
                     "multiline": False,
                     "tooltip": "Python format string to format the value (e.g., '{:.2f}', '{:04d}', etc.). Leave empty for default formatting."
+                }),
+                "show_type": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "Show type information for unknown value types"
                 })
             }
         }
@@ -42,7 +46,7 @@ class mbValue:
     OUTPUT_NODE = True
 
     @classmethod
-    def get_title(cls, value=None, format=None, **kwargs):
+    def get_title(cls, value=None, format=None, show_type=False, **kwargs):
         """Return dynamic title based on input value."""
         if value is None:
             return "mbValue"
@@ -70,13 +74,16 @@ class mbValue:
             elif hasattr(value, 'shape'):  # For tensors/arrays
                 return f"mbValue: {value.shape}"
             else:
-                # For other types, show type name
-                type_name = type(value).__name__
-                return f"mbValue: <{type_name}>"
+                # For other types, show type name only if show_type is enabled
+                if show_type:
+                    type_name = type(value).__name__
+                    return f"mbValue: <{type_name}>"
+                else:
+                    return f"mbValue: {str(value)}"
         except Exception:
             return "mbValue: <unknown>"
 
-    def display_value(self, value, format=None):
+    def display_value(self, value, format=None, show_type=False):
         """Process the input value (no output)."""
         # Apply custom format if provided
         display_value = value
@@ -90,17 +97,18 @@ class mbValue:
         return {"ui": {"value": [display_value]}}
 
     @classmethod
-    def IS_CHANGED(cls, value, format=None, **kwargs):
+    def IS_CHANGED(cls, value, format=None, show_type=False, **kwargs):
         """Force update when value changes."""
         try:
             # Create a hash-like representation for change detection
             format_str = format or ""
+            show_type_str = str(show_type)
             if isinstance(value, (int, float, str, bool)):
-                return f"{str(value)}_{format_str}"
+                return f"{str(value)}_{format_str}_{show_type_str}"
             elif hasattr(value, 'shape'):  # For tensors/arrays
-                return f"{value.shape}_{hash(str(value.flatten()[:10]) if hasattr(value, 'flatten') else str(value))}_{format_str}"
+                return f"{value.shape}_{hash(str(value.flatten()[:10]) if hasattr(value, 'flatten') else str(value))}_{format_str}_{show_type_str}"
             else:
-                return f"{str(hash(str(value)))}_{format_str}"
+                return f"{str(hash(str(value)))}_{format_str}_{show_type_str}"
         except Exception:
             import time
             return str(time.time())  # Fallback to timestamp

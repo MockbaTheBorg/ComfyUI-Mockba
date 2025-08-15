@@ -1,5 +1,6 @@
 from .modules.mbAIBypass import mbAIBypass
 from .modules.mbAIDetector import mbAIDetector
+from .modules.mbIlluminarty import mbIlluminarty
 from .modules.mbBarcode import mbBarcode
 from .modules.mbCLIPTextEncode import mbCLIPTextEncode
 from .modules.mbColorPicker import mbColorPicker
@@ -80,6 +81,7 @@ NODE_CLASS_MAPPINGS = {
     # === Image Processing ===
     "mb AI Bypass": mbAIBypass,
     "mb AI Detector": mbAIDetector,
+    "mb Illuminarty": mbIlluminarty,
     "mb Image Batch": mbImageBatch,
     "mb Image Center Rotate": mbImageCenterRotate,
     "mb Image Dither": mbImageDither,
@@ -141,6 +143,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     # === Image Processing ===
     "mb AI Bypass": "AI Bypass",
     "mb AI Detector": "AI Detector",
+    "mb Illuminarty": "Illuminarty AI Detector",
     "mb Image Batch": "Image Batch",
     "mb Image Center Rotate": "Image Center Rotate",
     "mb Image Dither": "Image Dither",

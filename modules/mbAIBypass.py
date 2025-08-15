@@ -267,22 +267,35 @@ class mbAIBypass:
             
         elif noise_type == "film_grain":
             # Simulate film grain with frequency-dependent characteristics
-            # Create grain at multiple scales for more realistic effect
-            grain_size_1 = 2
-            grain_size_2 = 4
-            
-            # Fine grain
-            fine_grain = np.random.random((height // grain_size_1, width // grain_size_1, channels))
-            fine_grain = np.kron(fine_grain, np.ones((grain_size_1, grain_size_1, 1)))[:height, :width, :]
-            
-            # Coarse grain
-            coarse_grain = np.random.random((height // grain_size_2, width // grain_size_2, channels))
-            coarse_grain = np.kron(coarse_grain, np.ones((grain_size_2, grain_size_2, 1)))[:height, :width, :]
-            
-            # Combine grains with different weights
-            grain = fine_grain * 0.7 + coarse_grain * 0.3
-            grain = (grain - 0.5) * strength * 1.5  # More visible grain
-            noise = grain
+            try:
+                # Create grain at multiple scales for more realistic effect
+                grain_size_1 = max(1, 2)  # Ensure minimum size of 1
+                grain_size_2 = max(1, 4)  # Ensure minimum size of 1
+                
+                # Fine grain - ensure dimensions are valid
+                fine_h, fine_w = max(1, height // grain_size_1), max(1, width // grain_size_1)
+                fine_grain = np.random.random((fine_h, fine_w, channels))
+                
+                # Manually repeat instead of using kron
+                fine_grain_expanded = np.repeat(np.repeat(fine_grain, grain_size_1, axis=0), grain_size_1, axis=1)
+                fine_grain_expanded = fine_grain_expanded[:height, :width, :channels]
+                
+                # Coarse grain - ensure dimensions are valid
+                coarse_h, coarse_w = max(1, height // grain_size_2), max(1, width // grain_size_2)
+                coarse_grain = np.random.random((coarse_h, coarse_w, channels))
+                
+                # Manually repeat instead of using kron
+                coarse_grain_expanded = np.repeat(np.repeat(coarse_grain, grain_size_2, axis=0), grain_size_2, axis=1)
+                coarse_grain_expanded = coarse_grain_expanded[:height, :width, :channels]
+                
+                # Combine grains with different weights
+                grain = fine_grain_expanded * 0.7 + coarse_grain_expanded * 0.3
+                grain = (grain - 0.5) * strength * 3.0  # Reduced from testing value
+                noise = grain
+                
+            except Exception as e:
+                # Fallback to simple noise
+                noise = np.random.normal(0, strength * 0.1, img_array.shape)
             
         elif noise_type == "gaussian":
             # Simple Gaussian noise
@@ -290,7 +303,11 @@ class mbAIBypass:
             
         elif noise_type == "perlin":
             # Perlin-like noise for more natural patterns
-            noise = self._generate_perlin_noise(height, width, channels, strength)
+            try:
+                noise = self._generate_perlin_noise(height, width, channels, strength)
+            except Exception as e:
+                # Fallback to simple noise
+                noise = np.random.normal(0, strength * 0.1, img_array.shape)
             
         else:  # mixed
             # Combine multiple noise types
@@ -418,32 +435,40 @@ class mbAIBypass:
 
     def _generate_perlin_noise(self, height, width, channels, strength):
         """Generate Perlin-like noise pattern."""
-        # Create multiple octaves for more realistic Perlin-like noise
-        noise = np.zeros((height, width, channels))
-        
-        # Generate multiple scales of noise
-        scales = [4, 8, 16, 32]
-        weights = [0.5, 0.25, 0.15, 0.1]
-        
-        for scale, weight in zip(scales, weights):
-            if height // scale > 0 and width // scale > 0:
-                # Generate noise at this scale
-                scale_noise = np.random.random((height // scale, width // scale, channels))
-                
-                # Upsample with smoothing
-                from scipy.ndimage import zoom
-                upsampled = zoom(scale_noise, (scale, scale, 1), order=1)
-                
-                # Ensure correct size
-                upsampled = upsampled[:height, :width, :channels]
-                
-                # Add to overall noise with weight
-                noise += upsampled * weight
-        
-        # Normalize and scale
-        noise = (noise - 0.5) * strength * 0.8  # Increased scaling for visibility
-        
-        return noise
+        try:
+            # Create multiple octaves for more realistic Perlin-like noise
+            noise = np.zeros((height, width, channels))
+            
+            # Generate multiple scales of noise
+            scales = [4, 8, 16, 32]
+            weights = [0.5, 0.25, 0.15, 0.1]
+            
+            for scale, weight in zip(scales, weights):
+                scale_h, scale_w = max(1, height // scale), max(1, width // scale)
+                if scale_h > 0 and scale_w > 0:
+                    # Generate noise at this scale
+                    scale_noise = np.random.random((scale_h, scale_w, channels))
+                    
+                    # Upsample manually instead of using scipy
+                    # Simple nearest neighbor upsampling
+                    upsampled = np.repeat(np.repeat(scale_noise, scale, axis=0), scale, axis=1)
+                    
+                    # Ensure correct size
+                    upsampled = upsampled[:height, :width, :channels]
+                    
+                    # Add to overall noise with weight
+                    noise += upsampled * weight
+            
+            # Normalize and scale
+            noise = (noise - 0.5) * strength * 2.0  # Reduced from testing value
+            
+            return noise
+            
+        except Exception as e:
+            # Fallback to simple random noise
+            fallback_noise = np.random.random((height, width, channels))
+            fallback_noise = (fallback_noise - 0.5) * strength * 1.0
+            return fallback_noise
 
     def _tensor_to_numpy(self, tensor):
         """Convert ComfyUI tensor to numpy array."""

@@ -219,6 +219,26 @@ app.registerExtension({
 			};
 		}
 		if (nodeData.name === "mb Value") {
+			const onNodeCreated = nodeType.prototype.onNodeCreated;
+			nodeType.prototype.onNodeCreated = function () {
+				const r = onNodeCreated?.apply(this, arguments);
+				
+				// Add listener to show_type widget to update title when changed
+				const showTypeWidget = this.widgets?.find(w => w.name === "show_type");
+				if (showTypeWidget) {
+					const originalCallback = showTypeWidget.callback;
+					showTypeWidget.callback = function(value) {
+						if (originalCallback) {
+							originalCallback.apply(this, arguments);
+						}
+						// Trigger title update when show_type changes
+						this.parent?.setDirtyCanvas(true, true);
+					};
+				}
+				
+				return r;
+			};
+
 			const onExecuted = nodeType.prototype.onExecuted;
 			nodeType.prototype.onExecuted = function (message) {
 				onExecuted?.apply(this, arguments);
@@ -226,35 +246,41 @@ app.registerExtension({
 				// Update node title based on the input value
 				if (message && message.value !== undefined) {
 					const value = message.value[0];
+					
+					// Get the show_type setting from the widget
+					const showTypeWidget = this.widgets?.find(w => w.name === "show_type");
+					const showType = showTypeWidget ? showTypeWidget.value : false;
+					
 					let displayTitle = "Value";
 					
 					try {
 						if (typeof value === 'number') {
-							const valueType = Number.isInteger(value) ? 'INT' : 'FLOAT';
-							displayTitle = `${valueType}: ${value}`;
+							displayTitle = showType ? 
+								`${Number.isInteger(value) ? 'INT' : 'FLOAT'}: ${value}` : 
+								`${value}`;
 						} else if (typeof value === 'string') {
 							const displayStr = value.length > 25 ? value.substring(0, 25) + "..." : value;
-							displayTitle = `STRING: ${displayStr}`;
+							displayTitle = showType ? `STRING: ${displayStr}` : displayStr;
 						} else if (Array.isArray(value)) {
-							displayTitle = `LIST: [${value.length} items]`;
+							displayTitle = showType ? `LIST: [${value.length} items]` : `[${value.length} items]`;
 						} else if (value && typeof value === 'object' && value.shape) {
-							displayTitle = `TENSOR: ${JSON.stringify(value.shape)}`;
+							displayTitle = showType ? `TENSOR: ${JSON.stringify(value.shape)}` : `${JSON.stringify(value.shape)}`;
 						} else if (typeof value === 'boolean') {
-							displayTitle = `BOOLEAN: ${value}`;
+							displayTitle = showType ? `BOOLEAN: ${value}` : `${value}`;
 						} else if (value === null) {
-							displayTitle = `NULL: null`;
+							displayTitle = showType ? `NULL: null` : `null`;
 						} else if (value && typeof value === 'object') {
 							const typeName = value.constructor ? value.constructor.name : 'OBJECT';
-							displayTitle = `${typeName.toUpperCase()}: <object>`;
+							displayTitle = showType ? `${typeName.toUpperCase()}: <object>` : `${value}`;
 						} else {
 							const typeName = typeof value;
-							displayTitle = `${typeName.toUpperCase()}: ${value}`;
+							displayTitle = showType ? `${typeName.toUpperCase()}: ${value}` : `${value}`;
 						}
 					} catch (e) {
 						displayTitle = "UNKNOWN: <error>";
 					}
 					
-					this.title = displayTitle;
+					this.title = `${displayTitle}`;
 					this.setDirtyCanvas(true, true);
 				}
 			};
