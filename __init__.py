@@ -1,3 +1,4 @@
+from .modules.mbAIDetector import mbAIDetector
 from .modules.mbBarcode import mbBarcode
 from .modules.mbCLIPTextEncode import mbCLIPTextEncode
 from .modules.mbColorPicker import mbColorPicker
@@ -16,6 +17,7 @@ from .modules.mbImageBatch import mbImageBatch
 from .modules.mbImageCenterRotate import mbImageCenterRotate
 from .modules.mbImageDither import mbImageDither
 from .modules.mbImageFilmEffect import mbImageFilmEffect
+from .modules.mbImageFFT import mbImageFFT
 from .modules.mbImageFlip import mbImageFlip
 from .modules.mbImageLoad import mbImageLoad
 from .modules.mbImageLoadURL import mbImageLoadURL
@@ -49,6 +51,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Tensor Channel 4 to 3": mbTensorChannel4to3,
     
     # === Development & Debugging ===
+    "mb AI Detector": mbAIDetector,
     "mb Color Picker": mbColorPicker,
     "mb Debug": mbDebug,
     "mb Display": mbDisplay,
@@ -73,9 +76,11 @@ NODE_CLASS_MAPPINGS = {
     "mb QR Code": mbQRCode,
     
     # === Image Processing ===
+    "mb AI Detector": mbAIDetector,
     "mb Image Batch": mbImageBatch,
     "mb Image Center Rotate": mbImageCenterRotate,
     "mb Image Dither": mbImageDither,
+    "mb Image FFT": mbImageFFT,
     "mb Image Film Effect": mbImageFilmEffect,
     "mb Image Flip": mbImageFlip,
     "mb Image Preview": mbImagePreview,
@@ -130,9 +135,11 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb QR Code": "QR Code",
     
     # === Image Processing ===
+    "mb AI Detector": "AI Detector",
     "mb Image Batch": "Image Batch",
     "mb Image Center Rotate": "Image Center Rotate",
     "mb Image Dither": "Image Dither",
+    "mb Image FFT": "Image FFT",
     "mb Image Film Effect": "Image Film Effect",
     "mb Image Flip": "Image Flip",
     "mb Image Preview": "Image Preview",
