@@ -29,6 +29,7 @@ from .modules.mbImageSize import mbImageSize
 from .modules.mbImageSubtract import mbImageSubtract
 from .modules.mbImageToFile import mbImageToFile
 from .modules.mbKSampler import mbKSampler
+from .modules.mbMaskApply import mbMaskApply
 from .modules.mbMaskFromColor import mbMaskFromColor
 from .modules.mbMaskInvertIfEmpty import mbMaskInvertIfEmpty
 from .modules.mbQRCode import mbQRCode
@@ -94,6 +95,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Image Subtract": mbImageSubtract,
     
     # === Mask Processing ===
+    "mb Mask Apply": mbMaskApply,
     "mb Mask from Color": mbMaskFromColor,
     "mb Mask Invert if Empty": mbMaskInvertIfEmpty,
 
@@ -156,6 +158,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Image Subtract": "Image Subtract",
     
     # === Mask Processing ===
+    "mb Mask Apply": "Mask Apply",
     "mb Mask from Color": "Mask from Color",
     "mb Mask Invert if Empty": "Mask Invert if Empty",
 
