@@ -6,3 +6,5 @@ scipy>=1.7.0
 transformers>=4.20.0
 torch>=1.9.0
 requests
+onnxruntime
+pdf417gen
