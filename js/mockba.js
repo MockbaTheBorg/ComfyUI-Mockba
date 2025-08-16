@@ -133,316 +133,212 @@ app.registerExtension({
 	name: "Comfy.Mockba",
 
 	beforeRegisterNodeDef(nodeType, nodeData, app) {
-		if (nodeData.name === "mb Textbox") {
+		// Helper function to add a callback to onNodeCreated
+		const addNodeCreatedHook = (callback) => {
 			const onNodeCreated = nodeType.prototype.onNodeCreated;
 			nodeType.prototype.onNodeCreated = function () {
 				const r = onNodeCreated?.apply(this, arguments);
+				callback.apply(this, arguments);
 				return r;
 			};
+		};
 
+		// Helper function to add a callback to onExecuted
+		const addNodeExecutedHook = (callback) => {
 			const onExecuted = nodeType.prototype.onExecuted;
 			nodeType.prototype.onExecuted = function (message) {
 				onExecuted?.apply(this, arguments);
-
-				for (const widget of this.widgets) {
-					if (widget.type === "customtext") {
-						widget.value = message.text.join("");
-					}
-				}
-
-				this.onResize?.(this.size);
+				callback.call(this, message);
 			};
-		}
-		if (nodeData.name === "mb Debug") {
-			const onExecuted = nodeType.prototype.onExecuted;
-			nodeType.prototype.onExecuted = function (message) {
-				onExecuted?.apply(this, arguments);
+		};
 
-				// Update debug output widget with execution results
-				if (this.widgets && message?.debug_output) {
-					const debugWidget = this.widgets.find(w => w.name === "debug_output");
-					if (debugWidget) {
-						debugWidget.value = message.debug_output[0];
+		switch (nodeData.name) {
+			case "mb Textbox":
+				addNodeExecutedHook(function (message) {
+					for (const widget of this.widgets) {
+						if (widget.type === "customtext") {
+							widget.value = message.text.join("");
+						}
 					}
 					this.onResize?.(this.size);
-				}
-			};
-		}
-		if (nodeData.name === "mb Display") {
-			const onExecuted = nodeType.prototype.onExecuted;
-			nodeType.prototype.onExecuted = function (message) {
-				onExecuted?.apply(this, arguments);
-
-				// Update display output widget with execution results
-				if (this.widgets && message?.value) {
-					const newValue = message.value[0];
-					const hasNewlines = newValue.includes('\n');
-					
-					// Find and properly remove the old widget
-					const widgetIndex = this.widgets.findIndex(w => w.name === "value");
-					if (widgetIndex >= 0) {
-						const oldWidget = this.widgets[widgetIndex];
-						
-						// Properly dispose of the old widget's DOM elements
-						if (oldWidget.inputEl && oldWidget.inputEl.parentNode) {
-							oldWidget.inputEl.parentNode.removeChild(oldWidget.inputEl);
+				});
+				break;
+			case "mb Debug":
+				addNodeExecutedHook(function (message) {
+					if (this.widgets && message?.debug_output) {
+						const debugWidget = this.widgets.find(w => w.name === "debug_output");
+						if (debugWidget) {
+							debugWidget.value = message.debug_output[0];
 						}
-						if (oldWidget.element && oldWidget.element.parentNode) {
-							oldWidget.element.parentNode.removeChild(oldWidget.element);
-						}
-						
-						// Remove from widgets array
-						this.widgets.splice(widgetIndex, 1);
+						this.onResize?.(this.size);
 					}
-					
-					// Create new widget with correct multiline setting
-					const newWidget = ComfyWidgets.STRING(this, "value", [
-						"STRING", 
-						{ multiline: hasNewlines, default: newValue }
-					], app).widget;
-					
-					// Set the value
-					newWidget.value = newValue;
-					
-					// Move widget to correct position if needed
-					if (widgetIndex >= 0 && widgetIndex < this.widgets.length) {
-						const widget = this.widgets.pop();
-						this.widgets.splice(widgetIndex, 0, widget);
-					}
-					
-					// Force node to recompute size and redraw
-					this.setSize(this.computeSize());
-					this.setDirtyCanvas(true, true);
-					
-					this.onResize?.(this.size);
-				}
-			};
-		}
-		if (nodeData.name === "mb Value") {
-			const onNodeCreated = nodeType.prototype.onNodeCreated;
-			nodeType.prototype.onNodeCreated = function () {
-				const r = onNodeCreated?.apply(this, arguments);
-				
-				// Add listener to show_type widget to update title when changed
-				const showTypeWidget = this.widgets?.find(w => w.name === "show_type");
-				if (showTypeWidget) {
-					const originalCallback = showTypeWidget.callback;
-					showTypeWidget.callback = function(value) {
-						if (originalCallback) {
-							originalCallback.apply(this, arguments);
+				});
+				break;
+			case "mb Display":
+				addNodeExecutedHook(function (message) {
+					if (this.widgets && message?.value) {
+						const newValue = message.value[0];
+						const hasNewlines = newValue.includes('\n');
+						
+						const widgetIndex = this.widgets.findIndex(w => w.name === "value");
+						if (widgetIndex >= 0) {
+							const oldWidget = this.widgets[widgetIndex];
+							if (oldWidget.inputEl && oldWidget.inputEl.parentNode) {
+								oldWidget.inputEl.parentNode.removeChild(oldWidget.inputEl);
+							}
+							if (oldWidget.element && oldWidget.element.parentNode) {
+								oldWidget.element.parentNode.removeChild(oldWidget.element);
+							}
+							this.widgets.splice(widgetIndex, 1);
 						}
-						// Trigger title update when show_type changes
-						this.parent?.setDirtyCanvas(true, true);
-					};
-				}
-				
-				return r;
-			};
-
-			const onExecuted = nodeType.prototype.onExecuted;
-			nodeType.prototype.onExecuted = function (message) {
-				onExecuted?.apply(this, arguments);
-
-				// Update node title based on the input value
-				if (message && message.value !== undefined) {
-					const value = message.value[0];
-					
-					// Get the show_type setting from the widget
+						
+						const newWidget = ComfyWidgets.STRING(this, "value", ["STRING", { multiline: hasNewlines, default: newValue }], app).widget;
+						newWidget.value = newValue;
+						
+						if (widgetIndex >= 0 && widgetIndex < this.widgets.length) {
+							const widget = this.widgets.pop();
+							this.widgets.splice(widgetIndex, 0, widget);
+						}
+						
+						this.setSize(this.computeSize());
+						this.setDirtyCanvas(true, true);
+						this.onResize?.(this.size);
+					}
+				});
+				break;
+			case "mb Value":
+				addNodeCreatedHook(function () {
 					const showTypeWidget = this.widgets?.find(w => w.name === "show_type");
-					const showType = showTypeWidget ? showTypeWidget.value : false;
-					
-					let displayTitle = "Value";
-					
-					try {
-						if (typeof value === 'number') {
-							displayTitle = showType ? 
-								`${Number.isInteger(value) ? 'INT' : 'FLOAT'}: ${value}` : 
-								`${value}`;
-						} else if (typeof value === 'string') {
-							const displayStr = value.length > 25 ? value.substring(0, 25) + "..." : value;
-							displayTitle = showType ? `STRING: ${displayStr}` : displayStr;
-						} else if (Array.isArray(value)) {
-							displayTitle = showType ? `LIST: [${value.length} items]` : `[${value.length} items]`;
-						} else if (value && typeof value === 'object' && value.shape) {
-							displayTitle = showType ? `TENSOR: ${JSON.stringify(value.shape)}` : `${JSON.stringify(value.shape)}`;
-						} else if (typeof value === 'boolean') {
-							displayTitle = showType ? `BOOLEAN: ${value}` : `${value}`;
-						} else if (value === null) {
-							displayTitle = showType ? `NULL: null` : `null`;
-						} else if (value && typeof value === 'object') {
-							const typeName = value.constructor ? value.constructor.name : 'OBJECT';
-							displayTitle = showType ? `${typeName.toUpperCase()}: <object>` : `${value}`;
-						} else {
-							const typeName = typeof value;
-							displayTitle = showType ? `${typeName.toUpperCase()}: ${value}` : `${value}`;
+					if (showTypeWidget) {
+						const originalCallback = showTypeWidget.callback;
+						showTypeWidget.callback = (value) => {
+							if (originalCallback) {
+								originalCallback.apply(this, arguments);
+							}
+							this.parent?.setDirtyCanvas(true, true);
+						};
+					}
+				});
+				addNodeExecutedHook(function (message) {
+					if (message && message.value !== undefined) {
+						const value = message.value[0];
+						const showTypeWidget = this.widgets?.find(w => w.name === "show_type");
+						const showType = showTypeWidget ? showTypeWidget.value : false;
+						let displayTitle = "Value";
+						try {
+							if (typeof value === 'number') {
+								displayTitle = showType ? `${Number.isInteger(value) ? 'INT' : 'FLOAT'}: ${value}` : `${value}`;
+							} else if (typeof value === 'string') {
+								const displayStr = value.length > 25 ? value.substring(0, 25) + "..." : value;
+								displayTitle = showType ? `STRING: ${displayStr}` : displayStr;
+							} else if (Array.isArray(value)) {
+								displayTitle = showType ? `LIST: [${value.length} items]` : `[${value.length} items]`;
+							} else if (value && typeof value === 'object' && value.shape) {
+								displayTitle = showType ? `TENSOR: ${JSON.stringify(value.shape)}` : `${JSON.stringify(value.shape)}`;
+							} else if (typeof value === 'boolean') {
+								displayTitle = showType ? `BOOLEAN: ${value}` : `${value}`;
+							} else if (value === null) {
+								displayTitle = showType ? `NULL: null` : `null`;
+							} else if (value && typeof value === 'object') {
+								const typeName = value.constructor ? value.constructor.name : 'OBJECT';
+								displayTitle = showType ? `${typeName.toUpperCase()}: <object>` : `${value}`;
+							} else {
+								const typeName = typeof value;
+								displayTitle = showType ? `${typeName.toUpperCase()}: ${value}` : `${value}`;
+							}
+						} catch (e) {
+							displayTitle = "UNKNOWN: <error>";
 						}
-					} catch (e) {
-						displayTitle = "UNKNOWN: <error>";
-					}
-					
-					this.title = `${displayTitle}`;
-					this.setDirtyCanvas(true, true);
-				}
-			};
-		}
-		if (nodeData.name === 'mb Image Size') {
-			const onNodeCreated = nodeType.prototype.onNodeCreated;
-			nodeType.prototype.onNodeCreated = function () {
-				const r = onNodeCreated?.apply(this, arguments);
-				const iw = ComfyWidgets["INT"](this, "width", ["INT", {}], app).widget;
-				const ih = ComfyWidgets["INT"](this, "height", ["INT", {}], app).widget;
-				return r;
-			};
-
-			const onExecuted = nodeType.prototype.onExecuted;
-			nodeType.prototype.onExecuted = function (message) {
-				onExecuted?.apply(this, arguments);
-
-				for (const widget of this.widgets) {
-					if (widget.name == "width") {
-						console.log(message);
-						widget.value = message.width[0];
-					}
-					if (widget.name == "height") {
-						console.log(message);
-						widget.value = message.height[0];
-					}
-				}
-				document.title = "executed";
-
-				this.onResize?.(this.size);
-			};
-		}
-		if (nodeData.name === 'mb Exec') {
-			const onNodeCreated = nodeType.prototype.onNodeCreated;
-			nodeType.prototype.onNodeCreated = function () {
-				const r = onNodeCreated?.apply(this, arguments);
-				
-				// Helper functions for managing hidden state in code
-				const HIDDEN_MARKER = "# __HIDDEN__";
-				
-				const isCodeHidden = (code) => {
-					return code.startsWith(HIDDEN_MARKER);
-				};
-				
-				const addHiddenMarker = (code) => {
-					if (!isCodeHidden(code)) {
-						return code ? HIDDEN_MARKER + "\n" + code : HIDDEN_MARKER;
-					}
-					return code;
-				};
-				
-				const removeHiddenMarker = (code) => {
-					if (isCodeHidden(code)) {
-						return code.substring(HIDDEN_MARKER.length + 1); // +1 for the newline
-					}
-					return code;
-				};
-				
-				// Add toggle button widget
-				const toggleWidget = this.addWidget("button", "Hide Code", "Hide Code", () => {
-					const codeWidget = this.widgets.find(w => w.name === "code");
-					if (codeWidget) {
-						if (codeWidget.type === "hidden") {
-							// Show code widget
-							codeWidget.type = "customtext";
-							codeWidget.value = removeHiddenMarker(codeWidget.value);
-							toggleWidget.name = "Hide Code";
-							this.setSize(this.computeSize());
-						} else {
-							// Hide code widget
-							codeWidget.type = "hidden";
-							codeWidget.value = addHiddenMarker(codeWidget.value);
-							toggleWidget.name = "Show Code";
-							this.setSize(this.computeSize());
-						}
+						this.title = `${displayTitle}`;
 						this.setDirtyCanvas(true, true);
 					}
 				});
-				
-				// Check initial state based on code content
-				setTimeout(() => {
-					const codeWidget = this.widgets.find(w => w.name === "code");
-					if (codeWidget && isCodeHidden(codeWidget.value)) {
-						// Code should be hidden initially
-						codeWidget.type = "hidden";
-						toggleWidget.name = "Show Code";
-						this.setSize(this.computeSize());
-						this.setDirtyCanvas(true, true);
+				break;
+			case 'mb Image Size':
+				addNodeCreatedHook(function () {
+					ComfyWidgets["INT"](this, "width", ["INT", {}], app);
+					ComfyWidgets["INT"](this, "height", ["INT", {}], app);
+				});
+				addNodeExecutedHook(function (message) {
+					for (const widget of this.widgets) {
+						if (widget.name === "width") {
+							widget.value = message.width[0];
+						}
+						if (widget.name === "height") {
+							widget.value = message.height[0];
+						}
 					}
-				}, 100);
-				
-				// Override serialize to maintain code widget functionality when hidden
-				const originalSerialize = this.serialize;
-				this.serialize = function() {
-					const data = originalSerialize.apply(this, arguments);
-					// Ensure code widget value is preserved even when hidden
-					const codeWidget = this.widgets.find(w => w.name === "code");
-					if (codeWidget && codeWidget.type === "hidden") {
-						// Find the code widget in serialized data and ensure it's included
-						if (data.widgets_values) {
+					this.onResize?.(this.size);
+				});
+				break;
+			case 'mb Exec':
+				addNodeCreatedHook(function () {
+					const HIDDEN_MARKER = "# __HIDDEN__";
+					const isCodeHidden = (code) => code.startsWith(HIDDEN_MARKER);
+					const addHiddenMarker = (code) => !isCodeHidden(code) ? (code ? HIDDEN_MARKER + "\n" + code : HIDDEN_MARKER) : code;
+					const removeHiddenMarker = (code) => isCodeHidden(code) ? code.substring(HIDDEN_MARKER.length + 1) : code;
+
+					const toggleWidget = this.addWidget("button", "Hide Code", "Hide Code", () => {
+						const codeWidget = this.widgets.find(w => w.name === "code");
+						if (codeWidget) {
+							if (codeWidget.type === "hidden") {
+								codeWidget.type = "customtext";
+								codeWidget.value = removeHiddenMarker(codeWidget.value);
+								toggleWidget.name = "Hide Code";
+							} else {
+								codeWidget.type = "hidden";
+								codeWidget.value = addHiddenMarker(codeWidget.value);
+								toggleWidget.name = "Show Code";
+							}
+							this.setSize(this.computeSize());
+							this.setDirtyCanvas(true, true);
+						}
+					});
+
+					setTimeout(() => {
+						const codeWidget = this.widgets.find(w => w.name === "code");
+						if (codeWidget && isCodeHidden(codeWidget.value)) {
+							codeWidget.type = "hidden";
+							toggleWidget.name = "Show Code";
+							this.setSize(this.computeSize());
+							this.setDirtyCanvas(true, true);
+						}
+					}, 100);
+
+					const originalSerialize = this.serialize;
+					this.serialize = function() {
+						const data = originalSerialize.apply(this, arguments);
+						const codeWidget = this.widgets.find(w => w.name === "code");
+						if (codeWidget && codeWidget.type === "hidden" && data.widgets_values) {
 							const codeIndex = this.widgets.findIndex(w => w.name === "code");
 							if (codeIndex >= 0) {
 								data.widgets_values[codeIndex] = codeWidget.value;
 							}
 						}
-					}
-					return data;
-				};
-				
-				return r;
-			};
-		}
-		if (nodeData.name === 'mb Submit') {
-			const onNodeCreated = nodeType.prototype.onNodeCreated;
-			nodeType.prototype.onNodeCreated = function () {
-				const r = onNodeCreated?.apply(this, arguments);
-				
-				// Add submit button widget
-				const submitWidget = this.addWidget("button", "Submit Workflow", "Submit Workflow", () => {
-					// Queue the current workflow for execution
-					app.queuePrompt(0); // 0 = add to end of queue, -1 = add to front
+						return data;
+					};
 				});
-
-
-				// Add reset canvas position button
-				const resetCanvasWidget = this.addWidget("button", "Reset Canvas", "Reset Canvas", () => {
-					// Reset canvas position to 0,0
-					if (app.canvas) {
-						app.canvas.ds.offset = [0, 0];
-						app.canvas.ds.scale = 1;
-						app.canvas.setDirty(true, true);
-					}
+				break;
+			case 'mb Submit':
+				addNodeCreatedHook(function () {
+					this.addWidget("button", "Submit Workflow", "Submit Workflow", () => app.queuePrompt(0));
+					this.addWidget("button", "Reset Canvas", "Reset Canvas", () => {
+						if (app.canvas) {
+							app.canvas.ds.offset = [0, 0];
+							app.canvas.ds.scale = 1;
+							app.canvas.setDirty(true, true);
+						}
+					});
 				});
-
-				return r;
-			};
-		}
-		if (nodeData.name === "mb Color Mask") {
-			const onNodeCreated = nodeType.prototype.onNodeCreated;
-			nodeType.prototype.onNodeCreated = function () {
-				const r = onNodeCreated?.apply(this, arguments);
-				
-				// Add color picker button
-				const pickColorButton = this.addWidget("button", "Pick Color", "Pick Color", () => {
-					ColorPickerUtils.startColorPicking(this);
+				break;
+			case "mb Color Picker":
+			case "mb Mask from Color":
+				addNodeCreatedHook(function () {
+					this.addWidget("button", "Pick Color", "Pick Color", () => {
+						ColorPickerUtils.startColorPicking(this);
+					});
 				});
-				
-				return r;
-			};
-		}
-		if (nodeData.name === "mb Color Picker") {
-			const onNodeCreated = nodeType.prototype.onNodeCreated;
-			nodeType.prototype.onNodeCreated = function () {
-				const r = onNodeCreated?.apply(this, arguments);
-				
-				// Add color picker button
-				const pickColorButton = this.addWidget("button", "Pick Color", "Pick Color", () => {
-					ColorPickerUtils.startColorPicking(this);
-				});
-				
-				return r;
-			};
+				break;
 		}
 		if (nodeData.name === 'mb Image Batch' ||
 			nodeData.name === 'mb Select' ||
