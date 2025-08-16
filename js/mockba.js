@@ -404,10 +404,6 @@ app.registerExtension({
 					app.queuePrompt(0); // 0 = add to end of queue, -1 = add to front
 				});
 
-				// Optional: Add a "Submit to Front" button for priority execution
-				const submitFrontWidget = this.addWidget("button", "Submit to Front", "Submit to Front", () => {
-					app.queuePrompt(-1); // -1 = add to front of queue
-				});
 
 				// Add reset canvas position button
 				const resetCanvasWidget = this.addWidget("button", "Reset Canvas", "Reset Canvas", () => {
