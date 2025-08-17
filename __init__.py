@@ -33,6 +33,7 @@ from .modules.mbKSampler import mbKSampler
 from .modules.mbLatentToFile import mbLatentToFile
 from .modules.mbMaskApply import mbMaskApply
 from .modules.mbMaskFromColor import mbMaskFromColor
+from .modules.mbMemoryUnload import mbMemoryUnload
 from .modules.mbMaskInvertIfEmpty import mbMaskInvertIfEmpty
 from .modules.mbQRCode import mbQRCode
 from .modules.mbSelect import mbSelect
@@ -63,6 +64,7 @@ NODE_CLASS_MAPPINGS = {
     "mb Display": mbDisplay,
     "mb Eval": mbEval,
     "mb Exec": mbExec,
+    "mb Memory Unload": mbMemoryUnload,
     "mb Submit": mbSubmit,
     "mb Value": mbValue,
     
@@ -128,6 +130,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb Display": "Display",
     "mb Eval": "Eval",
     "mb Exec": "Exec",
+    "mb Memory Unload": "Memory Unload",
     "mb Submit": "Submit",
     "mb Value": "Value",
     
