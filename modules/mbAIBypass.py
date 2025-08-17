@@ -18,9 +18,9 @@ class mbAIBypass:
     
     # Class constants
     BYPASS_MODES = ["subtle", "moderate", "aggressive", "custom"]
-    NOISE_TYPES = ["sensor", "film_grain", "gaussian", "perlin", "mixed"]
+    NOISE_TYPES = ["none", "sensor", "film_grain", "gaussian", "perlin", "mixed"]
     DEFAULT_MODE = "moderate"
-    DEFAULT_NOISE = "mixed"
+    DEFAULT_NOISE = "sensor"
     
     def __init__(self):
         """Initialize the AI bypass node."""
@@ -40,7 +40,7 @@ class mbAIBypass:
                 }),
                 "noise_type": (cls.NOISE_TYPES, {
                     "default": cls.DEFAULT_NOISE,
-                    "tooltip": "Type of noise pattern to add"
+                    "tooltip": "Type of noise pattern to add (none = no noise)"
                 }),
                 "high_freq_boost": ("FLOAT", {
                     "default": 0.3,
@@ -142,7 +142,7 @@ class mbAIBypass:
                 info_parts.append(f"High freq boost: {params['high_freq_boost']:.2f}")
             
             # 2. Add realistic noise patterns
-            if params['noise_strength'] > 0:
+            if params['noise_strength'] > 0 and noise_type != "none":
                 processed_img = self._add_realistic_noise(processed_img, noise_type, params['noise_strength'], adaptive_processing)
                 info_parts.append(f"Noise added: {noise_type}")
             
@@ -259,7 +259,11 @@ class mbAIBypass:
         height, width, channels = img_array.shape
         result = img_array.copy()
         
-        if noise_type == "sensor":
+        if noise_type == "none":
+            # No noise to apply
+            return img_array
+            
+        elif noise_type == "sensor":
             # Simulate camera sensor noise (shot noise + read noise)
             shot_noise = np.random.poisson(img_array * 255) / 255.0 - img_array
             read_noise = np.random.normal(0, 0.01, img_array.shape)
