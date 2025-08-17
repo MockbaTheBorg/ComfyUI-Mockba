@@ -13,6 +13,7 @@ from .modules.mbEmptyLatentImage import mbEmptyLatentImage
 from .modules.mbEval import mbEval
 from .modules.mbExec import mbExec
 from .modules.mbFileToImage import mbFileToImage
+from .modules.mbFileToLatent import mbFileToLatent
 from .modules.mbFileToText import mbFileToText
 from .modules.mbHashGenerator import mbHashGenerator
 from .modules.mbImageBatch import mbImageBatch
@@ -29,6 +30,7 @@ from .modules.mbImageSize import mbImageSize
 from .modules.mbImageSubtract import mbImageSubtract
 from .modules.mbImageToFile import mbImageToFile
 from .modules.mbKSampler import mbKSampler
+from .modules.mbLatentToFile import mbLatentToFile
 from .modules.mbMaskApply import mbMaskApply
 from .modules.mbMaskFromColor import mbMaskFromColor
 from .modules.mbMaskInvertIfEmpty import mbMaskInvertIfEmpty
@@ -66,10 +68,12 @@ NODE_CLASS_MAPPINGS = {
     
     # === File Operations ===
     "mb File to Image": mbFileToImage,
+    "mb File to Latent": mbFileToLatent,
     "mb File to Text": mbFileToText,
     "mb Image Load": mbImageLoad,
     "mb Image Load from URL": mbImageLoadURL,
     "mb Image to File": mbImageToFile,
+    "mb Latent to File": mbLatentToFile,
     "mb Text or File": mbTextOrFile,
     "mb Text to File": mbTextToFile,
     
@@ -129,10 +133,12 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     
     # === File Operations ===
     "mb File to Image": "File to Image",
+    "mb File to Latent": "File to Latent",
     "mb File to Text": "File to Text",
     "mb Image Load": "Image Load",
     "mb Image Load from URL": "Image Load from URL",
     "mb Image to File": "Image to File",
+    "mb Latent to File": "Latent to File",
     "mb Text or File": "Text or File",
     "mb Text to File": "Text to File",
     
