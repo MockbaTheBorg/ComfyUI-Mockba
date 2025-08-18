@@ -33,19 +33,23 @@ class mbMaskApply:
                 "invert_mask": ("BOOLEAN", {
                     "default": False,
                     "tooltip": "Invert the mask before applying"
+                }),
+                "invert_output_mask": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "Invert the output mask"
                 })
             }
         }
 
     # Node metadata
     TITLE = "Mask Apply"
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
+    RETURN_TYPES = ("IMAGE", "MASK")
+    RETURN_NAMES = ("image", "mask")
     FUNCTION = "apply_mask"
     CATEGORY = "unset"
     DESCRIPTION = "Apply a mask to an image, keeping only the masked parts while maintaining the original image size. Non-masked areas become transparent/black."
 
-    def apply_mask(self, image, mask=None, invert_mask=False):
+    def apply_mask(self, image, mask=None, invert_mask=False, invert_output_mask=False):
         """
         Apply mask to image, keeping only the masked parts.
         
@@ -53,30 +57,69 @@ class mbMaskApply:
             image: Input image tensor in ComfyUI format [batch, height, width, channels]
             mask: Optional mask tensor in ComfyUI format [batch, height, width]
             invert_mask: Whether to invert the mask before applying
+            invert_output_mask: Whether to invert the output mask
             
         Returns:
-            tuple: Masked image tensor
+            tuple: (Masked image tensor, Output mask tensor)
         """
         try:
-            # If no mask provided, return original image
+            # Get image dimensions for creating output mask
+            batch_size, height, width, channels = image.shape
+            device = image.device
+            
+            # If no mask provided, return original image and create full mask
             if mask is None:
                 print("No mask provided, returning original image")
-                return (image,)
+                # Create a full mask (all ones) with the size of the image
+                output_mask = torch.ones(batch_size, height, width, device=device)
+                if invert_output_mask:
+                    output_mask = 1.0 - output_mask
+                return (image, output_mask)
             
             # Check if mask is all zeros
             if torch.all(mask == 0):
                 print("Mask is all zeros, returning original image")
-                return (image,)
+                # Use the input mask as output mask
+                output_mask = mask.clone()
+                if invert_output_mask:
+                    output_mask = 1.0 - output_mask
+                return (image, output_mask)
             
             # Apply the mask
             masked_image = self._apply_mask_to_image(image, mask, invert_mask)
             
-            return (masked_image,)
+            # Prepare output mask (replicate input mask)
+            output_mask = mask.clone()
+            
+            # Ensure output mask has the same batch size and dimensions as image
+            if output_mask.shape[0] != batch_size:
+                if output_mask.shape[0] == 1:
+                    output_mask = output_mask.repeat(batch_size, 1, 1)
+                else:
+                    raise ValueError(f"Mask batch size ({output_mask.shape[0]}) doesn't match image batch size ({batch_size})")
+            
+            # Ensure output mask has the same spatial dimensions as image
+            if output_mask.shape[1:] != (height, width):
+                output_mask = torch.nn.functional.interpolate(
+                    output_mask.unsqueeze(1),  # Add channel dimension for interpolation
+                    size=(height, width),
+                    mode='nearest'
+                ).squeeze(1)  # Remove channel dimension
+            
+            # Invert output mask if requested
+            if invert_output_mask:
+                output_mask = 1.0 - output_mask
+            
+            return (masked_image, output_mask)
             
         except Exception as e:
             print(f"Mask application failed: {str(e)}")
-            # Return original image on error
-            return (image,)
+            # Return original image and create error fallback mask
+            batch_size, height, width, channels = image.shape
+            fallback_mask = torch.ones(batch_size, height, width, device=image.device)
+            if invert_output_mask:
+                fallback_mask = 1.0 - fallback_mask
+            return (image, fallback_mask)
 
     def _apply_mask_to_image(self, image, mask, invert_mask):
         """
@@ -134,7 +177,7 @@ class mbMaskApply:
         return masked_image
 
     @classmethod
-    def IS_CHANGED(cls, image, mask=None, invert_mask=False):
+    def IS_CHANGED(cls, image, mask=None, invert_mask=False, invert_output_mask=False):
         """Check if inputs have changed to determine if node needs to re-execute."""
         # Always re-execute when inputs change
         return True

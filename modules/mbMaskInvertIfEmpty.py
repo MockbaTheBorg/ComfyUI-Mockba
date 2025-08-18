@@ -41,12 +41,16 @@ class mbMaskInvertIfEmpty:
         Process mask - invert if empty, otherwise leave unchanged.
         
         Args:
-            mask: Input mask tensor in ComfyUI format [batch, height, width]
+            mask: Input mask tensor in ComfyUI format [batch, height, width] or None
             
         Returns:
-            tuple: Processed mask tensor
+            tuple: Processed mask tensor or None if input is None
         """
         try:
+            # If input mask is None, return None
+            if mask is None:
+                return (None,)
+            
             # Check if the mask is all zeros (empty)
             processed_mask = self._invert_if_empty(mask)
             
