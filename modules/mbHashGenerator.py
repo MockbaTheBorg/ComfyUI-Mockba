@@ -73,7 +73,7 @@ class mbHashGenerator:
     RETURN_TYPES = ("STRING", "STRING", "STRING")
     RETURN_NAMES = ("result", "hash_only", "algorithm_info")
     FUNCTION = "generate_hash"
-    CATEGORY = CATEGORIES["DATA_MANAGEMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Generate hashes using various algorithms (SHA1, SHA256, SHA512, MD5, BLAKE2b) with seeds and base strings."
 
     def generate_hash(self, seed, base_string, algorithm, output_format, include_timestamp, salt=""):

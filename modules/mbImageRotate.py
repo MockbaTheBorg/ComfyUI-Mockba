@@ -51,7 +51,7 @@ class mbImageRotate:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "rotate_image"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Rotate images by 90, 180, or 270 degrees counterclockwise with efficient batch processing."
 
     def rotate_image(self, image, degrees):

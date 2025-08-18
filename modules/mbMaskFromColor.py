@@ -56,7 +56,7 @@ class mbMaskFromColor:
     RETURN_TYPES = ("MASK",)
     RETURN_NAMES = ("mask",)
     FUNCTION = "create_mask_from_color"
-    CATEGORY = CATEGORIES["MASK"]
+    CATEGORY = "unset"
     DESCRIPTION = "Generate a mask for pixels matching a specific color with optional tolerance."
 
     def create_mask_from_color(self, image, color, tolerance, pick_color=None):

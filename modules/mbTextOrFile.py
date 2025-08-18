@@ -55,7 +55,7 @@ class mbTextOrFile:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "process_text_or_file"
-    CATEGORY = CATEGORIES["FILE_OPS"]
+    CATEGORY = "unset"
     DESCRIPTION = "Load text from file and combine with input text using append, prepend, replace, or input-only modes."
 
     def process_text_or_file(self, input_text, filename, action, fallback_mode):

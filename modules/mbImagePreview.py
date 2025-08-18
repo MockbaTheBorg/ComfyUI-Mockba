@@ -52,7 +52,7 @@ class mbImagePreview:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "save_images"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Previews and bridges input images, creates dynamic-sized text images for non-tensor inputs, and displays masks as grayscale images."
     OUTPUT_NODE = True
 

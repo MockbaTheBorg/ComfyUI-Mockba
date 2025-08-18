@@ -26,7 +26,7 @@ class mbSubmit:
     RETURN_TYPES = ()
     RETURN_NAMES = ()
     FUNCTION = "submit_workflow"
-    CATEGORY = CATEGORIES["DEVELOPMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Workflow submission node with button interface. Submission handled by JavaScript interface."
     OUTPUT_NODE = True
 

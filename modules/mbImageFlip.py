@@ -45,7 +45,7 @@ class mbImageFlip:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "flip_image"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Flip images horizontally, vertically, or both directions with batch processing support."
 
     def flip_image(self, image, flip):

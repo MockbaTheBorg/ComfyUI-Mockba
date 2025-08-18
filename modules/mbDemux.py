@@ -34,7 +34,7 @@ class mbDemux:
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("out",)
     FUNCTION = "demultiplex_inputs"
-    CATEGORY = CATEGORIES["DATA_MANAGEMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Select the first non-None input from multiple optional inputs."
 
     def demultiplex_inputs(self, **kwargs):

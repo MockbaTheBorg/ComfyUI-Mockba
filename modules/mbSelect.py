@@ -49,7 +49,7 @@ class mbSelect:
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("out",)
     FUNCTION = "select_input"
-    CATEGORY = CATEGORIES["DATA_MANAGEMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Select one output from multiple inputs based on index selection."
 
     def select_input(self, **kwargs):

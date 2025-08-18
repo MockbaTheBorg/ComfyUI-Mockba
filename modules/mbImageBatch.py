@@ -45,7 +45,7 @@ class mbImageBatch:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "create_image_batch"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Create batches from multiple images with automatic size normalization."
 
     def create_image_batch(self, **kwargs):

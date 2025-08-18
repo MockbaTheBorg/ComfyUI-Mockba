@@ -59,7 +59,7 @@ class mbFileToImage:
     RETURN_TYPES = ("IMAGE", "INT")
     RETURN_NAMES = ("image", "count")
     FUNCTION = "load_image_from_file"
-    CATEGORY = CATEGORIES["FILE_OPS"]
+    CATEGORY = "unset"
     DESCRIPTION = "Load images from files with support for single images and batch loading of sequentially numbered files. Returns error image with message if file not found."
 
     def load_image_from_file(self, filename, load_mode):

@@ -51,7 +51,7 @@ class mbLatentToFile:
     RETURN_TYPES = ("LATENT", "INT")
     RETURN_NAMES = ("latent", "count")
     FUNCTION = "save_latent_to_file"
-    CATEGORY = CATEGORIES["FILE_OPS"]
+    CATEGORY = "unset"
     DESCRIPTION = "Save latent tensors to files with support for single latents and batch processing of multiple latents."
 
     def save_latent_to_file(self, latent, filename, save_mode):

@@ -86,7 +86,7 @@ class mbQRCode:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "generate_qrcode"
-    CATEGORY = CATEGORIES["GENERATION"]
+    CATEGORY = "unset"
     DESCRIPTION = "Generate QR code images from text with customizable error correction and styling."
 
     def generate_qrcode(self, data, version, error_correction, box_size, border, foreground_color, background_color):

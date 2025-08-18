@@ -59,7 +59,7 @@ class mbImageFFT:
     RETURN_TYPES = ("IMAGE", "IMAGE", "FLOAT", "STRING")
     RETURN_NAMES = ("fft_visualization", "original_image", "high_freq_ratio", "analysis_info")
     FUNCTION = "analyze_fft"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Analyze image FFT to detect patterns characteristic of AI-generated images. Shows frequency domain representation."
 
     def analyze_fft(self, image, visualization_mode="log_magnitude", center_spectrum=True, 

@@ -56,7 +56,7 @@ class mbExec:
     RETURN_TYPES = (any_typ, "STRING")
     RETURN_NAMES = ("out", "error")
     FUNCTION = "execute_code"
-    CATEGORY = CATEGORIES["DEVELOPMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Execute Python code on inputs with access to safe built-in functions. Set 'out' variable to return result. Returns error message if execution fails."
 
     def execute_code(self, code, **kwargs):

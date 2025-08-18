@@ -53,7 +53,7 @@ class mbDebug:
     RETURN_TYPES = ()
     RETURN_NAMES = ()
     FUNCTION = "debug_object"
-    CATEGORY = CATEGORIES["DEVELOPMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Display comprehensive debug information about any input object in a text widget."
     OUTPUT_NODE = True
 

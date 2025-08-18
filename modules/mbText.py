@@ -35,7 +35,7 @@ class mbText:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "get_text"
-    CATEGORY = CATEGORIES["TEXT_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Multiline text input node for entering and passing text through workflows."
 
     def get_text(self, text):

@@ -94,7 +94,7 @@ class mbAIBypass:
     RETURN_TYPES = ("IMAGE", "STRING")
     RETURN_NAMES = ("image", "processing_info")
     FUNCTION = "apply_ai_bypass"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Modify images to help pass AI detection by adding natural artifacts, noise patterns, and frequency domain modifications."
 
     def apply_ai_bypass(self, image, bypass_mode, noise_type, high_freq_boost, texture_enhancement, 

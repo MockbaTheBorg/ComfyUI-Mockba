@@ -38,7 +38,7 @@ class mbImageSize:
     RETURN_TYPES = ("IMAGE", "INT", "INT")
     RETURN_NAMES = ("IMAGE", "width", "height")
     FUNCTION = "display_size"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Display image size information with UI feedback and passthrough functionality."
     OUTPUT_NODE = True
 

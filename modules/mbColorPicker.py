@@ -41,7 +41,7 @@ class mbColorPicker:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("color",)
     FUNCTION = "output_color"
-    CATEGORY = CATEGORIES["DATA_MANAGEMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Pick colors from images using a visual color picker and output them in #RRGGBB format."
 
     def output_color(self, color, pick_color=None):

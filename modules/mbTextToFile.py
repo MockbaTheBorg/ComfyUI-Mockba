@@ -44,7 +44,7 @@ class mbTextToFile:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "save_text_to_file"
-    CATEGORY = CATEGORIES["FILE_OPS"]
+    CATEGORY = "unset"
     DESCRIPTION = "Save text content to files with automatic directory management and extension handling."
 
     def save_text_to_file(self, text, filename):

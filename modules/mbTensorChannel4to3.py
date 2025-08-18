@@ -34,7 +34,7 @@ class mbTensorChannel4to3:
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("tensor",)
     FUNCTION = "convert_channels"
-    CATEGORY = CATEGORIES["DATA_MANAGEMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Convert a 1,x,y,4 tensor to a 1,x,y,3 tensor by removing the alpha channel. Returns unchanged if not 1,x,y,4."
 
     def convert_channels(self, tensor):

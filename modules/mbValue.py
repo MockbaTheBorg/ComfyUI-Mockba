@@ -42,7 +42,7 @@ class mbValue:
     RETURN_TYPES = ()
     RETURN_NAMES = ()
     FUNCTION = "display_value"
-    CATEGORY = CATEGORIES["DEVELOPMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Display any value in the node title without producing outputs. Supports custom Python formatting strings for value display. Useful for debugging and monitoring values in workflows."
     OUTPUT_NODE = True
 

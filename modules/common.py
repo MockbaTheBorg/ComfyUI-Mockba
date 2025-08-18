@@ -4,13 +4,13 @@ from PIL import Image, ImageDraw, ImageFont
 
 # Centralized category definitions for all nodes
 CATEGORIES = {
-    "IMAGE_PROCESSING": "🖖 Mockba/image",
-    "FILE_OPS": "🖖 Mockba/files", 
-    "TEXT_PROCESSING": "🖖 Mockba/text",
-    "GENERATION": "🖖 Mockba/generation",
     "DATA_MANAGEMENT": "🖖 Mockba/data",
     "DEVELOPMENT": "🖖 Mockba/development",
-    "MASK": "🖖 Mockba/mask"
+    "FILE_OPS": "🖖 Mockba/files", 
+    "GENERATION": "🖖 Mockba/generation",
+    "IMAGE_PROCESSING": "🖖 Mockba/image",
+    "MASK_PROCESSING": "🖖 Mockba/mask",
+    "TEXT_PROCESSING": "🖖 Mockba/text"
 }
 
 # A proxy class that always returns True when compared to any other object.

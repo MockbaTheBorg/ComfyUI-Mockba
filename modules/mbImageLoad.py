@@ -66,7 +66,7 @@ class mbImageLoad:
     RETURN_TYPES = ("IMAGE", "MASK", "STRING", "INT", "INT")
     RETURN_NAMES = ("image", "mask", "filename", "width", "height")
     FUNCTION = "load_image_enhanced"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Load images with support for multiple formats (PNG, JPG, WebP, BMP, TIFF), subfolders, and alpha channel extraction."
 
     def load_image_enhanced(self, image, force_rgb=True):

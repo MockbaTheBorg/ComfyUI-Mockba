@@ -55,7 +55,7 @@ class mbFileToLatent:
     RETURN_TYPES = ("LATENT", "INT")
     RETURN_NAMES = ("latent", "count")
     FUNCTION = "load_latent_from_file"
-    CATEGORY = CATEGORIES["FILE_OPS"]
+    CATEGORY = "unset"
     DESCRIPTION = "Load latent tensors from files with support for single latents and batch loading of sequentially numbered files. Returns default latent if file not found."
 
     def load_latent_from_file(self, filename, load_mode):

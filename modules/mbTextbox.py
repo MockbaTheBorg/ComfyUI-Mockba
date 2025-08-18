@@ -45,7 +45,7 @@ class mbTextbox:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "process_textbox"
-    CATEGORY = CATEGORIES["TEXT_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Dynamic textbox with passthrough capability and screen output functionality."
     OUTPUT_NODE = True
 

@@ -35,7 +35,7 @@ class mbString:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "get_string"
-    CATEGORY = CATEGORIES["TEXT_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Single-line string input node for entering and passing text through workflows."
 
     def get_string(self, text):

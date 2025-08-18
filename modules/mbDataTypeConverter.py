@@ -70,7 +70,7 @@ class mbDataTypeConverter:
     RETURN_TYPES = (any_typ, "STRING")
     RETURN_NAMES = ("converted_tensor", "memory_info")
     FUNCTION = "convert_data_type"
-    CATEGORY = CATEGORIES["DATA_MANAGEMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Convert tensor data types for memory optimization and performance tuning with detailed memory analysis."
     OUTPUT_NODE = True
 

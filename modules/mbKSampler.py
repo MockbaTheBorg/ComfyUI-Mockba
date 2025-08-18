@@ -118,7 +118,7 @@ class mbKSampler:
     RETURN_TYPES = ("LATENT", "FLOAT", "INT")
     RETURN_NAMES = ("latent", "elapsed_time", "actual_steps")
     FUNCTION = "enhanced_sample"
-    CATEGORY = CATEGORIES["GENERATION"]
+    CATEGORY = "unset"
     DESCRIPTION = "Enhanced K-Sampler with advanced noise control, partial sampling, preview options, and performance monitoring."
 
     def enhanced_sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, 

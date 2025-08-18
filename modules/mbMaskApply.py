@@ -42,7 +42,7 @@ class mbMaskApply:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "apply_mask"
-    CATEGORY = CATEGORIES["MASK"]
+    CATEGORY = "unset"
     DESCRIPTION = "Apply a mask to an image, keeping only the masked parts while maintaining the original image size. Non-masked areas become transparent/black."
 
     def apply_mask(self, image, mask=None, invert_mask=False):

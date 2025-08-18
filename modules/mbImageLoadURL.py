@@ -81,7 +81,7 @@ class mbImageLoadURL:
     RETURN_TYPES = ("IMAGE", "MASK", "STRING", "INT", "INT", "STRING")
     RETURN_NAMES = ("image", "mask", "filename", "width", "height", "content_type")
     FUNCTION = "load_image_from_url"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Load images from URLs with timeout handling, caching, format validation, and metadata extraction."
 
     def load_image_from_url(self, url, timeout=None, use_cache=True, force_rgb=True, 

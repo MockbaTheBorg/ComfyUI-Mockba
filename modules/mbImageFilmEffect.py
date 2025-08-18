@@ -89,7 +89,7 @@ class mbImageFilmEffect:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "apply_film_effects"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Add realistic film grain, vignette, and other film-like effects to make images look like analog photography."
 
     def apply_film_effects(self, image, film_type, grain_strength, vignette_strength, contrast_boost, color_shift, dust_spots, dead_pixels, seed):

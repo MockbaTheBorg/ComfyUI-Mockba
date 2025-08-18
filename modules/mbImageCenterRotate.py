@@ -59,7 +59,7 @@ class mbImageCenterRotate:
     RETURN_TYPES = ("IMAGE", "MASK")
     RETURN_NAMES = ("image", "mask")
     FUNCTION = "rotate_image"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Rotate images by arbitrary floating-point angles around their center with crop, expand, or contract options. Returns inverted mask for outpainting."
 
     def rotate_image(self, image, angle, size_mode, fill_color):

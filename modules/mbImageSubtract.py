@@ -52,7 +52,7 @@ class mbImageSubtract:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "subtract_images"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = (
         "Subtract two images to visualize differences with configurable gain. Mode options: 'Difference Values' shows actual difference values, "
         "'Binary Difference' shows black where no difference and white where differences exist. "

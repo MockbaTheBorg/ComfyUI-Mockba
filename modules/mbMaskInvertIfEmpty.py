@@ -33,7 +33,7 @@ class mbMaskInvertIfEmpty:
     RETURN_TYPES = ("MASK",)
     RETURN_NAMES = ("mask",)
     FUNCTION = "process_mask"
-    CATEGORY = CATEGORIES["MASK"]
+    CATEGORY = "unset"
     DESCRIPTION = "Inverts a mask if it's all zeros (empty), otherwise leaves it unchanged. Useful for ensuring masks have content."
 
     def process_mask(self, mask):

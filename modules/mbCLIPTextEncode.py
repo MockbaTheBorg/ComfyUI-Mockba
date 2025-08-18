@@ -37,7 +37,7 @@ class mbCLIPTextEncode(ComfyNodeABC):
     RETURN_TYPES = (IO.CONDITIONING, "STRING")
     RETURN_NAMES = ("prompt", "text")
     FUNCTION = "encode_text"
-    CATEGORY = CATEGORIES["TEXT_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = (
         "Encode text prompts using CLIP models into embeddings for guiding diffusion model image generation. "
         "Supports dynamic prompts and multiline text input."

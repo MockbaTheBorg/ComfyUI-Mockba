@@ -50,7 +50,7 @@ class mbFileToText:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "load_text_from_file"
-    CATEGORY = CATEGORIES["FILE_OPS"]
+    CATEGORY = "unset"
     DESCRIPTION = "Load text content from files with automatic fallback to default text."
 
     def load_text_from_file(self, filename, default_text=""):

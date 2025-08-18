@@ -93,7 +93,7 @@ class mbBarcode:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "generate_barcode"
-    CATEGORY = CATEGORIES["GENERATION"]
+    CATEGORY = "unset"
     DESCRIPTION = "Generate barcode images from text with customizable formatting options."
 
     def generate_barcode(self, data, type, fontsize, textdistance, foreground_color, background_color, pdf417_columns=3, pdf417_security_level=2, pdf417_scale=3):

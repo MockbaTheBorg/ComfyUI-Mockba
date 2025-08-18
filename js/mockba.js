@@ -153,7 +153,7 @@ app.registerExtension({
 		};
 
 		switch (nodeData.name) {
-			case "mb Textbox":
+			case "mbTextbox":
 				addNodeExecutedHook(function (message) {
 					for (const widget of this.widgets) {
 						if (widget.type === "customtext") {
@@ -163,7 +163,7 @@ app.registerExtension({
 					this.onResize?.(this.size);
 				});
 				break;
-			case "mb Debug":
+			case "mbDebug":
 				addNodeExecutedHook(function (message) {
 					if (this.widgets && message?.debug_output) {
 						const debugWidget = this.widgets.find(w => w.name === "debug_output");
@@ -174,7 +174,7 @@ app.registerExtension({
 					}
 				});
 				break;
-			case "mb Display":
+			case "mbDisplay":
 				addNodeExecutedHook(function (message) {
 					if (this.widgets && message?.value) {
 						const newValue = message.value[0];
@@ -188,7 +188,7 @@ app.registerExtension({
 					}
 				});
 				break;
-			case "mb Value":
+			case "mbValue":
 				addNodeCreatedHook(function () {
 					const showTypeWidget = this.widgets?.find(w => w.name === "show_type");
 					if (showTypeWidget) {
@@ -236,7 +236,7 @@ app.registerExtension({
 					}
 				});
 				break;
-			case 'mb Image Size':
+			case 'mbImageSize':
 				addNodeCreatedHook(function () {
 					ComfyWidgets["INT"](this, "width", ["INT", {}], app);
 					ComfyWidgets["INT"](this, "height", ["INT", {}], app);
@@ -253,7 +253,7 @@ app.registerExtension({
 					this.onResize?.(this.size);
 				});
 				break;
-			case 'mb Exec':
+			case 'mbExec':
 				addNodeCreatedHook(function () {
 					const HIDDEN_MARKER = "# __HIDDEN__";
 					const isCodeHidden = (code) => code.startsWith(HIDDEN_MARKER);
@@ -301,7 +301,7 @@ app.registerExtension({
 					};
 				});
 				break;
-			case 'mb Submit':
+			case 'mbSubmit':
 				addNodeCreatedHook(function () {
 					this.addWidget("button", "Submit Workflow", "Submit Workflow", () => app.queuePrompt(0));
 					this.addWidget("button", "Reset Canvas", "Reset Canvas", () => {
@@ -313,8 +313,8 @@ app.registerExtension({
 					});
 				});
 				break;
-			case "mb Color Picker":
-			case "mb Mask from Color":
+			case "mbColorPicker":
+			case "mbMaskFromColor":
 				addNodeCreatedHook(function () {
 					this.addWidget("button", "Pick Color", "Pick Color", () => {
 						ColorPickerUtils.startColorPicking(this);
@@ -322,19 +322,19 @@ app.registerExtension({
 				});
 				break;
 		}
-		if (nodeData.name === 'mb Image Batch' ||
-			nodeData.name === 'mb Select' ||
-			nodeData.name === 'mb Demux' ||
-			nodeData.name === 'mb Eval' ||
-			nodeData.name === 'mb Exec') {
+		if (nodeData.name === 'mbImageBatch' ||
+			nodeData.name === 'mbSelect' ||
+			nodeData.name === 'mbDemux' ||
+			nodeData.name === 'mbEval' ||
+			nodeData.name === 'mbExec') {
 			var input_name = "input";
 
 			switch (nodeData.name) {
-				case 'mb Image Batch':
+				case 'mbImageBatch':
 					input_name = "image";
 					break;
-				case 'mb Eval':
-				case 'mb Exec':
+				case 'mbEval':
+				case 'mbExec':
 					input_name = "i";
 					break;
 			}
@@ -347,11 +347,11 @@ app.registerExtension({
 				if (type == 2) {
 					// connect output
 					if (connected && index == 0) {
-						if ((nodeData.name == 'mb Select' || nodeData.name == 'mb Demux') && app.graph._nodes_by_id[link_info.target_id]?.type == 'Reroute') {
+						if ((nodeData.name == 'mbSelect' || nodeData.name == 'mbDemux') && app.graph._nodes_by_id[link_info.target_id]?.type == 'Reroute') {
 							app.graph._nodes_by_id[link_info.target_id].disconnectInput(link_info.target_slot);
 						}
 
-						if (nodeData.name != 'mb Eval' && nodeData.name != 'mb Exec') {
+						if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
 							if (this.outputs[0].type == '*') {
 								if (link_info.type == '*') {
 									app.graph._nodes_by_id[link_info.target_id].disconnectInput(link_info.target_slot);
@@ -372,7 +372,7 @@ app.registerExtension({
 					return;
 				} else {
 					// connect input
-					if ((nodeData.name == 'mb Select' || nodeData.name == 'mb Demux') && app.graph._nodes_by_id[link_info.origin_id].type == 'Reroute')
+					if ((nodeData.name == 'mbSelect' || nodeData.name == 'mbDemux') && app.graph._nodes_by_id[link_info.origin_id].type == 'Reroute')
 						this.disconnectInput(link_info.target_slot);
 
 					if (this.inputs[index].name == 'select' ||
@@ -383,7 +383,7 @@ app.registerExtension({
 						const node = app.graph.getNodeById(link_info.origin_id);
 						let origin_type = node.outputs[link_info.origin_slot].type;
 
-						if (nodeData.name != 'mb Eval' && nodeData.name != 'mb Exec') {
+						if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
 							if (origin_type == '*') {
 								this.disconnectInput(link_info.target_slot);
 								return;
@@ -433,14 +433,14 @@ app.registerExtension({
 					(last_slot.name == 'select' && this.inputs[this.inputs.length - 2].link != undefined) ||
 					(last_slot.name == 'code' && this.inputs[this.inputs.length - 2].link != undefined) ||
 					(last_slot.name != 'select' && last_slot.name != 'code' && last_slot.link != undefined)) {
-					if (nodeData.name != 'mb Eval' && nodeData.name != 'mb Exec') {
+					if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
 						this.addInput(`${input_name}${slot_i}`, this.outputs[0].type);
 					} else {
 						this.addInput(`${input_name}${slot_i}`);
 					}
 				}
 
-				if (nodeData.name == 'mb Select' || nodeData.name == 'mb Demux') {
+				if (nodeData.name == 'mbSelect' || nodeData.name == 'mbDemux') {
 					if (this.widgets) {
 						this.widgets[0].options.max = select_slot ? this.inputs.length - 2 : this.inputs.length - 1;
 						this.widgets[0].value = Math.min(this.widgets[0].value, this.widgets[0].options.max);

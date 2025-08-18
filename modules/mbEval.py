@@ -54,7 +54,7 @@ class mbEval:
     RETURN_TYPES = (any_typ, "STRING")
     RETURN_NAMES = ("result", "error")
     FUNCTION = "evaluate_expression"
-    CATEGORY = CATEGORIES["DEVELOPMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Evaluate Python expressions on inputs with access to safe built-in functions and mathematical operations. Returns error message if evaluation fails."
 
     def evaluate_expression(self, code, **kwargs):

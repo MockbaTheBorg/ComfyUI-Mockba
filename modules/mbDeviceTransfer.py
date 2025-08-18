@@ -42,7 +42,7 @@ class mbDeviceTransfer:
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("tensor",)
     FUNCTION = "transfer_device"
-    CATEGORY = CATEGORIES["DATA_MANAGEMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Transfer tensor to specified device (CPU, CUDA, MPS) for memory optimization and compute efficiency."
 
     @classmethod

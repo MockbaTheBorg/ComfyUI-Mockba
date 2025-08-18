@@ -90,7 +90,7 @@ class mbEmptyLatentImage:
     RETURN_TYPES = ("LATENT",)
     RETURN_NAMES = ("latent_image",)
     FUNCTION = "generate_empty_latent"
-    CATEGORY = CATEGORIES["GENERATION"]
+    CATEGORY = "unset"
     DESCRIPTION = "Create empty latent tensors for diffusion models with device placement and memory management options."
 
     def generate_empty_latent(self, size, width, height, batch_size, device, memory_management):

@@ -56,7 +56,7 @@ class mbDisplay:
     RETURN_TYPES = ()
     RETURN_NAMES = ()
     FUNCTION = "display_data"
-    CATEGORY = CATEGORIES["DEVELOPMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Universal display node that shows information about any input type - strings, numbers, images, tensors, etc."
     OUTPUT_NODE = True
 

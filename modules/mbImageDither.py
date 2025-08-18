@@ -92,7 +92,7 @@ class mbImageDither:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("dithered_image",)
     FUNCTION = "apply_dithering"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Apply professional dithering algorithms including Floyd-Steinberg, Bayer, and halftone patterns with color/monochrome support."
 
     def apply_dithering(self, image, method, color_mode, threshold, dot_size, custom_angle=45.0, enhance_contrast=False):
