@@ -31,6 +31,7 @@ class mbText:
         }
 
     # Node metadata
+    TITLE = "Multiline Text Input"
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "get_text"

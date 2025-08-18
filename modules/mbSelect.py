@@ -45,6 +45,7 @@ class mbSelect:
         }
 
     # Node metadata
+    TITLE = "Input Selector"
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("out",)
     FUNCTION = "select_input"

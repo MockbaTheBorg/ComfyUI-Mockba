@@ -47,6 +47,7 @@ class mbMemoryUnload:
         }
 
     # Node metadata
+    TITLE = "Memory Unload"
     RETURN_TYPES = (any_typ, "STRING")
     RETURN_NAMES = ("output", "memory_stats")
     FUNCTION = "unload_memory_and_passthrough"

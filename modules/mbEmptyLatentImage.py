@@ -86,6 +86,7 @@ class mbEmptyLatentImage:
         }
 
     # Node metadata
+    TITLE = "Empty Latent Image"
     RETURN_TYPES = ("LATENT",)
     RETURN_NAMES = ("latent_image",)
     FUNCTION = "generate_empty_latent"

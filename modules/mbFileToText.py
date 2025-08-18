@@ -46,6 +46,7 @@ class mbFileToText:
         }
 
     # Node metadata
+    TITLE = "File to Text Reader"
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "load_text_from_file"

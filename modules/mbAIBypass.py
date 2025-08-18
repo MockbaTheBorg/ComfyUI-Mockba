@@ -90,6 +90,7 @@ class mbAIBypass:
         }
 
     # Node metadata
+    TITLE = "AI Detection Bypass"
     RETURN_TYPES = ("IMAGE", "STRING")
     RETURN_NAMES = ("image", "processing_info")
     FUNCTION = "apply_ai_bypass"

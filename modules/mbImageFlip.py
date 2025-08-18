@@ -41,6 +41,7 @@ class mbImageFlip:
         }
 
     # Node metadata
+    TITLE = "Image Flip"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "flip_image"

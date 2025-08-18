@@ -40,6 +40,7 @@ class mbTextToFile:
         }
 
     # Node metadata
+    TITLE = "Text to File Writer"
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "save_text_to_file"

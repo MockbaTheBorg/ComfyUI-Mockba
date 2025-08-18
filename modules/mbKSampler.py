@@ -114,6 +114,7 @@ class mbKSampler:
         }
 
     # Node metadata
+    TITLE = "Enhanced K-Sampler"
     RETURN_TYPES = ("LATENT", "FLOAT", "INT")
     RETURN_NAMES = ("latent", "elapsed_time", "actual_steps")
     FUNCTION = "enhanced_sample"

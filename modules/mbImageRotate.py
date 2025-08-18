@@ -47,6 +47,7 @@ class mbImageRotate:
         }
 
     # Node metadata
+    TITLE = "Image Rotation"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "rotate_image"

@@ -55,6 +55,7 @@ class mbImageCenterRotate:
         }
 
     # Node metadata
+    TITLE = "Image Center Rotate"
     RETURN_TYPES = ("IMAGE", "MASK")
     RETURN_NAMES = ("image", "mask")
     FUNCTION = "rotate_image"

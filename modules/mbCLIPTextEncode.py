@@ -33,6 +33,7 @@ class mbCLIPTextEncode(ComfyNodeABC):
         }
     
     # Node metadata
+    TITLE = "CLIP Text Encoder"
     RETURN_TYPES = (IO.CONDITIONING, "STRING")
     RETURN_NAMES = ("prompt", "text")
     FUNCTION = "encode_text"

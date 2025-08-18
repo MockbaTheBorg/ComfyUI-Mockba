@@ -69,6 +69,7 @@ class mbAIDetector:
         }
 
     # Node metadata
+    TITLE = "AI Image Detector"
     RETURN_TYPES = ("BOOLEAN", "FLOAT", "FLOAT", "STRING", "STRING")
     RETURN_NAMES = ("is_ai_generated", "ai_probability", "human_probability", "prediction", "model_info")
     FUNCTION = "detect_ai_image"

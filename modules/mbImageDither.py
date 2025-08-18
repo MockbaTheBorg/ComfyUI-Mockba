@@ -88,6 +88,7 @@ class mbImageDither:
         }
 
     # Node metadata
+    TITLE = "Image Dithering"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("dithered_image",)
     FUNCTION = "apply_dithering"

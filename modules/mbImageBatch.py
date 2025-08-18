@@ -41,6 +41,7 @@ class mbImageBatch:
         }
 
     # Node metadata
+    TITLE = "Image Batch Creator"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "create_image_batch"

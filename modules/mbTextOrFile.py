@@ -51,6 +51,7 @@ class mbTextOrFile:
         }
 
     # Node metadata
+    TITLE = "Text or File Input"
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "process_text_or_file"

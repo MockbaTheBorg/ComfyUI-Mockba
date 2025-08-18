@@ -77,6 +77,7 @@ class mbImageLoadURL:
         }
 
     # Node metadata
+    TITLE = "Image Loader (URL)"
     RETURN_TYPES = ("IMAGE", "MASK", "STRING", "INT", "INT", "STRING")
     RETURN_NAMES = ("image", "mask", "filename", "width", "height", "content_type")
     FUNCTION = "load_image_from_url"

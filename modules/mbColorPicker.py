@@ -37,6 +37,7 @@ class mbColorPicker:
         }
 
     # Node metadata
+    TITLE = "Color Picker"
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("color",)
     FUNCTION = "output_color"

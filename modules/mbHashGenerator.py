@@ -69,6 +69,7 @@ class mbHashGenerator:
         }
 
     # Node metadata
+    TITLE = "Hash Generator"
     RETURN_TYPES = ("STRING", "STRING", "STRING")
     RETURN_NAMES = ("result", "hash_only", "algorithm_info")
     FUNCTION = "generate_hash"

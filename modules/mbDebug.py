@@ -49,6 +49,7 @@ class mbDebug:
         }
 
     # Node metadata
+    TITLE = "Debug Information"
     RETURN_TYPES = ()
     RETURN_NAMES = ()
     FUNCTION = "debug_object"

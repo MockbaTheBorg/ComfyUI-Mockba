@@ -50,6 +50,7 @@ class mbEval:
         }
 
     # Node metadata
+    TITLE = "Python Expression Evaluator"
     RETURN_TYPES = (any_typ, "STRING")
     RETURN_NAMES = ("result", "error")
     FUNCTION = "evaluate_expression"

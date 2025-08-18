@@ -89,6 +89,7 @@ class mbBarcode:
         }
 
     # Node metadata
+    TITLE = "Barcode Generator"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "generate_barcode"

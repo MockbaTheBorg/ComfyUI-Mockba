@@ -86,6 +86,7 @@ class mbImageToFile:
         }
 
     # Node metadata
+    TITLE = "Image to File Saver"
     RETURN_TYPES = ("IMAGE", "INT")
     RETURN_NAMES = ("image", "count")
     FUNCTION = "save_image_to_file"

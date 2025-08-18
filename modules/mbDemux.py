@@ -30,6 +30,7 @@ class mbDemux:
         }
 
     # Node metadata
+    TITLE = "Demultiplexer"
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("out",)
     FUNCTION = "demultiplex_inputs"

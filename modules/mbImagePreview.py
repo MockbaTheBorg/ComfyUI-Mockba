@@ -48,6 +48,7 @@ class mbImagePreview:
         }
 
     # Node metadata
+    TITLE = "Image Preview"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "save_images"

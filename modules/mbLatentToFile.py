@@ -47,6 +47,7 @@ class mbLatentToFile:
         }
 
     # Node metadata
+    TITLE = "Latent to File Saver"
     RETURN_TYPES = ("LATENT", "INT")
     RETURN_NAMES = ("latent", "count")
     FUNCTION = "save_latent_to_file"

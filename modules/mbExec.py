@@ -52,6 +52,7 @@ class mbExec:
         }
 
     # Node metadata
+    TITLE = "Python Code Executor"
     RETURN_TYPES = (any_typ, "STRING")
     RETURN_NAMES = ("out", "error")
     FUNCTION = "execute_code"

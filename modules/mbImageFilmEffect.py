@@ -85,6 +85,7 @@ class mbImageFilmEffect:
         }
 
     # Node metadata
+    TITLE = "Image Film Effect"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "apply_film_effects"

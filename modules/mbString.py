@@ -31,6 +31,7 @@ class mbString:
         }
 
     # Node metadata
+    TITLE = "String Input"
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "get_string"

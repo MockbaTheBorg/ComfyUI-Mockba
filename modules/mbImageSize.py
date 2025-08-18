@@ -34,6 +34,7 @@ class mbImageSize:
         }
 
     # Node metadata
+    TITLE = "Image Size Display"
     RETURN_TYPES = ("IMAGE", "INT", "INT")
     RETURN_NAMES = ("IMAGE", "width", "height")
     FUNCTION = "display_size"

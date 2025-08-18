@@ -52,6 +52,7 @@ class mbMaskFromColor:
         }
 
     # Node metadata
+    TITLE = "Mask from Color"
     RETURN_TYPES = ("MASK",)
     RETURN_NAMES = ("mask",)
     FUNCTION = "create_mask_from_color"

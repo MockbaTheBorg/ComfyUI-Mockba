@@ -29,6 +29,7 @@ class mbMaskInvertIfEmpty:
         }
 
     # Node metadata
+    TITLE = "Mask Invert If Empty"
     RETURN_TYPES = ("MASK",)
     RETURN_NAMES = ("mask",)
     FUNCTION = "process_mask"

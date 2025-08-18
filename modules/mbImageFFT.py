@@ -55,6 +55,7 @@ class mbImageFFT:
         }
 
     # Node metadata
+    TITLE = "Image FFT Analysis"
     RETURN_TYPES = ("IMAGE", "IMAGE", "FLOAT", "STRING")
     RETURN_NAMES = ("fft_visualization", "original_image", "high_freq_ratio", "analysis_info")
     FUNCTION = "analyze_fft"

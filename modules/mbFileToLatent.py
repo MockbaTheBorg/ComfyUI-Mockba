@@ -51,6 +51,7 @@ class mbFileToLatent:
         }
 
     # Node metadata
+    TITLE = "File to Latent Loader"
     RETURN_TYPES = ("LATENT", "INT")
     RETURN_NAMES = ("latent", "count")
     FUNCTION = "load_latent_from_file"

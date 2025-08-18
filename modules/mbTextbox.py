@@ -41,6 +41,7 @@ class mbTextbox:
         }
 
     # Node metadata
+    TITLE = "Dynamic Textbox"
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
     FUNCTION = "process_textbox"

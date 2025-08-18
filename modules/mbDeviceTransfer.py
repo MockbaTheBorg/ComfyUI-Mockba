@@ -38,6 +38,7 @@ class mbDeviceTransfer:
         }
 
     # Node metadata
+    TITLE = "Device Transfer"
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("tensor",)
     FUNCTION = "transfer_device"

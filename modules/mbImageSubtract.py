@@ -48,6 +48,7 @@ class mbImageSubtract:
         }
 
     # Node metadata
+    TITLE = "Image Subtraction"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "subtract_images"

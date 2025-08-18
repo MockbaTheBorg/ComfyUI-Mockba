@@ -52,6 +52,7 @@ class mbDisplay:
         }
 
     # Node metadata
+    TITLE = "Universal Display"
     RETURN_TYPES = ()
     RETURN_NAMES = ()
     FUNCTION = "display_data"

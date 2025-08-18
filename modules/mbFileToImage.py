@@ -55,6 +55,7 @@ class mbFileToImage:
         }
 
     # Node metadata
+    TITLE = "File to Image Loader"
     RETURN_TYPES = ("IMAGE", "INT")
     RETURN_NAMES = ("image", "count")
     FUNCTION = "load_image_from_file"

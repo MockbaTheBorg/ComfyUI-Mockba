@@ -38,6 +38,7 @@ class mbValue:
         }
 
     # Node metadata
+    TITLE = "Value Display"
     RETURN_TYPES = ()
     RETURN_NAMES = ()
     FUNCTION = "display_value"

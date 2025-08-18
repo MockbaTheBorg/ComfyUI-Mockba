@@ -66,6 +66,7 @@ class mbDataTypeConverter:
         }
 
     # Node metadata
+    TITLE = "Data Type Converter"
     RETURN_TYPES = (any_typ, "STRING")
     RETURN_NAMES = ("converted_tensor", "memory_info")
     FUNCTION = "convert_data_type"

@@ -38,6 +38,7 @@ class mbMaskApply:
         }
 
     # Node metadata
+    TITLE = "Mask Apply"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "apply_mask"

@@ -1,3 +1,5 @@
+from .modules.common import CATEGORIES
+
 from .modules.mbAIBypass import mbAIBypass
 from .modules.mbAIDetector import mbAIDetector
 from .modules.mbIlluminarty import mbIlluminarty

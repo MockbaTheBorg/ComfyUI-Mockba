@@ -22,6 +22,7 @@ class mbSubmit:
         }
 
     # Node metadata
+    TITLE = "Workflow Submit"
     RETURN_TYPES = ()
     RETURN_NAMES = ()
     FUNCTION = "submit_workflow"

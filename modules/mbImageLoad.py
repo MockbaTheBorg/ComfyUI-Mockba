@@ -62,6 +62,7 @@ class mbImageLoad:
             }
 
     # Node metadata
+    TITLE = "Image Loader"
     RETURN_TYPES = ("IMAGE", "MASK", "STRING", "INT", "INT")
     RETURN_NAMES = ("image", "mask", "filename", "width", "height")
     FUNCTION = "load_image_enhanced"

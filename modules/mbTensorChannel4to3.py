@@ -30,6 +30,7 @@ class mbTensorChannel4to3:
         }
 
     # Node metadata
+    TITLE = "Tensor Channel Converter"
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("tensor",)
     FUNCTION = "convert_channels"
