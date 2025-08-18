@@ -17,7 +17,6 @@ class mbDisplay:
     # Class constants
     DEFAULT_MESSAGE = "Display output will appear here after execution..."
     MAX_DICT_KEYS = 10
-    MAX_STRING_LENGTH = 200
     PFORMAT_WIDTH = 60
     PFORMAT_DEPTH = 2
     
@@ -34,9 +33,20 @@ class mbDisplay:
                     "tooltip": "Any type of data to display"
                 }),
                 "value": ("STRING", {
-                    "multiline": False, 
+                    "multiline": True, 
                     "default": cls.DEFAULT_MESSAGE,
                     "tooltip": "Display output (automatically populated)"
+                }),
+                "console_output": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "Also print display information to console"
+                }),
+                "truncate_size": ("INT", {
+                    "default": 500,
+                    "min": 0,
+                    "max": 10000,
+                    "step": 1,
+                    "tooltip": "Maximum characters for truncation (0 = no truncation)"
                 }),
             }
         }
@@ -49,29 +59,40 @@ class mbDisplay:
     DESCRIPTION = "Universal display node that shows information about any input type - strings, numbers, images, tensors, etc."
     OUTPUT_NODE = True
 
-    def display_data(self, input, value):
+    def display_data(self, input, value, console_output, truncate_size):
         """
         Display information about the input data.
         
         Args:
             input: Any type of data to analyze and display
             value: Current display value (updated by this function)
+            console_output: Whether to print to console
+            truncate_size: Maximum characters for truncation (0 = no truncation)
             
         Returns:
             dict: UI update with formatted display text and multiline setting
         """
         try:
             display_text = self._format_data(input)
+            
+            # Apply truncation if specified
+            if truncate_size > 0 and len(display_text) > truncate_size:
+                display_text = display_text[:truncate_size] + "... (truncated)"
+                
         except Exception as e:
             display_text = f"Error: {str(e)}"
         
-        # Determine if multiline display is needed
-        has_newlines = '\n' in display_text
+        # Print to console if requested
+        if console_output:
+            print("=" * 50)
+            print("mbDisplay Console Output:")
+            print("=" * 50)
+            print(display_text)
+            print("=" * 50)
         
         return {
             "ui": {"value": [display_text]},
-            "result": (display_text,),
-            "multiline": has_newlines
+            "result": (display_text,)
         }
 
     def _format_data(self, input):
@@ -169,11 +190,9 @@ class mbDisplay:
             attr_text = "\n".join(attrs)
             return f"{value_type}\n{attr_text}"
         else:
-            # Try string representation with length limit
+            # Try string representation - truncation now handled at top level
             try:
                 str_repr = str(obj)
-                if len(str_repr) > self.MAX_STRING_LENGTH:
-                    str_repr = str_repr[:self.MAX_STRING_LENGTH] + "..."
                 return str_repr
             except:
                 return f"{value_type} (cannot convert to string)"

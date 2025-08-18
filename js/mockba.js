@@ -178,31 +178,13 @@ app.registerExtension({
 				addNodeExecutedHook(function (message) {
 					if (this.widgets && message?.value) {
 						const newValue = message.value[0];
-						const hasNewlines = newValue.includes('\n');
 						
-						const widgetIndex = this.widgets.findIndex(w => w.name === "value");
-						if (widgetIndex >= 0) {
-							const oldWidget = this.widgets[widgetIndex];
-							if (oldWidget.inputEl && oldWidget.inputEl.parentNode) {
-								oldWidget.inputEl.parentNode.removeChild(oldWidget.inputEl);
-							}
-							if (oldWidget.element && oldWidget.element.parentNode) {
-								oldWidget.element.parentNode.removeChild(oldWidget.element);
-							}
-							this.widgets.splice(widgetIndex, 1);
+						const valueWidget = this.widgets.find(w => w.name === "value");
+						if (valueWidget) {
+							valueWidget.value = newValue;
 						}
 						
-						const newWidget = ComfyWidgets.STRING(this, "value", ["STRING", { multiline: hasNewlines, default: newValue }], app).widget;
-						newWidget.value = newValue;
-						
-						if (widgetIndex >= 0 && widgetIndex < this.widgets.length) {
-							const widget = this.widgets.pop();
-							this.widgets.splice(widgetIndex, 0, widget);
-						}
-						
-						this.setSize(this.computeSize());
 						this.setDirtyCanvas(true, true);
-						this.onResize?.(this.size);
 					}
 				});
 				break;

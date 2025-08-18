@@ -34,6 +34,17 @@ class mbDebug:
                     "default": cls.DEFAULT_DEBUG_MESSAGE,
                     "tooltip": "Debug output display (automatically populated)"
                 }),
+                "console_output": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "Also print debug information to console"
+                }),
+                "truncate_size": ("INT", {
+                    "default": 500,
+                    "min": 0,
+                    "max": 10000,
+                    "step": 1,
+                    "tooltip": "Maximum characters for truncation (0 = no truncation)"
+                }),
             }
         }
 
@@ -45,13 +56,15 @@ class mbDebug:
     DESCRIPTION = "Display comprehensive debug information about any input object in a text widget."
     OUTPUT_NODE = True
 
-    def debug_object(self, input, debug_output):
+    def debug_object(self, input, debug_output, console_output, truncate_size):
         """
         Generate debug information for the input object.
         
         Args:
             input: Any object to debug
             debug_output: Current debug output (updated by this function)
+            console_output: Whether to print to console
+            truncate_size: Maximum characters for truncation (0 = no truncation)
             
         Returns:
             dict: UI update with formatted debug information
@@ -60,10 +73,24 @@ class mbDebug:
             debug_lines = self._generate_debug_info(input)
             debug_text = "\n".join(debug_lines)
             
+            # Apply truncation if specified
+            if truncate_size > 0 and len(debug_text) > truncate_size:
+                debug_text = debug_text[:truncate_size] + "... (truncated)"
+            
+            # Print to console if requested
+            if console_output:
+                print("=" * 50)
+                print("mbDebug Console Output:")
+                print("=" * 50)
+                print(debug_text)
+                print("=" * 50)
+            
             return {"ui": {"debug_output": [debug_text]}}
             
         except Exception as e:
             error_msg = f"Error generating debug info: {str(e)}"
+            if console_output:
+                print(f"mbDebug Error: {error_msg}")
             return {"ui": {"debug_output": [error_msg]}}
 
     def _generate_debug_info(self, obj):
@@ -132,8 +159,7 @@ class mbDebug:
         
         try:
             value_str = str(obj)
-            if len(value_str) > 500:  # Limit very long outputs
-                value_str = value_str[:500] + "... (truncated)"
+            # Note: Truncation is now handled at the top level in debug_object
             debug_lines.append(f"  Value: {value_str}")
         except:
             debug_lines.append("  Value: Unable to convert to string")
