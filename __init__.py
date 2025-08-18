@@ -86,8 +86,6 @@ NODE_CLASS_MAPPINGS = {
     "mb QR Code": mbQRCode,
     
     # === Image Processing ===
-    "mb AI Bypass": mbAIBypass,
-    "mb AI Detector": mbAIDetector,
     "mb Illuminarty": mbIlluminarty,
     "mb Image Batch": mbImageBatch,
     "mb Image Center Rotate": mbImageCenterRotate,
@@ -125,6 +123,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     
     # === Development & Debugging ===
     "mb AI Bypass": "AI Bypass",
+    "mb AI Detector": "AI Detector",
     "mb Color Picker": "Color Picker",
     "mb Debug": "Debug",
     "mb Display": "Display",
@@ -152,8 +151,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "mb QR Code": "QR Code",
     
     # === Image Processing ===
-    "mb AI Bypass": "AI Bypass",
-    "mb AI Detector": "AI Detector",
     "mb Illuminarty": "Illuminarty AI Detector",
     "mb Image Batch": "Image Batch",
     "mb Image Center Rotate": "Image Center Rotate",

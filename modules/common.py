@@ -9,7 +9,7 @@ CATEGORIES = {
     "TEXT_PROCESSING": "🖖 Mockba/text",
     "GENERATION": "🖖 Mockba/generation",
     "DATA_MANAGEMENT": "🖖 Mockba/data",
-    "DEVELOPMENT": "🖖 Mockba/dev",
+    "DEVELOPMENT": "🖖 Mockba/development",
     "MASK": "🖖 Mockba/mask"
 }
 
