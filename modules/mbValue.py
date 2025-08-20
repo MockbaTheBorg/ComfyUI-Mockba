@@ -46,44 +46,6 @@ class mbValue:
     DESCRIPTION = "Display any value in the node title without producing outputs. Supports custom Python formatting strings for value display. Useful for debugging and monitoring values in workflows."
     OUTPUT_NODE = True
 
-    @classmethod
-    def get_title(cls, value=None, format=None, show_type=False, **kwargs):
-        """Return dynamic title based on input value."""
-        if value is None:
-            return "mbValue"
-        
-        # Handle different value types for display
-        try:
-            # Apply custom format if provided
-            if format and format.strip():
-                try:
-                    formatted_value = format.format(value)
-                    return f"mbValue: {formatted_value}"
-                except (ValueError, TypeError, KeyError) as e:
-                    # If formatting fails, show error and fallback to default
-                    return f"mbValue: <format error: {str(e)}>"
-            
-            # Default formatting
-            if isinstance(value, (int, float)):
-                return f"mbValue: {value}"
-            elif isinstance(value, str):
-                # Truncate long strings
-                display_str = value[:30] + "..." if len(value) > 30 else value
-                return f"mbValue: {display_str}"
-            elif isinstance(value, (list, tuple)):
-                return f"mbValue: [{len(value)} items]"
-            elif hasattr(value, 'shape'):  # For tensors/arrays
-                return f"mbValue: {value.shape}"
-            else:
-                # For other types, show type name only if show_type is enabled
-                if show_type:
-                    type_name = type(value).__name__
-                    return f"mbValue: <{type_name}>"
-                else:
-                    return f"mbValue: {str(value)}"
-        except Exception:
-            return "mbValue: <unknown>"
-
     def display_value(self, value, format=None, show_type=False):
         """Process the input value (no output)."""
         # Apply custom format if provided
