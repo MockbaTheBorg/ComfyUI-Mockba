@@ -14,7 +14,7 @@ class mbWirelessInput:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "id": ("STRING", {"default": "wireless_1", "multiline": False}),
+                "id": ("STRING", {"default": "1", "multiline": False}),
                 "data": (any_typ, {}),
             }
         }
