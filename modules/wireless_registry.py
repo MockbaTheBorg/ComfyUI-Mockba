@@ -30,7 +30,7 @@ def get_wireless_ids():
     """Get list of all active wireless IDs"""
     return list(_WIRELESS_REGISTRY.keys())
 
-def _compute_data_hash(id, data):
+def _compute_data_hash(wid, data):
     """Compute a hash for the data to detect changes"""
     try:
         if hasattr(data, 'shape'):  # For tensors/numpy arrays
@@ -44,12 +44,16 @@ def _compute_data_hash(id, data):
             data_str = str(data)
         
         # Include ID to make it unique per wireless connection
-        content_str = f"{id}_{data_str}"
+        content_str = f"{wid}_{data_str}"
         return hashlib.md5(content_str.encode()).hexdigest()
         
     except Exception as e:
-        # Fallback: use data ID for guaranteed uniqueness per object
-        return hashlib.md5(f"fallback_{id}_{id(data)}".encode()).hexdigest()
+        # Fallback: use Python object id (avoid shadowing built-in id)
+        try:
+            obj_id = builtins.id(data)  # type: ignore
+        except Exception:
+            obj_id = 0
+        return hashlib.md5(f"fallback_{wid}_{obj_id}".encode()).hexdigest()
 
 def store_wireless_data(id, data):
     """Store data in the wireless registry"""

@@ -1,5 +1,5 @@
 from .common import any_typ
-from .wireless_registry import retrieve_wireless_data, get_wireless_ids, get_data_hash
+from .wireless_registry import retrieve_wireless_data, get_data_hash
 
 class mbWirelessOutput:
     """
@@ -23,21 +23,31 @@ class mbWirelessOutput:
     
     @classmethod
     def IS_CHANGED(cls, id, **kwargs):
-        """
-        Tell ComfyUI when this node needs to re-execute.
-        This checks if the wireless input data has changed.
+        """Always force execution to avoid one-cycle lag.
+
+        Rationale:
+        ComfyUI evaluates IS_CHANGED for *all* nodes before executing any of
+        them. Because the wireless input and output nodes are not connected
+        by an edge, the output node previously looked at the *current* stored
+        hash. If the previous run had no change (same image submitted twice),
+        the input node was skipped and the registry hash stayed the same.
+        On the *next* run where the image actually changes, the output's
+        IS_CHANGED was still comparing the old hash (since the input had not
+        executed yet this cycle), causing the output to skip and display the
+        prior image – a one-run latency. Forcing re-execution removes that
+        race/ordering issue while the cost is minimal (simple registry read).
         """
         if not id or not id.strip():
-            return float("NaN")
-        
-        id = id.strip()
-        
-        # Get the current hash of the data stored with this ID
-        data_hash = get_data_hash(id)
-        print(f"[Wireless Output] Current data hash for '{id}': {data_hash[:8] if data_hash != 'not_found' else 'not_found'}")
-        
-        # Return the hash - if it changes, ComfyUI will re-execute this node
-        return data_hash
+            return float("NaN")  # still guard against empty id
+
+        # We still log the current hash for debugging insight.
+        sid = id.strip()
+        data_hash = get_data_hash(sid)
+        print(f"[Wireless Output] (forced) current data hash for '{sid}': {data_hash[:8] if data_hash != 'not_found' else 'not_found'}")
+
+        # Return a unique value every call (time-based) so ComfyUI always re-runs.
+        import time
+        return time.time()
     
     @classmethod
     def VALIDATE_INPUTS(cls, id, **kwargs):
