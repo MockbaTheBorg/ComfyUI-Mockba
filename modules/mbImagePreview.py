@@ -18,7 +18,19 @@ import folder_paths
 from comfy.cli_args import args
 
 # Local imports
-from .common import CATEGORIES, any_typ, create_text_image, convert_pil_to_tensor, mask_to_image
+from .common import (
+    CATEGORIES, 
+    any_typ, 
+    create_text_image, 
+    convert_pil_to_tensor, 
+    mask_to_image,
+    create_empty_mask,
+    resize_mask_to_image,
+    is_mask_tensor,
+    load_mask_from_image,
+    convert_mask_to_image_enhanced,
+    create_empty_image_and_mask
+)
 
 # Global cache for mask preservation functionality
 preview_cache = {}
@@ -68,67 +80,7 @@ class mbImagePreview:
     DESCRIPTION = "Previews and bridges input images with mask support, creates dynamic-sized text images for non-tensor inputs, displays masks as grayscale images, and preserves masks between runs."
     OUTPUT_NODE = True
 
-    def convert_mask_to_image(self, mask):
-        """
-        Converts a mask tensor to a grayscale image tensor using global utility.
-        
-        Args:
-            mask: Mask tensor (typically 2D or 3D)
-            
-        Returns:
-            torch.Tensor in the format expected by ComfyUI (grayscale image)
-        """
-        # Ensure mask is a torch tensor
-        if not isinstance(mask, torch.Tensor):
-            mask = torch.tensor(mask, dtype=torch.float32)
-        
-        # Normalize mask values to 0-1 range if needed
-        if mask.max() > 1.0:
-            mask = mask / mask.max()
-        
-        # Ensure mask has the right dimensions for the global function
-        # The global mask_to_image expects at least 3D tensor [batch, height, width]
-        if len(mask.shape) == 2:
-            # 2D mask: add batch dimension [H, W] -> [1, H, W]
-            mask = mask.unsqueeze(0)
-        elif len(mask.shape) == 4:
-            # 4D mask: remove channel dimension if it's 1 [B, H, W, 1] -> [B, H, W]
-            if mask.shape[-1] == 1:
-                mask = mask.squeeze(-1)
-        
-        # Use the global mask_to_image function
-        grayscale_image = mask_to_image(mask)
-        
-        return grayscale_image
-
-    def load_mask_from_image(self, image_path):
-        """
-        Loads a mask from an image file's alpha channel.
-        
-        Args:
-            image_path: Path to the image file
-            
-        Returns:
-            torch.Tensor: Mask tensor or None if no alpha channel
-        """
-        if not os.path.isfile(image_path):
-            return None
-            
-        try:
-            i = Image.open(image_path)
-            i = ImageOps.exif_transpose(i)
-            
-            if 'A' in i.getbands():
-                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-                mask = 1. - torch.from_numpy(mask)  # Invert for ComfyUI format
-                return mask.unsqueeze(0)  # Add batch dimension
-        except Exception as e:
-            print(f"Error loading mask from {image_path}: {e}")
-            
-        return None
-
-    @staticmethod
-    def load_image_and_mask(image_id):
+    def load_image_and_mask(self, image_id):
         """
         Loads an image and mask from an image ID, similar to bridge nodes.
         
@@ -142,27 +94,11 @@ class mbImagePreview:
         
         # Check if this is a registered image ID
         if image_id not in image_id_map:
-            # Return empty/default values
-            empty_image = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
-            empty_mask = torch.zeros((1, 64, 64), dtype=torch.float32)
-            ui_item = {
-                "filename": "empty.png",
-                "subfolder": "",
-                "type": "temp"
-            }
-            return empty_image, empty_mask, ui_item
+            return create_empty_image_and_mask()
 
         image_path = image_id_map[image_id]
         if not os.path.isfile(image_path):
-            # Return empty/default values
-            empty_image = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
-            empty_mask = torch.zeros((1, 64, 64), dtype=torch.float32)
-            ui_item = {
-                "filename": "empty.png",
-                "subfolder": "",
-                "type": "temp"
-            }
-            return empty_image, empty_mask, ui_item
+            return create_empty_image_and_mask()
 
         try:
             i = Image.open(image_path)
@@ -171,13 +107,10 @@ class mbImagePreview:
             image = np.array(image).astype(np.float32) / 255.0
             image = torch.from_numpy(image)[None,]
 
-            if 'A' in i.getbands():
-                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-                mask = 1. - torch.from_numpy(mask)
-            else:
-                mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
-            
-            mask = mask.unsqueeze(0)  # Add batch dimension
+            # Load mask using common function
+            mask = load_mask_from_image(image_path)
+            if mask is None:
+                mask = create_empty_mask(64, 64)
             
             ui_item = {
                 "filename": os.path.basename(image_path),
@@ -188,15 +121,7 @@ class mbImagePreview:
             return image, mask, ui_item
         except Exception as e:
             print(f"Error loading image and mask from {image_path}: {e}")
-            # Return empty/default values
-            empty_image = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
-            empty_mask = torch.zeros((1, 64, 64), dtype=torch.float32)
-            ui_item = {
-                "filename": "empty.png",
-                "subfolder": "",
-                "type": "temp"
-            }
-            return empty_image, empty_mask, ui_item
+            return create_empty_image_and_mask()
 
     def register_clipspace_image(self, clipspace_path, node_id):
         """
@@ -255,64 +180,14 @@ class mbImagePreview:
         # Load mask from alpha channel if present
         if os.path.isfile(file_path):
             try:
-                i = Image.open(file_path)
-                i = ImageOps.exif_transpose(i)
-                if 'A' in i.getbands():
-                    mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-                    mask = 1. - torch.from_numpy(mask)
-                    last_mask_cache[node_id] = mask.unsqueeze(0)
+                mask = load_mask_from_image(file_path)
+                if mask is not None:
+                    last_mask_cache[node_id] = mask
             except Exception as e:
                 print(f"Error loading mask from {file_path}: {e}")
         
         pb_id_counter += 1
         return pb_id
-
-    def create_empty_mask(self, height=64, width=64):
-        """
-        Creates an empty mask tensor.
-        
-        Args:
-            height: Height of the mask
-            width: Width of the mask
-            
-        Returns:
-            torch.Tensor: Empty mask tensor
-        """
-        return torch.zeros((1, height, width), dtype=torch.float32, device="cpu")
-
-    def resize_mask_to_image(self, mask, image_shape):
-        """
-        Resizes a mask to match the dimensions of an image.
-        
-        Args:
-            mask: Input mask tensor
-            image_shape: Target image shape (batch, height, width, channels)
-            
-        Returns:
-            torch.Tensor: Resized mask tensor
-        """
-        if mask is None:
-            return self.create_empty_mask(image_shape[1], image_shape[2])
-            
-        target_height, target_width = image_shape[1], image_shape[2]
-        
-        # Ensure mask has batch dimension
-        if len(mask.shape) == 2:
-            mask = mask.unsqueeze(0)
-        
-        # If mask already matches the target size, return as is
-        if mask.shape[1] == target_height and mask.shape[2] == target_width:
-            return mask
-            
-        # Resize mask using interpolation
-        mask_4d = mask.unsqueeze(1)  # Add channel dimension for interpolation
-        resized_mask = torch.nn.functional.interpolate(
-            mask_4d, 
-            size=(target_height, target_width), 
-            mode="bilinear", 
-            align_corners=False
-        )
-        return resized_mask.squeeze(1)  # Remove channel dimension
 
     def apply_mask_to_image(self, images, mask):
         """
@@ -329,7 +204,7 @@ class mbImagePreview:
             return images
             
         # Resize mask to match image dimensions
-        resized_mask = self.resize_mask_to_image(mask, images.shape)
+        resized_mask = resize_mask_to_image(mask, images.shape)
         
         # Convert images to RGBA format
         batch_size = images.shape[0]
@@ -347,46 +222,6 @@ class mbImagePreview:
                 rgba_images[i, :, :, 3] = 1.0  # Full opacity if no mask
         
         return rgba_images
-
-    def is_mask_tensor(self, data):
-        """
-        Determines if the input data is a mask tensor.
-        Masks are distinguished from regular images by having fewer dimensions or single channel.
-        
-        Args:
-            data: Input data to check
-            
-        Returns:
-            bool: True if data appears to be a mask tensor
-        """
-        if not hasattr(data, 'shape') or not hasattr(data, 'dtype'):
-            return False
-        
-        # ComfyUI images are typically 4D [batch, height, width, 3_channels]
-        # Masks are typically 2D [height, width], 3D [batch, height, width], or 4D [batch, height, width, 1]
-        
-        if len(data.shape) == 2:
-            # 2D tensor is likely a mask
-            return True
-        elif len(data.shape) == 3:
-            # 3D tensor without channel dimension is likely a mask
-            return True
-        elif len(data.shape) == 4:
-            # 4D tensor with 1 channel is likely a mask
-            # 4D tensor with 3 channels is likely a regular image
-            if data.shape[-1] == 1:
-                return True
-            elif data.shape[-1] == 3:
-                # This is likely a regular ComfyUI image tensor
-                return False
-            else:
-                # Uncertain case, check value range as fallback
-                if data.dtype in [torch.float32, torch.float64]:
-                    return data.min() >= 0 and data.max() <= 1.1
-                elif data.dtype in [torch.uint8]:
-                    return data.min() >= 0 and data.max() <= 255
-        
-        return False
 
     def save_images(self, images, image="", restore_mask="never", filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None, unique_id=None):
         """
@@ -458,8 +293,8 @@ class mbImagePreview:
                     
                     text_img = create_text_image(text_content)
                     images = convert_pil_to_tensor(text_img)
-                elif is_tensor and self.is_mask_tensor(images):
-                    images = self.convert_mask_to_image(images)
+                elif is_tensor and is_mask_tensor(images):
+                    images = convert_mask_to_image_enhanced(images)
                 
                 # Ensure images is always a list/batch
                 if len(images.shape) == 3:
@@ -476,17 +311,17 @@ class mbImagePreview:
                     elif mask is not None:
                         # For both "always" and "if_same_size" (when dimensions match), 
                         # resize mask to exactly match image dimensions
-                        mask = self.resize_mask_to_image(mask, images.shape)
+                        mask = resize_mask_to_image(mask, images.shape)
                 else:
                     mask = None
 
                 if mask is None:
-                    mask = self.create_empty_mask(images.shape[1], images.shape[2])
+                    mask = create_empty_mask(images.shape[1], images.shape[2])
                     # Save images without mask overlay
                     display_images = images
                 else:
                     # Ensure mask matches image dimensions (double-check)
-                    mask = self.resize_mask_to_image(mask, images.shape)
+                    mask = resize_mask_to_image(mask, images.shape)
                     # Apply mask to images for display
                     display_images = self.apply_mask_to_image(images, mask)
 
@@ -552,6 +387,6 @@ class mbImagePreview:
         except Exception as e:
             print(f"Error saving image preview: {e}")
             # Return empty result with default mask
-            empty_mask = self.create_empty_mask()
+            empty_mask = create_empty_mask()
             return {"ui": {"images": []}, "result": (torch.zeros((1, 512, 512, 3)), empty_mask)}
 

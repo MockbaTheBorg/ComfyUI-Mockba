@@ -1,6 +1,7 @@
 import torch
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+import os
 
 # Centralized category definitions for all nodes
 CATEGORIES = {
@@ -115,8 +116,8 @@ def create_text_image(text, font_size=20, margin=20, max_width=1200, min_width=1
             max_line_width = max(max_line_width, line_width)
     
     # Calculate final image dimensions
-    width = max(min_width, min(max_width, max_line_width + (2 * margin)))
-    height = len(lines) * line_height + (2 * margin)
+    width = int(max(min_width, min(max_width, max_line_width + (2 * margin))))
+    height = int(len(lines) * line_height + (2 * margin))
     
     # Create image with calculated dimensions
     img = Image.new('RGB', (width, height), color='white')
@@ -151,4 +152,176 @@ def convert_pil_to_tensor(img):
         tensor = tensor.unsqueeze(0)  # Add batch dimension
     
     return tensor
+
+
+# Mask utility functions
+def create_empty_mask(height=64, width=64):
+    """
+    Creates an empty mask tensor.
+    
+    Args:
+        height: Height of the mask
+        width: Width of the mask
+        
+    Returns:
+        torch.Tensor: Empty mask tensor
+    """
+    return torch.zeros((1, height, width), dtype=torch.float32, device="cpu")
+
+
+def resize_mask_to_image(mask, image_shape):
+    """
+    Resizes a mask to match the dimensions of an image.
+    
+    Args:
+        mask: Input mask tensor
+        image_shape: Target image shape (batch, height, width, channels)
+        
+    Returns:
+        torch.Tensor: Resized mask tensor
+    """
+    if mask is None:
+        return create_empty_mask(image_shape[1], image_shape[2])
+        
+    target_height, target_width = image_shape[1], image_shape[2]
+    
+    # Ensure mask has batch dimension
+    if len(mask.shape) == 2:
+        mask = mask.unsqueeze(0)
+    
+    # If mask already matches the target size, return as is
+    if mask.shape[1] == target_height and mask.shape[2] == target_width:
+        return mask
+        
+    # Resize mask using interpolation
+    mask_4d = mask.unsqueeze(1)  # Add channel dimension for interpolation
+    resized_mask = torch.nn.functional.interpolate(
+        mask_4d, 
+        size=(target_height, target_width), 
+        mode="bilinear", 
+        align_corners=False
+    )
+    return resized_mask.squeeze(1)  # Remove channel dimension
+
+
+def is_mask_tensor(data):
+    """
+    Determines if the input data is a mask tensor.
+    Masks are distinguished from regular images by having fewer dimensions or single channel.
+    
+    Args:
+        data: Input data to check
+        
+    Returns:
+        bool: True if data appears to be a mask tensor
+    """
+    if not hasattr(data, 'shape') or not hasattr(data, 'dtype'):
+        return False
+    
+    # ComfyUI images are typically 4D [batch, height, width, 3_channels]
+    # Masks are typically 2D [height, width], 3D [batch, height, width], or 4D [batch, height, width, 1]
+    
+    if len(data.shape) == 2:
+        # 2D tensor is likely a mask
+        return True
+    elif len(data.shape) == 3:
+        # 3D tensor without channel dimension is likely a mask
+        return True
+    elif len(data.shape) == 4:
+        # 4D tensor with 1 channel is likely a mask
+        # 4D tensor with 3 channels is likely a regular image
+        if data.shape[-1] == 1:
+            return True
+        elif data.shape[-1] == 3:
+            # This is likely a regular ComfyUI image tensor
+            return False
+        else:
+            # Uncertain case, check value range as fallback
+            if data.dtype in [torch.float32, torch.float64]:
+                return data.min() >= 0 and data.max() <= 1.1
+            elif data.dtype in [torch.uint8]:
+                return data.min() >= 0 and data.max() <= 255
+    
+    return False
+
+
+def load_mask_from_image(image_path):
+    """
+    Loads a mask from an image file's alpha channel.
+    
+    Args:
+        image_path: Path to the image file
+        
+    Returns:
+        torch.Tensor: Mask tensor or None if no alpha channel
+    """
+    if not os.path.isfile(image_path):
+        return None
+        
+    try:
+        i = Image.open(image_path)
+        i = ImageOps.exif_transpose(i)
+        
+        if 'A' in i.getbands():
+            mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+            mask = 1. - torch.from_numpy(mask)  # Invert for ComfyUI format
+            return mask.unsqueeze(0)  # Add batch dimension
+    except Exception as e:
+        print(f"Error loading mask from {image_path}: {e}")
+        
+    return None
+
+
+def create_empty_image_and_mask(height=64, width=64):
+    """
+    Creates empty image and mask tensors for fallback scenarios.
+    
+    Args:
+        height: Height of the tensors
+        width: Width of the tensors
+        
+    Returns:
+        tuple: (empty_image_tensor, empty_mask_tensor, ui_item)
+    """
+    empty_image = torch.zeros((1, height, width, 3), dtype=torch.float32)
+    empty_mask = create_empty_mask(height, width)
+    ui_item = {
+        "filename": "empty.png",
+        "subfolder": "",
+        "type": "temp"
+    }
+    return empty_image, empty_mask, ui_item
+
+
+def convert_mask_to_image_enhanced(mask):
+    """
+    Converts a mask tensor to a grayscale image tensor with enhanced preprocessing.
+    This is an enhanced version of mask_to_image that handles more edge cases.
+    
+    Args:
+        mask: Mask tensor (typically 2D or 3D)
+        
+    Returns:
+        torch.Tensor in the format expected by ComfyUI (grayscale image)
+    """
+    # Ensure mask is a torch tensor
+    if not isinstance(mask, torch.Tensor):
+        mask = torch.tensor(mask, dtype=torch.float32)
+    
+    # Normalize mask values to 0-1 range if needed
+    if mask.max() > 1.0:
+        mask = mask / mask.max()
+    
+    # Ensure mask has the right dimensions for the global function
+    # The global mask_to_image expects at least 3D tensor [batch, height, width]
+    if len(mask.shape) == 2:
+        # 2D mask: add batch dimension [H, W] -> [1, H, W]
+        mask = mask.unsqueeze(0)
+    elif len(mask.shape) == 4:
+        # 4D mask: remove channel dimension if it's 1 [B, H, W, 1] -> [B, H, W]
+        if mask.shape[-1] == 1:
+            mask = mask.squeeze(-1)
+    
+    # Use the global mask_to_image function
+    return mask_to_image(mask)
 
