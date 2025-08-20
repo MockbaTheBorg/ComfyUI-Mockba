@@ -48,8 +48,6 @@ mbDeviceTransfer = import_and_register('.modules.mbDeviceTransfer', category)
 mbHashGenerator = import_and_register('.modules.mbHashGenerator', category)
 mbSelect = import_and_register('.modules.mbSelect', category)
 mbSignal = import_and_register('.modules.mbSignal', category)
-mbWirelessInput = import_and_register('.modules.mbWirelessInput', category)
-mbWirelessOutput = import_and_register('.modules.mbWirelessOutput', category)
 mbTensorChannel3to4 = import_and_register('.modules.mbTensorChannel3to4', category)
 mbTensorChannel4to3 = import_and_register('.modules.mbTensorChannel4to3', category)
 
@@ -66,8 +64,6 @@ mbExec = import_and_register('.modules.mbExec', category)
 mbMemoryUnload = import_and_register('.modules.mbMemoryUnload', category)
 mbSubmit = import_and_register('.modules.mbSubmit', category)
 mbValue = import_and_register('.modules.mbValue', category)
-mbWirelessManager = import_and_register('.modules.mbWirelessManager', category)
-mbWirelessDebug = import_and_register('.modules.mbWirelessDebug', category)
 
 # === File Operations ===
 category = CATEGORIES["FILE_OPS"]
