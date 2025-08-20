@@ -59,12 +59,12 @@ class mbImagePreview:
         return {
             "required": {
                 "images": (any_typ,),
-                "image": ("STRING", {"default": ""}),
             },
             "optional": {
                 "restore_mask": (["never", "always", "if_same_size"], {"default": "never", "tooltip": "if_same_size: If the input image is the same size as the previous image, restore using the last saved mask\nalways: Whenever the input image changes, always restore using the last saved mask\nnever: Do not restore the mask"}),
             },
             "hidden": {
+                "image": ("STRING", {"default": ""}),
                 "prompt": "PROMPT",
                 "extra_pnginfo": "EXTRA_PNGINFO",
                 "unique_id": "UNIQUE_ID"
