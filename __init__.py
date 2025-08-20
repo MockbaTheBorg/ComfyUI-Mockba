@@ -50,6 +50,8 @@ mbSelect = import_and_register('.modules.mbSelect', category)
 mbSignal = import_and_register('.modules.mbSignal', category)
 mbTensorChannel3to4 = import_and_register('.modules.mbTensorChannel3to4', category)
 mbTensorChannel4to3 = import_and_register('.modules.mbTensorChannel4to3', category)
+mbWirelessInput = import_and_register('.modules.mbWirelessInput', category)
+mbWirelessOutput = import_and_register('.modules.mbWirelessOutput', category)
 
 # === Development & Debugging ===
 category = CATEGORIES["DEVELOPMENT"]
