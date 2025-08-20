@@ -12,8 +12,8 @@ import numpy as np
 import torch
 
 # ComfyUI imports
-import comfy.sample
 import comfy.samplers
+import comfy.sample
 import comfy.utils
 import latent_preview
 
@@ -245,47 +245,11 @@ class mbKSampler:
                 device=latent_samples.device,
             )
         else:
-            # Generate random noise with proper batch handling
+            # Use standard ComfyUI noise preparation with proper batch handling
             batch_indices = latent_image.get("batch_index", None)
-            noise = self._generate_noise(latent_samples, seed, batch_indices)
+            noise = comfy.sample.prepare_noise(latent_samples, seed, batch_indices)
         
         return noise
-
-    def _generate_noise(self, latent_image, seed, noise_indices=None):
-        """Generate random noise for sampling with batch support."""
-        # Setup random generator with seed
-        generator = torch.Generator(device=latent_image.device)
-        generator.manual_seed(seed)
-        
-        if noise_indices is None:
-            # Standard noise generation
-            noise = torch.randn(
-                latent_image.size(),
-                dtype=latent_image.dtype,
-                layout=latent_image.layout,
-                generator=generator,
-                device=latent_image.device,
-            )
-            return noise
-        
-        # Advanced batch noise generation
-        unique_indices, inverse = np.unique(noise_indices, return_inverse=True)
-        noise_tensors = []
-        
-        for i in range(unique_indices[-1] + 1):
-            single_noise = torch.randn(
-                [1] + list(latent_image.size())[1:],
-                dtype=latent_image.dtype,
-                layout=latent_image.layout,
-                generator=generator,
-                device=latent_image.device,
-            )
-            if i in unique_indices:
-                noise_tensors.append(single_noise)
-        
-        # Reassemble noise based on batch indices
-        reordered_noise = [noise_tensors[i] for i in inverse]
-        return torch.cat(reordered_noise, dim=0)
 
     def _setup_preview_callback(self, model, steps, preview_method):
         """Setup preview callback based on method selection."""
@@ -307,6 +271,9 @@ class mbKSampler:
         """Execute the actual sampling process."""
         # Extract latent samples
         latent_samples = latent_image["samples"]
+        
+        # Fix empty latent channels to match model requirements
+        latent_samples = comfy.sample.fix_empty_latent_channels(model, latent_samples)
         
         # Extract noise mask if present
         noise_mask = latent_image.get("noise_mask", None)
