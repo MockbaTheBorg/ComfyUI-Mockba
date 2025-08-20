@@ -55,6 +55,7 @@ mbTensorChannel4to3 = import_and_register('.modules.mbTensorChannel4to3', catego
 category = CATEGORIES["DEVELOPMENT"]
 mbAIBypass = import_and_register('.modules.mbAIBypass', category)
 mbAIDetector = import_and_register('.modules.mbAIDetector', category)
+mbIlluminarty = import_and_register('.modules.mbIlluminarty', category)
 mbColorPicker = import_and_register('.modules.mbColorPicker', category)
 mbDebug = import_and_register('.modules.mbDebug', category)
 mbDisplay = import_and_register('.modules.mbDisplay', category)
@@ -85,7 +86,6 @@ mbQRCode = import_and_register('.modules.mbQRCode', category)
 
 # === Image Processing ===
 category = CATEGORIES["IMAGE_PROCESSING"]
-mbIlluminarty = import_and_register('.modules.mbIlluminarty', category)
 mbImageBatch = import_and_register('.modules.mbImageBatch', category)
 mbImageCenterRotate = import_and_register('.modules.mbImageCenterRotate', category)
 mbImageDither = import_and_register('.modules.mbImageDither', category)
