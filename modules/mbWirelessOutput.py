@@ -23,19 +23,8 @@ class mbWirelessOutput:
     
     @classmethod
     def IS_CHANGED(cls, id, **kwargs):
-        """Always force execution to avoid one-cycle lag.
-
-        Rationale:
-        ComfyUI evaluates IS_CHANGED for *all* nodes before executing any of
-        them. Because the wireless input and output nodes are not connected
-        by an edge, the output node previously looked at the *current* stored
-        hash. If the previous run had no change (same image submitted twice),
-        the input node was skipped and the registry hash stayed the same.
-        On the *next* run where the image actually changes, the output's
-        IS_CHANGED was still comparing the old hash (since the input had not
-        executed yet this cycle), causing the output to skip and display the
-        prior image – a one-run latency. Forcing re-execution removes that
-        race/ordering issue while the cost is minimal (simple registry read).
+        """
+        Always force execution to avoid one-cycle lag.
         """
         if not id or not id.strip():
             return float("NaN")  # still guard against empty id
