@@ -104,13 +104,10 @@ category = CATEGORIES["DEVELOPMENT"]
 mbAIBypass = import_and_register('.modules.mbAIBypass', category)
 mbAIDetector = import_and_register('.modules.mbAIDetector', category)
 mbIlluminarty = import_and_register('.modules.mbIlluminarty', category)
-mbColorPicker = import_and_register('.modules.mbColorPicker', category)
 mbDebug = import_and_register('.modules.mbDebug', category)
 mbDisplay = import_and_register('.modules.mbDisplay', category)
 mbEval = import_and_register('.modules.mbEval', category)
 mbExec = import_and_register('.modules.mbExec', category)
-mbMemoryUnload = import_and_register('.modules.mbMemoryUnload', category)
-mbSubmit = import_and_register('.modules.mbSubmit', category)
 mbValue = import_and_register('.modules.mbValue', category)
 
 # === File Operations ===
@@ -157,6 +154,13 @@ mbCLIPTextEncode = import_and_register('.modules.mbCLIPTextEncode', category)
 mbString = import_and_register('.modules.mbString', category)
 mbText = import_and_register('.modules.mbText', category)
 mbTextbox = import_and_register('.modules.mbTextbox', category)
+
+# === Tools ===
+category = CATEGORIES["TOOLS"]
+mbColorPicker = import_and_register('.modules.mbColorPicker', category)
+mbMemoryUnload = import_and_register('.modules.mbMemoryUnload', category)
+mbSlider = import_and_register('.modules.mbSlider', category)
+mbSubmit = import_and_register('.modules.mbSubmit', category)
 
 # Web directory for static files
 WEB_DIRECTORY = "js"
