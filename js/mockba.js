@@ -130,7 +130,7 @@ const ColorPickerUtils = {
 };
 
 app.registerExtension({
-	name: "Comfy.Mockba",
+	name: "Mockba.Common",
 
 	beforeRegisterNodeDef(nodeType, nodeData, app) {
 		// Helper function to add a callback to onNodeCreated
