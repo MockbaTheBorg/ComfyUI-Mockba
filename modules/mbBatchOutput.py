@@ -1,29 +1,40 @@
 """
-Batch Output Node for ComfyUI
+Dynamic Batch Output Node for ComfyUI
 Splits a batch of objects into multiple outputs for downstream processing.
+Shows popup to configure number of outputs when first added.
 """
 
 # Local imports
 from .common import any_typ
 
-NUM_CHANNELS = 4  # Change this to adjust number of inputs/outputs
+# Configuration constants
+MIN_OUTPUTS = 2
+MAX_OUTPUTS = 16
 
 class mbBatchOutput:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {"batch": (any_typ,)}
+            "required": {
+                "batch": (any_typ,),
+                "outputs": ("INT", {
+                    "default": -1,  # -1 indicates popup is needed
+                    "min": MIN_OUTPUTS,
+                    "max": MAX_OUTPUTS,
+                    "step": 1
+                })
+            }
         }
 
     # Node metadata
-    TITLE = "Batch Output"
-    RETURN_TYPES = tuple(any_typ for _ in range(NUM_CHANNELS))
-    RETURN_NAMES = tuple(f"output_{i+1}" for i in range(NUM_CHANNELS))
+    TITLE = "Dynamic Batch Output"
+    RETURN_TYPES = tuple(any_typ for _ in range(MIN_OUTPUTS))
+    RETURN_NAMES = tuple(f"output_{i+1}" for i in range(MIN_OUTPUTS))
     FUNCTION = "unbatch"
     CATEGORY = "unset"
-    DESCRIPTION = "Split a batch of objects into multiple outputs for downstream processing."
+    DESCRIPTION = "Split a batch of objects into multiple outputs. Configure number of outputs when added to workflow."
 
-    def unbatch(self, batch):
+    def unbatch(self, batch, outputs):
         # Unpack the tuple/list and pad with None if needed
         if not isinstance(batch, (tuple, list)):
             raise ValueError("Input must be a tuple or list")
@@ -31,12 +42,16 @@ class mbBatchOutput:
         # Convert batch to list for easier manipulation
         batch_list = list(batch)
         
-        # Pad with None if batch is shorter than NUM_CHANNELS
-        while len(batch_list) < NUM_CHANNELS:
-            batch_list.append(None)
+        # Create result list with actual outputs
+        result = []
+        for i in range(outputs if outputs > 0 else 0):
+            if i < len(batch_list):
+                result.append(batch_list[i])
+            else:
+                result.append(None)
         
-        # Truncate if batch is longer than NUM_CHANNELS
-        if len(batch_list) > NUM_CHANNELS:
-            batch_list = batch_list[:NUM_CHANNELS]
+        # Pad to MAX_OUTPUTS with None for unused outputs
+        while len(result) < MAX_OUTPUTS:
+            result.append(None)
         
-        return tuple(batch_list)
+        return tuple(result)

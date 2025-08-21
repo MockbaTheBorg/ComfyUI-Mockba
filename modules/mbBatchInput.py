@@ -1,12 +1,15 @@
 """
-Batch Input Node for ComfyUI
+Dynamic Batch Input Node for ComfyUI
 Combines multiple inputs into a single batch for processing.
+Shows popup to configure number of inputs when first added.
 """
 
 # Local imports
 from .common import any_typ
 
-NUM_CHANNELS = 4  # Change this to adjust number of inputs/outputs
+# Configuration constants
+MIN_INPUTS = 2
+MAX_INPUTS = 16
 
 class mbBatchInput:
     def __init__(self):
@@ -16,23 +19,28 @@ class mbBatchInput:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "optional": {
-                f"input_{i+1}": (any_typ,) for i in range(NUM_CHANNELS)
+            "required": {
+                "inputs": ("INT", {
+                    "default": -1,  # -1 indicates popup is needed
+                    "min": MIN_INPUTS,
+                    "max": MAX_INPUTS,
+                    "step": 1
+                })
             }
         }
 
     # Node metadata
-    TITLE = "Batch Input"
+    TITLE = "Dynamic Batch Input"
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("batch",)
     FUNCTION = "batch"
     CATEGORY = "unset"
-    DESCRIPTION = "Combine multiple objects into a single batch for transfer over one wire."
+    DESCRIPTION = "Combine multiple objects into a single batch. Configure number of inputs when added to workflow."
 
-    def batch(self, **kwargs):
-        # Filter out None values and collect valid inputs into a tuple
+    def batch(self, inputs, **kwargs):
+        # Collect all the dynamic inputs
         valid_inputs = []
-        for i in range(NUM_CHANNELS):
+        for i in range(inputs if inputs > 0 else 0):
             key = f"input_{i+1}"
             if key in kwargs and kwargs[key] is not None:
                 valid_inputs.append(kwargs[key])
