@@ -1,6 +1,6 @@
 """
 Signal Connector Node for ComfyUI
-A simple passthrough node that connects any type of data from input to output.
+A simple passthrough node that connects any type of data from input to output, created collapsed by default.
 """
 
 # Local imports
