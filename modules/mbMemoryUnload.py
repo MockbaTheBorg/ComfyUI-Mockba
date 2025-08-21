@@ -51,6 +51,7 @@ class mbMemoryUnload:
     FUNCTION = "unload_memory_and_passthrough"
     CATEGORY = "unset"
     DESCRIPTION = "Bridge node that unloads GPU memory when executed and passes input through unchanged. Provides memory statistics output."
+    OUTPUT_NODE = True
 
     def unload_memory_and_passthrough(self, input, unload_mode, show_stats):
         """
