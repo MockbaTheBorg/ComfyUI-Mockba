@@ -17,11 +17,15 @@ class mbBatchOutput:
         inputs = {
             "required": {
                 "batch": (any_typ,),
+            },
+            "optional": {
                 "outputs": ("INT", {
                     "default": -1,  # -1 indicates popup is needed
                     "min": MIN_OUTPUTS,
                     "max": MAX_OUTPUTS,
-                    "step": 1
+                    "step": 1,
+                    "forceInput": False,
+                    "tooltip": "Number of outputs (configure via popup)"
                 })
             }
         }

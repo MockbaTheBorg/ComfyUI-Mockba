@@ -19,12 +19,15 @@ class mbBatchInput:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {
+            "required": {},
+            "optional": {
                 "inputs": ("INT", {
                     "default": -1,  # -1 indicates popup is needed
                     "min": MIN_INPUTS,
                     "max": MAX_INPUTS,
-                    "step": 1
+                    "step": 1,
+                    "forceInput": False,
+                    "tooltip": "Number of inputs (configure via popup)"
                 })
             }
         }
