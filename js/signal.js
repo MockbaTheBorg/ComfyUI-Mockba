@@ -15,7 +15,7 @@ class mbSignal {
 
 // Register the extension with ComfyUI
 app.registerExtension({
-    name: "mockba.signal",
+    name: "Mockba.Signal",
     nodeCreated(node) {
         if (node.comfyClass === "mbSignal") {
             new mbSignal(node);

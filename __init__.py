@@ -84,6 +84,12 @@ def import_and_register(module_path, category=None):
     return cls
 
 # Import and register all modules
+# === AI Tools ===
+category = CATEGORIES["AI_TOOLS"]
+mbAIBypass = import_and_register('.modules.mbAIBypass', category)
+mbAIDetector = import_and_register('.modules.mbAIDetector', category)
+mbIlluminarty = import_and_register('.modules.mbIlluminarty', category)
+
 # === Data Management ===
 category = CATEGORIES["DATA_MANAGEMENT"]
 mbBatchInput = import_and_register('.modules.mbBatchInput', category)
@@ -101,9 +107,6 @@ mbWirelessOutput = import_and_register('.modules.mbWirelessOutput', category)
 
 # === Development & Debugging ===
 category = CATEGORIES["DEVELOPMENT"]
-mbAIBypass = import_and_register('.modules.mbAIBypass', category)
-mbAIDetector = import_and_register('.modules.mbAIDetector', category)
-mbIlluminarty = import_and_register('.modules.mbIlluminarty', category)
 mbDebug = import_and_register('.modules.mbDebug', category)
 mbDisplay = import_and_register('.modules.mbDisplay', category)
 mbEval = import_and_register('.modules.mbEval', category)

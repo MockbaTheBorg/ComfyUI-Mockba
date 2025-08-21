@@ -5,6 +5,7 @@ import os
 
 # Centralized category definitions for all nodes
 CATEGORIES = {
+    "AI_TOOLS": "🖖 Mockba/ai",
     "DATA_MANAGEMENT": "🖖 Mockba/data",
     "DEVELOPMENT": "🖖 Mockba/development",
     "FILE_OPS": "🖖 Mockba/files", 
