@@ -1,5 +1,5 @@
 """
-Universal Display Node for ComfyUI
+Display Anything Node for ComfyUI
 Shows information about any input type with automatic formatting and multiline detection.
 """
 
@@ -26,7 +26,7 @@ class mbDisplay:
 
     @classmethod
     def INPUT_TYPES(cls):
-        """Define input types for universal display."""
+        """Define input types for display."""
         return {
             "required": {
                 "input": (any_typ, {
@@ -52,12 +52,12 @@ class mbDisplay:
         }
 
     # Node metadata
-    TITLE = "Universal Display"
+    TITLE = "Display Anything"
     RETURN_TYPES = ()
     RETURN_NAMES = ()
     FUNCTION = "display_data"
     CATEGORY = "unset"
-    DESCRIPTION = "Universal display node that shows information about any input type - strings, numbers, images, tensors, etc."
+    DESCRIPTION = "Display anything node that shows information about any input type - strings, numbers, images, tensors, etc."
     OUTPUT_NODE = True
 
     def display_data(self, input, value, console_output, truncate_size):

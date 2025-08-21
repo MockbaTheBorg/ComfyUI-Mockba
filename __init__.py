@@ -1,14 +1,22 @@
 import importlib
 from .modules.common import CATEGORIES
 
+# Notify that ComfyUI is being loaded, with a 50 dashes line
+print("Loading ComfyUI-Mockba...")
+print("-" * 50)
+
 # --- Wireless node execution order patch ---
 def patch_wireless_execution_order():
     try:
+        print("Attempting to patch wireless execution order...")
         import comfy_execution.graph as graph
     except ImportError:
-        return  # ComfyUI not loaded yet
-    if getattr(graph.TopologicalSort, '_wireless_patch_applied', False):
+        print("ComfyUI not loaded yet. Patch not applied.")
         return
+    if getattr(graph.TopologicalSort, '_wireless_patch_applied', False):
+        print("Patch already applied.")
+        return
+    print("Applying wireless execution order patch.")
     original_add_node = graph.TopologicalSort.add_node
     def patched_add_node(self, node_unique_id, *args, **kwargs):
         original_add_node(self, node_unique_id, *args, **kwargs)
@@ -26,8 +34,12 @@ def patch_wireless_execution_order():
                     if out_id not in self.blocking[in_id]:
                         self.blocking[in_id][out_id] = {}
                         self.blockCount[out_id] += 1
-    graph.TopologicalSort.add_node = patched_add_node
-    graph.TopologicalSort._wireless_patch_applied = True
+    try:
+        graph.TopologicalSort.add_node = patched_add_node
+        graph.TopologicalSort._wireless_patch_applied = True
+        print("Patch successfully applied.")
+    except Exception as e:
+        print(f"Patch failed: {e}")
 patch_wireless_execution_order()
 # --- End wireless node patch ---
 
@@ -48,7 +60,7 @@ def import_and_register(module_path, category=None):
     """
     # Extract class name from module path (e.g., '.modules.mbTextbox' -> 'mbTextbox')
     class_name = module_path.split('.')[-1]
-    
+
     # Import the module and get the class using importlib for relative imports
     module = importlib.import_module(module_path, package=__name__)
     cls = getattr(module, class_name)
@@ -66,7 +78,9 @@ def import_and_register(module_path, category=None):
     else:
         # Fallback to class name if TITLE is not defined
         NODE_DISPLAY_NAME_MAPPINGS[class_name] = class_name
-    
+
+    print(f"Imported {NODE_DISPLAY_NAME_MAPPINGS[class_name]} from {module_path}")
+
     return cls
 
 # Import and register all modules
@@ -145,3 +159,7 @@ mbTextbox = import_and_register('.modules.mbTextbox', category)
 # Web directory for static files
 WEB_DIRECTORY = "js"
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+
+# Notify that the module has been loaded
+print("Loaded ComfyUI-Mockba module.")
+print("-" * 50)
