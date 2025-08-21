@@ -246,7 +246,7 @@ app.registerExtension({
 					this.size = [180, 55];
 					
 					// Ensure the node doesn't resize automatically
-					this.resizable = true;
+					this.resizable = false;
 				});
 				break;
 			case "mbColorPicker":
