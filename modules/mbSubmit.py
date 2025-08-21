@@ -3,10 +3,6 @@ Submit Node for ComfyUI
 Provides workflow submission controls with optional data passthrough.
 """
 
-# Local imports
-from .common import any_typ, CATEGORIES
-
-
 class mbSubmit:
     """Workflow submission node with optional data passthrough capability."""
     

@@ -7,10 +7,6 @@ Computes and visualizes the Fast Fourier Transform of an image to detect AI gene
 import numpy as np
 import torch
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbImageFFT:
     """Compute and visualize the FFT of an image for AI detection analysis."""
     

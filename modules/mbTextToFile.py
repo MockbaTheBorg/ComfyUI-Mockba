@@ -9,10 +9,6 @@ import os
 # ComfyUI imports
 import folder_paths
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbTextToFile:
     """Save text content to files with automatic formatting and path management."""
     

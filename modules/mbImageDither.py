@@ -8,10 +8,6 @@ ordered dithering, and halftone patterns with support for both monochrome and co
 import numpy as np
 import torch
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbImageDither:
     """Apply professional dithering algorithms to images with extensive method and parameter control."""
     

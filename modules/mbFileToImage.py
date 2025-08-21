@@ -15,8 +15,7 @@ from PIL import Image, ImageOps
 import folder_paths
 
 # Local imports
-from .common import CATEGORIES, create_text_image, convert_pil_to_tensor
-
+from .common import create_text_image, convert_pil_to_tensor
 
 class mbFileToImage:
     """Load images from files with automatic format handling and batch support."""

@@ -19,11 +19,9 @@ from comfy.cli_args import args
 
 # Local imports
 from .common import (
-    CATEGORIES, 
     any_typ, 
     create_text_image, 
     convert_pil_to_tensor, 
-    mask_to_image,
     create_empty_mask,
     resize_mask_to_image,
     is_mask_tensor,

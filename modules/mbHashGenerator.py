@@ -9,10 +9,6 @@ import hashlib
 import secrets
 import time
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbHashGenerator:
     """Generate hashes using various algorithms with seed and base string inputs."""
     

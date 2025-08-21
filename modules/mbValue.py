@@ -5,8 +5,7 @@ Supports custom Python formatting strings for value display.
 """
 
 # Local imports
-from .common import CATEGORIES, any_typ
-
+from .common import any_typ
 
 class mbValue:
     """Display any value in the node title without outputs."""

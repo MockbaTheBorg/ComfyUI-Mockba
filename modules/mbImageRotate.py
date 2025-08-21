@@ -6,10 +6,6 @@ Rotates images by 90, 180, or 270 degrees counterclockwise with batch processing
 # Standard library imports
 import torch
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbImageRotate:
     """Rotate images by 90, 180, or 270 degrees counterclockwise."""
     

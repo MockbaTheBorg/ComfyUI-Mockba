@@ -9,10 +9,6 @@ import torch
 # ComfyUI imports
 import comfy.utils
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbImageBatch:
     """Create batches from multiple images with automatic size matching."""
     

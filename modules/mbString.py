@@ -3,10 +3,6 @@ String Input Node for ComfyUI
 Provides single-line string input for workflow processing.
 """
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbString:
     """Single-line string input node for ComfyUI workflows."""
     

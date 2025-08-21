@@ -7,14 +7,10 @@ Adds realistic film grain, vignette, and other film-like effects to images.
 import torch
 import numpy as np
 import math
-from PIL import Image, ImageFilter, ImageEnhance
+from PIL import Image, ImageEnhance
 
 # Use numeric value for LANCZOS to avoid version compatibility issues
 LANCZOS = 1  # PIL.Image.LANCZOS constant value
-
-# Local imports
-from .common import CATEGORIES
-
 
 class mbImageFilmEffect:
     """Add realistic film grain, vignette, and film-like effects to images."""

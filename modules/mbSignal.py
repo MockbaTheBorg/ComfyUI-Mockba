@@ -4,8 +4,7 @@ A simple passthrough node that connects any type of data from input to output.
 """
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbSignal:
     """Simple passthrough connector for any data type."""

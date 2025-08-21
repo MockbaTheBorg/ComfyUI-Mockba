@@ -17,10 +17,6 @@ import requests
 import torch
 from PIL import Image
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbImageLoadURL:
     """Load images from URLs with timeout handling, caching, and format validation."""
     

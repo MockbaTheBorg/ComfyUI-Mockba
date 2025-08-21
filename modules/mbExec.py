@@ -4,8 +4,7 @@ Executes Python code with inputs and returns the result through 'out' variable.
 """
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbExec:
     """Execute Python code on inputs and return the result via 'out' variable."""

@@ -7,8 +7,7 @@ Displays comprehensive debug information about any input object.
 from pprint import pformat
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbDebug:
     """Display comprehensive debug information about any input object."""

@@ -8,8 +8,7 @@ import qrcode
 from qrcode.constants import ERROR_CORRECT_L, ERROR_CORRECT_M, ERROR_CORRECT_Q, ERROR_CORRECT_H
 
 # Local imports
-from .common import CATEGORIES, convert_pil_to_tensor
-
+from .common import convert_pil_to_tensor
 
 class mbQRCode:
     """Generate QR code images from text data with various customization options."""

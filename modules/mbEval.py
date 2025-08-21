@@ -4,8 +4,7 @@ Evaluates Python expressions on inputs with safe execution environment.
 """
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbEval:
     """Evaluate Python expressions on inputs and return the result."""

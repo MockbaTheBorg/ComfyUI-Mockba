@@ -13,10 +13,6 @@ import numpy as np
 import requests
 from PIL import Image
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbIlluminarty:
     """Detect if an image is AI-generated using Illuminarty API."""
     

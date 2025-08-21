@@ -9,10 +9,6 @@ import numpy as np
 import math
 from PIL import Image, ImageFilter, ImageEnhance
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbAIBypass:
     """Add natural artifacts and noise patterns to help images pass AI detection systems."""
     

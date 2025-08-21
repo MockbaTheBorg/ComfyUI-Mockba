@@ -20,10 +20,6 @@ except Exception:
 # ComfyUI imports
 import folder_paths
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbImageToFile:
     """Save images to files with automatic format detection and batch support."""
     

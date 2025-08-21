@@ -7,8 +7,7 @@ Converts a 1,x,y,3 tensor and mask to a 1,x,y,4 tensor by adding mask as alpha c
 import torch
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbTensorChannel3to4:
     """Convert a 1,x,y,3 tensor and mask to a 1,x,y,4 tensor by adding mask as alpha channel."""

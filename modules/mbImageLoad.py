@@ -14,10 +14,6 @@ from PIL import Image
 # ComfyUI imports
 import folder_paths
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbImageLoad:
     """Load images from files with multi-format support, subfolder scanning, and alpha channel handling."""
     

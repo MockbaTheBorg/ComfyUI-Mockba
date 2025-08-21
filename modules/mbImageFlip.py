@@ -6,10 +6,6 @@ Flips images horizontally, vertically, or both with batch processing support.
 # Standard library imports
 import torch
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbImageFlip:
     """Flip images horizontally, vertically, or both directions."""
     

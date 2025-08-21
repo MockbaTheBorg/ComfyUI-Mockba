@@ -9,10 +9,6 @@ import os
 # ComfyUI imports
 import folder_paths
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbFileToText:
     """Load text content from files with automatic fallback handling."""
     

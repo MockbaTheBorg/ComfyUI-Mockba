@@ -3,10 +3,6 @@ Text Input Node for ComfyUI
 Provides multiline text input with customizable default content.
 """
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbText:
     """Multiline text input node for ComfyUI workflows."""
     

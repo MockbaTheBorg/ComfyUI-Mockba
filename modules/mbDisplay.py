@@ -8,8 +8,7 @@ import numpy as np
 from pprint import pformat
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbDisplay:
     """Universal display node that shows information about any input type."""

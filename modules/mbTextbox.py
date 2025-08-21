@@ -3,10 +3,6 @@ Dynamic Textbox Node for ComfyUI
 Provides multiline text input with passthrough capability and screen output.
 """
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbTextbox:
     """Dynamic textbox with passthrough capability and screen output."""
     

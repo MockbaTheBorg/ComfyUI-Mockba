@@ -9,10 +9,6 @@ import os
 # ComfyUI imports
 import folder_paths
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbTextOrFile:
     """Load text from file and combine with input text using various merge actions."""
     

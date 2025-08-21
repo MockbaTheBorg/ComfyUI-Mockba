@@ -86,6 +86,8 @@ def import_and_register(module_path, category=None):
 # Import and register all modules
 # === Data Management ===
 category = CATEGORIES["DATA_MANAGEMENT"]
+mbBatchInput = import_and_register('.modules.mbBatchInput', category)
+mbBatchOutput = import_and_register('.modules.mbBatchOutput', category)
 mbDataTypeConverter = import_and_register('.modules.mbDataTypeConverter', category)
 mbDemux = import_and_register('.modules.mbDemux', category)
 mbDeviceTransfer = import_and_register('.modules.mbDeviceTransfer', category)

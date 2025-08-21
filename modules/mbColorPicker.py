@@ -3,10 +3,6 @@ Color Picker Node for ComfyUI
 Provides a color picker interface to select colors from images and output them in #RRGGBB format.
 """
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbColorPicker:
     """Pick colors from images and output them in #RRGGBB format."""
     

@@ -10,10 +10,6 @@ import os
 # Third-party imports
 import torch
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbEmptyLatentImage:
     """Generate empty latent images with configurable dimensions and device placement."""
     

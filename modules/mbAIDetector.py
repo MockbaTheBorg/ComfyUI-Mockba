@@ -15,10 +15,6 @@ from PIL import Image
 import requests
 from transformers import AutoImageProcessor, AutoModelForImageClassification, BeitImageProcessor, BeitForImageClassification
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbAIDetector:
     """Detect if an image is AI-generated using pre-trained models."""
     

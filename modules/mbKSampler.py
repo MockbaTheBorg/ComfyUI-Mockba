@@ -17,10 +17,6 @@ import comfy.sample
 import comfy.utils
 import latent_preview
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbKSampler:
     """Enhanced K-Sampler with advanced noise control, sampling parameters, and monitoring capabilities."""
     

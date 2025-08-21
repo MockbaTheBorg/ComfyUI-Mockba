@@ -6,10 +6,6 @@ Inverts a mask if it's all zeros (empty), otherwise leaves it unchanged.
 # Standard library imports
 import torch
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbMaskInvertIfEmpty:
     """Invert mask if it's all zeros (empty), otherwise leave unchanged."""
     

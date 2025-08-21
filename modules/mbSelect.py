@@ -4,8 +4,7 @@ Selects one output from multiple inputs based on index selection.
 """
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbSelect:
     """Select one output from multiple inputs based on index."""

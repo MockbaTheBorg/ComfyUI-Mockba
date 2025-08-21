@@ -7,8 +7,7 @@ Converts a 1,x,y,4 tensor to a 1,x,y,3 tensor and extracts alpha as mask.
 import torch
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbTensorChannel4to3:
     """Convert a 1,x,y,4 tensor to a 1,x,y,3 tensor and extract alpha channel as mask."""

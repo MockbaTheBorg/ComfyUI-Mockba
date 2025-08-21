@@ -3,10 +3,6 @@ Image Size Display Node for ComfyUI
 Shows image size information with UI feedback and passthrough functionality.
 """
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbImageSize:
     """Display image size information with UI feedback."""
     

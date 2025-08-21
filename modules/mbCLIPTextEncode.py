@@ -6,10 +6,6 @@ Encodes text prompts using CLIP models for diffusion model guidance.
 # ComfyUI imports
 from comfy.comfy_types import IO, ComfyNodeABC, InputTypeDict
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbCLIPTextEncode(ComfyNodeABC):
     """Encode text prompts using CLIP models for diffusion guidance."""
     

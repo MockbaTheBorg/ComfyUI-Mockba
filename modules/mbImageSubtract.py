@@ -6,10 +6,6 @@ Computes visual differences between two images with different output modes.
 # Standard library imports
 import torch
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbImageSubtract:
     """Subtract two images to visualize differences with configurable output modes."""
     

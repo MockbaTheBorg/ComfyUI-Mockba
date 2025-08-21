@@ -5,12 +5,10 @@ A passthrough bridge node that unloads GPU memory and provides statistics.
 
 # Standard library imports
 import gc
-import sys
 import torch
 
 # Local imports
-from .common import any_typ, CATEGORIES, create_text_image, convert_pil_to_tensor
-
+from .common import any_typ
 
 class mbMemoryUnload:
     """Passthrough bridge node that unloads GPU memory when executed."""

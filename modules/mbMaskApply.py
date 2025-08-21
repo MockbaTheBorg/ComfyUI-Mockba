@@ -6,10 +6,6 @@ Applies a mask to an image, returning only the masked part while keeping the ima
 # Standard library imports
 import torch
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbMaskApply:
     """Apply a mask to an image, keeping only the masked parts while maintaining image size."""
     

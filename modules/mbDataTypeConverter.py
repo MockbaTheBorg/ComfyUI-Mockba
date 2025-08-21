@@ -7,8 +7,7 @@ Converts tensor data types for memory optimization and performance tuning with d
 import torch
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbDataTypeConverter:
     """Convert tensor data types with comprehensive memory analysis and optimization reporting."""

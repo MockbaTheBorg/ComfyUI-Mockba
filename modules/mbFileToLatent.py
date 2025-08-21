@@ -12,10 +12,6 @@ import torch
 # ComfyUI imports
 import folder_paths
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbFileToLatent:
     """Load latent tensors from files with automatic handling and batch support."""
     

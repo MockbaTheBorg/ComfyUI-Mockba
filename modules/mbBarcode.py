@@ -9,8 +9,7 @@ from barcode.writer import ImageWriter
 import pdf417gen
 
 # Local imports
-from .common import CATEGORIES, convert_pil_to_tensor
-
+from .common import convert_pil_to_tensor
 
 class mbBarcode:
     """Generate barcode images from text data with various format options."""

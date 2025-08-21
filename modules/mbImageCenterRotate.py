@@ -9,11 +9,6 @@ import torch
 import math
 import numpy as np
 from PIL import Image
-import torchvision.transforms.functional as TF
-
-# Local imports
-from .common import CATEGORIES
-
 
 class mbImageCenterRotate:
     """Rotate images by arbitrary floating-point angles around their center."""

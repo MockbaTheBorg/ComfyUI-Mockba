@@ -7,8 +7,7 @@ Transfers tensors between available compute devices (CPU, CUDA, MPS).
 import torch
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbDeviceTransfer:
     """Transfer tensors between available compute devices."""

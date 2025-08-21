@@ -4,8 +4,7 @@ Selects the first non-None input from multiple optional inputs.
 """
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbDemux:
     """Select the first non-None input from multiple optional inputs."""

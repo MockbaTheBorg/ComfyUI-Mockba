@@ -11,8 +11,7 @@ import pickle
 import folder_paths
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbWirelessOutput:
     """Retrieve data from file cache for wireless transmission."""

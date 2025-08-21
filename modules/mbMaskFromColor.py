@@ -6,10 +6,6 @@ Generates a mask for pixels matching a specific color in an input image.
 # Standard library imports
 import torch
 
-# Local imports
-from .common import CATEGORIES
-
-
 class mbMaskFromColor:
     """Generate a mask for pixels matching a specific color in an input image."""
     

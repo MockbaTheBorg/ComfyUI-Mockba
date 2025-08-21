@@ -6,14 +6,12 @@ Stores any data to a file cache for transmission to Wireless Output nodes.
 # Standard library imports
 import os
 import pickle
-import tempfile
 
 # ComfyUI imports
 import folder_paths
 
 # Local imports
-from .common import any_typ, CATEGORIES
-
+from .common import any_typ
 
 class mbWirelessInput:
     """Store any data to file cache for wireless transmission."""
