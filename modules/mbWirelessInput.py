@@ -25,32 +25,24 @@ class mbWirelessInput:
     CHANNEL_STEP = 1
     CACHE_FOLDER = "wireless_cache"
     
+    # Initialize the cache directory
     def __init__(self):
         """Initialize the wireless input node."""
         self.cache_dir = self._get_cache_directory()
         self._ensure_cache_directory_exists()
-        self._initialize_dummy_cache()
 
+    # Get the cache directory path
     def _get_cache_directory(self):
         """Get the wireless cache directory path."""
         temp_dir = folder_paths.get_temp_directory()
         return os.path.join(temp_dir, self.CACHE_FOLDER)
-    
+
+    # Ensure the cache directory exists
     def _ensure_cache_directory_exists(self):
         """Ensure the cache directory exists."""
         os.makedirs(self.cache_dir, exist_ok=True)
-    
-    def _initialize_dummy_cache(self):
-        """Initialize dummy cache entries for all 8 channels to prevent sync issues."""
-        for channel in range(1, 9):
-            cache_file = os.path.join(self.cache_dir, f"channel_{channel}.pkl")
-            if not os.path.exists(cache_file):
-                try:
-                    with open(cache_file, 'wb') as f:
-                        pickle.dump(None, f)
-                except Exception as e:
-                    print(f"mbWirelessInput: Failed to create dummy cache for channel {channel}: {e}")
-    
+
+    # Get the cache file path for a specific channel
     def _get_cache_file_path(self, channel):
         """Get the cache file path for a specific channel."""
         return os.path.join(self.cache_dir, f"channel_{channel}.pkl")
@@ -84,7 +76,7 @@ class mbWirelessInput:
     FUNCTION = "transmit_data"
     CATEGORY = "unset"
     DESCRIPTION = "Store any data to file cache for wireless transmission to output nodes."
-    OUTPUT_NODE = True  # This ensures input nodes execute first
+    OUTPUT_NODE = True
     
     @classmethod
     def IS_CHANGED(cls, channel, data, **kwargs):

@@ -63,7 +63,7 @@ class mbWirelessOutput:
     FUNCTION = "receive_data"
     CATEGORY = "unset"
     DESCRIPTION = "Retrieve data from file cache transmitted by wireless input nodes."
-    OUTPUT_NODE = True  # Ensure this node always executes and receives unique_id
+    OUTPUT_NODE = True
     
     @classmethod
     def IS_CHANGED(cls, channel, **kwargs):
