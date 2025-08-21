@@ -11,7 +11,8 @@ CATEGORIES = {
     "GENERATION": "🖖 Mockba/generation",
     "IMAGE_PROCESSING": "🖖 Mockba/image",
     "MASK_PROCESSING": "🖖 Mockba/mask",
-    "TEXT_PROCESSING": "🖖 Mockba/text"
+    "TEXT_PROCESSING": "🖖 Mockba/text",
+    "TOOLS": "🖖 Mockba/tools"
 }
 
 # A proxy class that always returns True when compared to any other object.
