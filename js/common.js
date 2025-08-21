@@ -188,54 +188,6 @@ app.registerExtension({
 					}
 				});
 				break;
-			case "mbValue":
-				addNodeCreatedHook(function () {
-					const showTypeWidget = this.widgets?.find(w => w.name === "show_type");
-					if (showTypeWidget) {
-						const originalCallback = showTypeWidget.callback;
-						showTypeWidget.callback = (value) => {
-							if (originalCallback) {
-								originalCallback.apply(this, arguments);
-							}
-							this.parent?.setDirtyCanvas(true, true);
-						};
-					}
-				});
-				addNodeExecutedHook(function (message) {
-					if (message && message.value !== undefined) {
-						const value = message.value[0];
-						const showTypeWidget = this.widgets?.find(w => w.name === "show_type");
-						const showType = showTypeWidget ? showTypeWidget.value : false;
-						let displayTitle = "Value";
-						try {
-							if (typeof value === 'number') {
-								displayTitle = showType ? `${Number.isInteger(value) ? 'INT' : 'FLOAT'}: ${value}` : `${value}`;
-							} else if (typeof value === 'string') {
-								const displayStr = value.length > 25 ? value.substring(0, 25) + "..." : value;
-								displayTitle = showType ? `STRING: ${displayStr}` : displayStr;
-							} else if (Array.isArray(value)) {
-								displayTitle = showType ? `LIST: [${value.length} items]` : `[${value.length} items]`;
-							} else if (value && typeof value === 'object' && value.shape) {
-								displayTitle = showType ? `TENSOR: ${JSON.stringify(value.shape)}` : `${JSON.stringify(value.shape)}`;
-							} else if (typeof value === 'boolean') {
-								displayTitle = showType ? `BOOLEAN: ${value}` : `${value}`;
-							} else if (value === null) {
-								displayTitle = showType ? `NULL: null` : `null`;
-							} else if (value && typeof value === 'object') {
-								const typeName = value.constructor ? value.constructor.name : 'OBJECT';
-								displayTitle = showType ? `${typeName.toUpperCase()}: <object>` : `${value}`;
-							} else {
-								const typeName = typeof value;
-								displayTitle = showType ? `${typeName.toUpperCase()}: ${value}` : `${value}`;
-							}
-						} catch (e) {
-							displayTitle = "UNKNOWN: <error>";
-						}
-						this.title = `${displayTitle}`;
-						this.setDirtyCanvas(true, true);
-					}
-				});
-				break;
 			case 'mbImageSize':
 				addNodeCreatedHook(function () {
 					ComfyWidgets["INT"](this, "width", ["INT", {}], app);

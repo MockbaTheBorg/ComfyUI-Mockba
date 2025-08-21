@@ -23,15 +23,12 @@ class mbValue:
                     "tooltip": "Any value to display in the node title"
                 })
             },
-            "optional": {
+            "hidden": {
                 "format": ("STRING", {
-                    "default": "",
-                    "multiline": False,
-                    "tooltip": "Python format string to format the value (e.g., '{:.2f}', '{:04d}', etc.). Leave empty for default formatting."
+                    "default": ""
                 }),
                 "show_type": ("BOOLEAN", {
-                    "default": False,
-                    "tooltip": "Show type information for unknown value types"
+                    "default": False
                 })
             }
         }
@@ -45,7 +42,7 @@ class mbValue:
     DESCRIPTION = "Display any value in the node title without producing outputs. Supports custom Python formatting strings for value display. Useful for debugging and monitoring values in workflows."
     OUTPUT_NODE = True
 
-    def display_value(self, value, format=None, show_type=False):
+    def display_value(self, value, format="", show_type=False):
         """Process the input value (no output)."""
         # Apply custom format if provided
         display_value = value
@@ -59,7 +56,7 @@ class mbValue:
         return {"ui": {"value": [display_value]}}
 
     @classmethod
-    def IS_CHANGED(cls, value, format=None, show_type=False, **kwargs):
+    def IS_CHANGED(cls, value, format="", show_type=False, **kwargs):
         """Force update when value changes."""
         try:
             # Create a hash-like representation for change detection
