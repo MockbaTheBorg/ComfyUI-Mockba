@@ -14,7 +14,6 @@ class mbSubmit:
     def INPUT_TYPES(cls):
         """Define input types for workflow submission."""
         return {
-            "required": {},
         }
 
     # Node metadata
