@@ -628,29 +628,60 @@ app.registerExtension({
 				
 				if (isInput) {
 					// Setup dynamic inputs for mbBatchInput
-					// Remove existing optional inputs
-					for (let i = this.inputs.length - 1; i >= 0; i--) {
-						if (this.inputs[i].name.startsWith("input_")) {
-							this.removeInput(i);
-						}
-					}
+					// Count current dynamic inputs
+					const currentDynamicInputs = this.inputs.filter(input => 
+						input.name.startsWith("input_")).length;
 					
-					// Add new inputs
-					for (let i = 0; i < count; i++) {
-						this.addInput(`input_${i+1}`, "*");
+					// Only modify if the count is different
+					if (currentDynamicInputs !== count) {
+						// Remove existing optional inputs
+						for (let i = this.inputs.length - 1; i >= 0; i--) {
+							if (this.inputs[i].name.startsWith("input_")) {
+								this.removeInput(i);
+							}
+						}
+						
+						// Add new inputs
+						for (let i = 0; i < count; i++) {
+							this.addInput(`input_${i+1}`, "*");
+						}
 					}
 				} else {
 					// Setup dynamic outputs for mbBatchOutput
-					// Remove existing outputs (except the first few that might be required)
-					for (let i = this.outputs.length - 1; i >= 0; i--) {
-						if (this.outputs[i].name.startsWith("output_")) {
-							this.removeOutput(i);
-						}
-					}
+					// Count current dynamic outputs
+					const currentDynamicOutputs = this.outputs.filter(output => 
+						output.name.startsWith("output_")).length;
 					
-					// Add new outputs
-					for (let i = 0; i < count; i++) {
-						this.addOutput(`output_${i+1}`, "*");
+					// Only modify if the count is different
+					if (currentDynamicOutputs !== count) {
+						// Store connections before removing outputs
+						const connections = [];
+						for (let i = 0; i < this.outputs.length; i++) {
+							if (this.outputs[i].name.startsWith("output_") && this.outputs[i].links) {
+								connections[i] = [...this.outputs[i].links];
+							}
+						}
+						
+						// Remove existing outputs
+						for (let i = this.outputs.length - 1; i >= 0; i--) {
+							if (this.outputs[i].name.startsWith("output_")) {
+								this.removeOutput(i);
+							}
+						}
+						
+						// Add new outputs
+						for (let i = 0; i < count; i++) {
+							this.addOutput(`output_${i+1}`, "*");
+						}
+						
+						// Restore connections that are still valid
+						setTimeout(() => {
+							for (let i = 0; i < connections.length && i < this.outputs.length; i++) {
+								if (connections[i] && this.outputs[i]) {
+									// ComfyUI will automatically reconnect valid links
+								}
+							}
+						}, 10);
 					}
 				}
 				

@@ -14,7 +14,7 @@ MAX_OUTPUTS = 16
 class mbBatchOutput:
     @classmethod
     def INPUT_TYPES(cls):
-        return {
+        inputs = {
             "required": {
                 "batch": (any_typ,),
                 "outputs": ("INT", {
@@ -25,6 +25,7 @@ class mbBatchOutput:
                 })
             }
         }
+        return inputs
 
     # Node metadata
     TITLE = "Dynamic Batch Output"
@@ -34,7 +35,17 @@ class mbBatchOutput:
     CATEGORY = "unset"
     DESCRIPTION = "Split a batch of objects into multiple outputs. Configure number of outputs when added to workflow."
 
+    @classmethod
+    def update_node_metadata(cls, outputs):
+        """Update the node metadata to reflect the actual number of outputs."""
+        cls.RETURN_TYPES = tuple(any_typ for _ in range(outputs))
+        cls.RETURN_NAMES = tuple(f"output_{i+1}" for i in range(outputs))
+
     def unbatch(self, batch, outputs, unique_id=None):
+        # Update the node metadata to match the requested outputs
+        if outputs > 0:
+            self.__class__.update_node_metadata(outputs)
+        
         # Unpack the tuple/list and pad with None if needed
         if not isinstance(batch, (tuple, list)):
             raise ValueError("Input must be a tuple or list")
@@ -49,9 +60,5 @@ class mbBatchOutput:
                 result.append(batch_list[i])
             else:
                 result.append(None)
-        
-        # Pad to MAX_OUTPUTS with None for unused outputs
-        while len(result) < MAX_OUTPUTS:
-            result.append(None)
         
         return tuple(result)
