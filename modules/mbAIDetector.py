@@ -4,7 +4,6 @@ Detects if an image is AI-generated using open-source machine learning models.
 """
 
 # Standard library imports
-import os
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -12,7 +11,6 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import torch
 from PIL import Image
-import requests
 from transformers import AutoImageProcessor, AutoModelForImageClassification, BeitImageProcessor, BeitForImageClassification
 
 class mbAIDetector:

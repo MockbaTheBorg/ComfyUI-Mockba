@@ -11,7 +11,6 @@ from datetime import datetime
 # Third-party imports
 import numpy as np
 from PIL import Image
-from PIL.PngImagePlugin import PngInfo
 try:
     import piexif
 except Exception:

@@ -6,8 +6,7 @@ Modifies images to help them pass FFT-based AI detection by adding natural artif
 # Standard library imports
 import torch
 import numpy as np
-import math
-from PIL import Image, ImageFilter, ImageEnhance
+from PIL import Image
 
 class mbAIBypass:
     """Add natural artifacts and noise patterns to help images pass AI detection systems."""
