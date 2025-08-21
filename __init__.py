@@ -1,6 +1,36 @@
 import importlib
 from .modules.common import CATEGORIES
 
+# --- Wireless node execution order patch ---
+def patch_wireless_execution_order():
+    try:
+        import comfy_execution.graph as graph
+    except ImportError:
+        return  # ComfyUI not loaded yet
+    if getattr(graph.TopologicalSort, '_wireless_patch_applied', False):
+        return
+    original_add_node = graph.TopologicalSort.add_node
+    def patched_add_node(self, node_unique_id, *args, **kwargs):
+        original_add_node(self, node_unique_id, *args, **kwargs)
+        wireless_inputs = []
+        wireless_outputs = []
+        for node_id in self.pendingNodes:
+            node = self.dynprompt.get_node(node_id)
+            if node["class_type"] == "mbWirelessInput":
+                wireless_inputs.append((node_id, node["inputs"].get("channel")))
+            if node["class_type"] == "mbWirelessOutput":
+                wireless_outputs.append((node_id, node["inputs"].get("channel")))
+        for in_id, in_channel in wireless_inputs:
+            for out_id, out_channel in wireless_outputs:
+                if in_channel == out_channel:
+                    if out_id not in self.blocking[in_id]:
+                        self.blocking[in_id][out_id] = {}
+                        self.blockCount[out_id] += 1
+    graph.TopologicalSort.add_node = patched_add_node
+    graph.TopologicalSort._wireless_patch_applied = True
+patch_wireless_execution_order()
+# --- End wireless node patch ---
+
 # Initialize the mappings
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}

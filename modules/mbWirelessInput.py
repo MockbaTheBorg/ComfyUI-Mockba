@@ -100,14 +100,15 @@ class mbWirelessInput:
         except Exception:
             return str(time.time())
 
-    def transmit_data(self, channel, data, **kwargs):
+    def transmit_data(self, channel, data, unique_id=None, **kwargs):
         """
         Store data to file cache for the specified channel.
         
         Args:
             channel: Channel number (1-8) for wireless transmission
             data: Any data to transmit
-            **kwargs: Additional arguments (unique_id, extra_pnginfo)
+            unique_id: Unique workflow/session/run id (from ComfyUI hidden input)
+            **kwargs: Additional arguments (extra_pnginfo)
             
         Returns:
             tuple: Passthrough of the input data
@@ -119,20 +120,14 @@ class mbWirelessInput:
             # Get cache file path
             cache_file = self._get_cache_file_path(channel)
             
-            # Store data to cache file with atomic write
+            # Store data to cache file with atomic write (no control file)
             temp_file = cache_file + ".tmp"
             with open(temp_file, 'wb') as f:
                 pickle.dump(data, f)
-            
-            # Atomic move to prevent race conditions
             import shutil
             shutil.move(temp_file, cache_file)
-            
             print(f"mbWirelessInput: Stored data to channel {channel} (type: {type(data).__name__})")
-            
-            # Return passthrough of input data
             return (data,)
-            
         except Exception as e:
             error_msg = f"Failed to transmit data on channel {channel}: {str(e)}"
             print(f"mbWirelessInput: {error_msg}")

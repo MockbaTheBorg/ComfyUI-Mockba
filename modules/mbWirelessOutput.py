@@ -63,6 +63,7 @@ class mbWirelessOutput:
     FUNCTION = "receive_data"
     CATEGORY = "unset"
     DESCRIPTION = "Retrieve data from file cache transmitted by wireless input nodes."
+    OUTPUT_NODE = True  # Ensure this node always executes and receives unique_id
     
     @classmethod
     def IS_CHANGED(cls, channel, **kwargs):
@@ -84,13 +85,14 @@ class mbWirelessOutput:
         except Exception:
             return str(time.time())
 
-    def receive_data(self, channel, **kwargs):
+    def receive_data(self, channel, unique_id=None, **kwargs):
         """
         Retrieve data from file cache for the specified channel.
         
         Args:
             channel: Channel number (1-8) for wireless reception
-            **kwargs: Additional arguments (unique_id, extra_pnginfo)
+            unique_id: Unique workflow/session/run id (from ComfyUI hidden input)
+            **kwargs: Additional arguments (extra_pnginfo)
             
         Returns:
             tuple: Retrieved data from cache, or None if not available
@@ -98,36 +100,21 @@ class mbWirelessOutput:
         import time
         
         # Retry mechanism to handle timing issues
-        max_retries = 3
-        retry_delay = 0.1  # 100ms between retries
-        
+        max_retries = 10
+        retry_delay = 0.05  # 50ms between retries
+        cache_file = self._get_cache_file_path(channel)
         for attempt in range(max_retries):
             try:
-                # Get cache file path
-                cache_file = self._get_cache_file_path(channel)
-                
-                # Check if cache file exists
                 if not os.path.exists(cache_file):
                     if attempt < max_retries - 1:
                         time.sleep(retry_delay)
                         continue
                     print(f"mbWirelessOutput: No data available on channel {channel} (cache file not found)")
                     return (None,)
-                
-                # Load data from cache file
                 with open(cache_file, 'rb') as f:
                     data = pickle.load(f)
-                
-                if data is None:
-                    if attempt < max_retries - 1:
-                        time.sleep(retry_delay)
-                        continue
-                    print(f"mbWirelessOutput: No data available on channel {channel} (empty cache)")
-                    return (None,)
-                else:
-                    print(f"mbWirelessOutput: Retrieved data from channel {channel} (type: {type(data).__name__})")
-                    return (data,)
-                    
+                print(f"mbWirelessOutput: Retrieved data from channel {channel} (type: {type(data).__name__})")
+                return (data,)
             except Exception as e:
                 if attempt < max_retries - 1:
                     time.sleep(retry_delay)
@@ -135,5 +122,4 @@ class mbWirelessOutput:
                 error_msg = f"Failed to receive data from channel {channel}: {str(e)}"
                 print(f"mbWirelessOutput: {error_msg}")
                 return (None,)
-        
         return (None,)
