@@ -458,26 +458,14 @@ app.registerExtension({
 app.registerExtension({
 	name: "Mockba.DynamicBatch",
 	
-	setup() {
-		this.isLoadingWorkflow = false;
-		
-		const originalLoadGraphData = app.loadGraphData;
-		app.loadGraphData = (graphData) => {
-			this.isLoadingWorkflow = true;
-			const result = originalLoadGraphData.call(app, graphData);
-			setTimeout(() => { this.isLoadingWorkflow = false; }, 100);
-			return result;
-		};
-	},
-	
 	async beforeRegisterNodeDef(nodeType, nodeData, app) {
 		if (nodeData.name === "mbBatchInput" || nodeData.name === "mbBatchOutput") {
-			const extension = this;
 			const onNodeCreated = nodeType.prototype.onNodeCreated;
 			
 			nodeType.prototype.onNodeCreated = function() {
 				const r = onNodeCreated?.apply(this, arguments);
 				
+				// Use a longer delay to ensure node is fully initialized
 				setTimeout(() => {
 					const configWidget = this.widgets?.find(w => w.name === "inputs" || w.name === "outputs");
 					if (configWidget) {
@@ -487,13 +475,20 @@ app.registerExtension({
 							if (value > 0) this.setupDynamicConnections(value);
 						};
 						
-						if (!extension.isLoadingWorkflow && configWidget.value === -1) {
-							this.showConfigurationPopup();
+						// Simple check: if value is -1, show popup after a delay to ensure we're not during loading
+						if (configWidget.value === -1) {
+							// Wait longer to ensure any workflow loading is complete
+							setTimeout(() => {
+								// Double-check the value hasn't changed (would indicate loading)
+								if (configWidget.value === -1) {
+									this.showConfigurationPopup();
+								}
+							}, 500);
 						} else if (configWidget.value > 0) {
 							this.setupDynamicConnections(configWidget.value);
 						}
 					}
-				}, 50);
+				}, 100);
 				
 				return r;
 			};
