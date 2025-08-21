@@ -163,31 +163,7 @@ app.registerExtension({
 					this.onResize?.(this.size);
 				});
 				break;
-			case "mbDebug":
-				addNodeExecutedHook(function (message) {
-					if (this.widgets && message?.debug_output) {
-						const debugWidget = this.widgets.find(w => w.name === "debug_output");
-						if (debugWidget) {
-							debugWidget.value = message.debug_output[0];
-						}
-						this.onResize?.(this.size);
-					}
-				});
-				break;
-			case "mbDisplay":
-				addNodeExecutedHook(function (message) {
-					if (this.widgets && message?.value) {
-						const newValue = message.value[0];
-						
-						const valueWidget = this.widgets.find(w => w.name === "value");
-						if (valueWidget) {
-							valueWidget.value = newValue;
-						}
-						
-						this.setDirtyCanvas(true, true);
-					}
-				});
-				break;
+
 			case 'mbImageSize':
 				addNodeCreatedHook(function () {
 					ComfyWidgets["INT"](this, "width", ["INT", {}], app);
