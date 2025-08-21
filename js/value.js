@@ -21,6 +21,10 @@ class mbValue {
         }
 
         this.node.onAdded = function() {
+            // Collapse the node by default
+            this.flags = this.flags || {};
+            this.flags.collapsed = true;
+            
             // Hide widgets when node is added
             if (this.widgets) {
                 for (let i = 0; i < this.widgets.length; i++) {
