@@ -34,7 +34,7 @@ class mbBatchOutput:
     CATEGORY = "unset"
     DESCRIPTION = "Split a batch of objects into multiple outputs. Configure number of outputs when added to workflow."
 
-    def unbatch(self, batch, outputs):
+    def unbatch(self, batch, outputs, unique_id=None):
         # Unpack the tuple/list and pad with None if needed
         if not isinstance(batch, (tuple, list)):
             raise ValueError("Input must be a tuple or list")

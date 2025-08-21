@@ -482,13 +482,10 @@ app.registerExtension({
 			nodeType.prototype.onNodeCreated = function() {
 				const r = onNodeCreated ? onNodeCreated.apply(this, arguments) : undefined;
 				
-				// Hide the configuration widget visually
+				// Set up widget callback and initial configuration check
 				setTimeout(() => {
 					const configWidget = this.widgets?.find(w => w.name === "inputs" || w.name === "outputs");
 					if (configWidget) {
-						// Hide the widget visually
-						configWidget.type = "hidden";
-						
 						// Setup widget callback for future changes
 						const originalCallback = configWidget.callback;
 						configWidget.callback = (value) => {
@@ -507,27 +504,6 @@ app.registerExtension({
 						}
 					}
 				}, 50);
-				
-				return r;
-			};
-			
-			// Override configure to handle loading from saved data
-			const originalConfigure = nodeType.prototype.configure;
-			nodeType.prototype.configure = function(info) {
-				const r = originalConfigure ? originalConfigure.call(this, info) : undefined;
-				
-				// After configuration, check if we need to setup dynamic connections
-				setTimeout(() => {
-					const configWidget = this.widgets?.find(w => w.name === "inputs" || w.name === "outputs");
-					if (configWidget) {
-						// Hide the widget
-						configWidget.type = "hidden";
-						
-						if (configWidget.value > 0) {
-							this.setupDynamicConnections(configWidget.value);
-						}
-					}
-				}, 10);
 				
 				return r;
 			};
@@ -682,21 +658,6 @@ app.registerExtension({
 				if (app.graph) {
 					app.graph.setDirtyCanvas(true, true);
 				}
-			};
-			
-			// Add context menu option to reconfigure
-			const getExtraMenuOptions = nodeType.prototype.getExtraMenuOptions;
-			nodeType.prototype.getExtraMenuOptions = function(_, options) {
-				const r = getExtraMenuOptions ? getExtraMenuOptions.apply(this, arguments) : undefined;
-				
-				options.push({
-					content: "Reconfigure...",
-					callback: () => {
-						this.showConfigurationPopup();
-					}
-				});
-				
-				return r;
 			};
 		}
 	}

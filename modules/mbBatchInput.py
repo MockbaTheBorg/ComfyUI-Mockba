@@ -37,7 +37,7 @@ class mbBatchInput:
     CATEGORY = "unset"
     DESCRIPTION = "Combine multiple objects into a single batch. Configure number of inputs when added to workflow."
 
-    def batch(self, inputs, **kwargs):
+    def batch(self, inputs, unique_id=None, **kwargs):
         # Collect all the dynamic inputs
         valid_inputs = []
         for i in range(inputs if inputs > 0 else 0):
