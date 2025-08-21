@@ -243,10 +243,10 @@ app.registerExtension({
 					// Set node size to fit the two buttons properly
 					// Each button takes approximately 30 pixels height + padding
 					// Width should accommodate the button text
-					this.size = [160, 85];
+					this.size = [180, 55];
 					
 					// Ensure the node doesn't resize automatically
-					this.resizable = false;
+					this.resizable = true;
 				});
 				break;
 			case "mbColorPicker":

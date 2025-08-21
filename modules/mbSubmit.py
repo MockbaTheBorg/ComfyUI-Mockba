@@ -13,8 +13,7 @@ class mbSubmit:
     @classmethod
     def INPUT_TYPES(cls):
         """Define input types for workflow submission."""
-        return {
-        }
+        return {}
 
     # Node metadata
     TITLE = "Workflow Submit"
