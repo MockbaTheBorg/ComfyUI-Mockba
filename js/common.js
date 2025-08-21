@@ -143,6 +143,16 @@ app.registerExtension({
 			};
 		};
 
+		// Helper function to add a callback to onDrawForeground
+		const addNodeDrawForegroundHook = (callback) => {
+			const onDrawForeground = nodeType.prototype.onDrawForeground;
+			nodeType.prototype.onDrawForeground = function () {
+				const r = onDrawForeground?.apply(this, arguments);
+				callback.apply(this, arguments);
+				return r;
+			};
+		};
+
 		// Helper function to add a callback to onExecuted
 		const addNodeExecutedHook = (callback) => {
 			const onExecuted = nodeType.prototype.onExecuted;
@@ -239,14 +249,10 @@ app.registerExtension({
 							app.canvas.setDirty(true, true);
 						}
 					});
-					
-					// Set node size to fit the two buttons properly
-					// Each button takes approximately 30 pixels height + padding
-					// Width should accommodate the button text
 					this.size = [180, 55];
-					
-					// Ensure the node doesn't resize automatically
-					this.resizable = false;
+				});
+				addNodeDrawForegroundHook(function () {
+					this.size = [180, 55];
 				});
 				break;
 			case "mbColorPicker":
