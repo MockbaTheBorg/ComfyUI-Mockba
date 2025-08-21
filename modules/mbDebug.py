@@ -28,11 +28,8 @@ class mbDebug:
                 "input": (any_typ, {
                     "tooltip": "Any object to debug and analyze"
                 }),
-                "debug_output": ("STRING", {
-                    "multiline": True, 
-                    "default": cls.DEFAULT_DEBUG_MESSAGE,
-                    "tooltip": "Debug output display (automatically populated)"
-                }),
+            },
+            "hidden": {
                 "console_output": ("BOOLEAN", {
                     "default": False,
                     "tooltip": "Also print debug information to console"
@@ -56,13 +53,12 @@ class mbDebug:
     DESCRIPTION = "Display comprehensive debug information about any input object in a text widget."
     OUTPUT_NODE = True
 
-    def debug_object(self, input, debug_output, console_output, truncate_size):
+    def debug_object(self, input, console_output=False, truncate_size=500):
         """
         Generate debug information for the input object.
         
         Args:
             input: Any object to debug
-            debug_output: Current debug output (updated by this function)
             console_output: Whether to print to console
             truncate_size: Maximum characters for truncation (0 = no truncation)
             

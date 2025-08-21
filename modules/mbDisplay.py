@@ -31,11 +31,8 @@ class mbDisplay:
                 "input": (any_typ, {
                     "tooltip": "Any type of data to display"
                 }),
-                "value": ("STRING", {
-                    "multiline": True, 
-                    "default": cls.DEFAULT_MESSAGE,
-                    "tooltip": "Display output (automatically populated)"
-                }),
+            },
+            "hidden": {
                 "console_output": ("BOOLEAN", {
                     "default": False,
                     "tooltip": "Also print display information to console"
@@ -59,13 +56,12 @@ class mbDisplay:
     DESCRIPTION = "Display anything node that shows information about any input type - strings, numbers, images, tensors, etc."
     OUTPUT_NODE = True
 
-    def display_data(self, input, value, console_output, truncate_size):
+    def display_data(self, input, console_output=False, truncate_size=500):
         """
         Display information about the input data.
         
         Args:
             input: Any type of data to analyze and display
-            value: Current display value (updated by this function)
             console_output: Whether to print to console
             truncate_size: Maximum characters for truncation (0 = no truncation)
             

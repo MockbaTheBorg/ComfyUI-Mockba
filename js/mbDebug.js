@@ -1,4 +1,5 @@
 import { app } from "../../scripts/app.js";
+import { ComfyWidgets } from "../../scripts/widgets.js";
 
 class mbDebug {
     constructor(node) {
@@ -9,29 +10,11 @@ class mbDebug {
         this.node.properties.console_output = this.node.properties.console_output ?? false;
         this.node.properties.truncate_size = this.node.properties.truncate_size ?? 500;
 
-        // Hide the hidden inputs from the UI - check if widgets exist first
-        if (this.node.widgets && this.node.widgets.length > 0) {
-            for (let i = 0; i < this.node.widgets.length; i++) {
-                const widget = this.node.widgets[i];
-                if (widget.name === "console_output" || widget.name === "truncate_size") {
-                    widget.hidden = true;
-                    widget.type = "hidden";
-                }
-            }
-        }
-
-        this.node.onAdded = function() {
-            // Hide widgets when node is added
-            if (this.widgets) {
-                for (let i = 0; i < this.widgets.length; i++) {
-                    const widget = this.widgets[i];
-                    if (widget.name === "console_output" || widget.name === "truncate_size") {
-                        widget.hidden = true;
-                        widget.type = "hidden";
-                    }
-                }
-            }
-        };
+        // Create the debug output widget
+        ComfyWidgets["STRING"](this.node, "debug_output", ["STRING", {
+            multiline: true, 
+            default: "Debug output will appear here after execution..."
+        }], app);
 
         this.node.onConfigure = function() {
             // Called when loading from workflow - ensure properties are valid
@@ -54,18 +37,6 @@ class mbDebug {
             }
             if (typeof this.properties.truncate_size !== 'number' || this.properties.truncate_size < 0 || this.properties.truncate_size > 10000) {
                 this.properties.truncate_size = 500;
-            }
-
-            // Update corresponding hidden widget values if widgets exist
-            if (this.widgets) {
-                for (let i = 0; i < this.widgets.length; i++) {
-                    const widget = this.widgets[i];
-                    if (widget.name === "console_output") {
-                        widget.value = this.properties.console_output;
-                    } else if (widget.name === "truncate_size") {
-                        widget.value = this.properties.truncate_size;
-                    }
-                }
             }
         };
 
