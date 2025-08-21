@@ -49,6 +49,7 @@ class mbLatentToFile:
     FUNCTION = "save_latent_to_file"
     CATEGORY = "unset"
     DESCRIPTION = "Save latent tensors to files with support for single latents and batch processing of multiple latents."
+    OUTPUT_NODE = True
 
     def save_latent_to_file(self, latent, filename, save_mode):
         """

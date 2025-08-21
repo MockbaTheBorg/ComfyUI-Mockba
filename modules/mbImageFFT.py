@@ -57,6 +57,7 @@ class mbImageFFT:
     FUNCTION = "analyze_fft"
     CATEGORY = "unset"
     DESCRIPTION = "Analyze image FFT to detect patterns characteristic of AI-generated images. Shows frequency domain representation."
+    OUTPUT_NODE = True
 
     def analyze_fft(self, image, visualization_mode="log_magnitude", center_spectrum=True, 
                    enhance_contrast=True, color_channel="luminance", high_freq_threshold=0.1):

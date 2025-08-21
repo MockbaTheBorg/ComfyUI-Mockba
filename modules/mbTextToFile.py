@@ -42,6 +42,7 @@ class mbTextToFile:
     FUNCTION = "save_text_to_file"
     CATEGORY = "unset"
     DESCRIPTION = "Save text content to files with automatic directory management and extension handling."
+    OUTPUT_NODE = True
 
     def save_text_to_file(self, text, filename):
         """

@@ -87,6 +87,7 @@ class mbImageToFile:
     FUNCTION = "save_image_to_file"
     CATEGORY = "unset"
     DESCRIPTION = "Save images to files with support for multiple formats (PNG, JPEG, WebP, BMP, TIFF) and batch processing."
+    OUTPUT_NODE = True
 
     def save_image_to_file(self, image, filename, format, save_mode, jpeg_quality, remove_ai_metadata, embed_exif, exif_profile):
         """
