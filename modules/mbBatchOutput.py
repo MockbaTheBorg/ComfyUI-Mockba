@@ -41,7 +41,7 @@ class mbBatchOutput:
         cls.RETURN_TYPES = tuple(any_typ for _ in range(outputs))
         cls.RETURN_NAMES = tuple(f"output_{i+1}" for i in range(outputs))
 
-    def unbatch(self, batch, outputs, unique_id=None):
+    def unbatch(self, batch, outputs):
         # Update the node metadata to match the requested outputs
         if outputs > 0:
             self.__class__.update_node_metadata(outputs)
