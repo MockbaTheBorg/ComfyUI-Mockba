@@ -459,17 +459,13 @@ app.registerExtension({
 	name: "Mockba.DynamicBatch",
 	
 	setup() {
-		// Track when we're loading a workflow
 		this.isLoadingWorkflow = false;
 		
 		const originalLoadGraphData = app.loadGraphData;
 		app.loadGraphData = (graphData) => {
 			this.isLoadingWorkflow = true;
 			const result = originalLoadGraphData.call(app, graphData);
-			// Reset the flag after a delay to allow all nodes to be created
-			setTimeout(() => {
-				this.isLoadingWorkflow = false;
-			}, 100);
+			setTimeout(() => { this.isLoadingWorkflow = false; }, 100);
 			return result;
 		};
 	},
@@ -480,26 +476,20 @@ app.registerExtension({
 			const onNodeCreated = nodeType.prototype.onNodeCreated;
 			
 			nodeType.prototype.onNodeCreated = function() {
-				const r = onNodeCreated ? onNodeCreated.apply(this, arguments) : undefined;
+				const r = onNodeCreated?.apply(this, arguments);
 				
-				// Set up widget callback and initial configuration check
 				setTimeout(() => {
 					const configWidget = this.widgets?.find(w => w.name === "inputs" || w.name === "outputs");
 					if (configWidget) {
-						// Setup widget callback for future changes
 						const originalCallback = configWidget.callback;
 						configWidget.callback = (value) => {
 							if (originalCallback) originalCallback(value);
-							if (value > 0) {
-								this.setupDynamicConnections(value);
-							}
+							if (value > 0) this.setupDynamicConnections(value);
 						};
 						
-						// Only show popup if we're NOT loading a workflow and the value is -1
 						if (!extension.isLoadingWorkflow && configWidget.value === -1) {
 							this.showConfigurationPopup();
 						} else if (configWidget.value > 0) {
-							// Node is configured, set up dynamic connections
 							this.setupDynamicConnections(configWidget.value);
 						}
 					}
@@ -508,187 +498,64 @@ app.registerExtension({
 				return r;
 			};
 			
-			// Add method to show configuration popup
 			nodeType.prototype.showConfigurationPopup = function() {
 				const node = this;
 				const isInput = nodeData.name === "mbBatchInput";
 				const configField = isInput ? "inputs" : "outputs";
-				const label = isInput ? "inputs" : "outputs";
 				
-				// Create popup dialog
-				const dialog = document.createElement("div");
-				dialog.style.cssText = `
-					position: fixed;
-					top: 50%;
-					left: 50%;
-					transform: translate(-50%, -50%);
-					background: #2a2a2a;
-					border: 1px solid #555;
-					border-radius: 8px;
-					padding: 20px;
-					z-index: 10000;
-					color: white;
-					font-family: Arial, sans-serif;
-					box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-				`;
-				
-				dialog.innerHTML = `
-					<h3 style="margin-top: 0;">Configure ${isInput ? 'Batch Input' : 'Batch Output'}</h3>
-					<p>How many ${label} do you want?</p>
-					<input type="number" id="configValue" min="2" max="16" value="4" style="
-						width: 100px;
-						padding: 5px;
-						margin: 10px 0;
-						background: #1a1a1a;
-						border: 1px solid #555;
-						color: white;
-						border-radius: 4px;
-					">
-					<div style="margin-top: 15px;">
-						<button id="configOk" style="
-							background: #007acc;
-							color: white;
-							border: none;
-							padding: 8px 16px;
-							margin-right: 10px;
-							border-radius: 4px;
-							cursor: pointer;
-						">OK</button>
-						<button id="configCancel" style="
-							background: #666;
-							color: white;
-							border: none;
-							padding: 8px 16px;
-							border-radius: 4px;
-							cursor: pointer;
-						">Cancel</button>
-					</div>
-				`;
-				
-				// Create backdrop
-				const backdrop = document.createElement("div");
-				backdrop.style.cssText = `
-					position: fixed;
-					top: 0;
-					left: 0;
-					width: 100%;
-					height: 100%;
-					background: rgba(0,0,0,0.5);
-					z-index: 9999;
-				`;
-				
-				document.body.appendChild(backdrop);
-				document.body.appendChild(dialog);
-				
-				const input = dialog.querySelector("#configValue");
-				const okBtn = dialog.querySelector("#configOk");
-				const cancelBtn = dialog.querySelector("#configCancel");
-				
-				input.focus();
-				input.select();
-				
-				const cleanup = () => {
-					document.body.removeChild(backdrop);
-					document.body.removeChild(dialog);
-				};
-				
-				const confirm = () => {
-					const value = parseInt(input.value);
-					if (value >= 2 && value <= 16) {
-						// Update the widget value
-						const configWidget = node.widgets?.find(w => w.name === configField);
-						if (configWidget) {
-							configWidget.value = value;
-							node.setupDynamicConnections(value);
-						}
-						cleanup();
-					} else {
-						alert("Please enter a value between 2 and 16");
-					}
-				};
-				
-				okBtn.onclick = confirm;
-				cancelBtn.onclick = () => {
-					// If cancelled, remove the node
+				const value = prompt(`How many ${configField} do you want? (2-16)`, "4");
+				if (value === null) {
 					app.graph.remove(node);
-					cleanup();
-				};
+					return;
+				}
 				
-				input.onkeydown = (e) => {
-					if (e.key === "Enter") confirm();
-					if (e.key === "Escape") cancelBtn.click();
-				};
-				
-				backdrop.onclick = cancelBtn.onclick;
+				const count = parseInt(value);
+				if (count >= 2 && count <= 16) {
+					const configWidget = node.widgets?.find(w => w.name === configField);
+					if (configWidget) {
+						configWidget.value = count;
+						node.setupDynamicConnections(count);
+					}
+				} else {
+					alert("Please enter a value between 2 and 16");
+					this.showConfigurationPopup();
+				}
 			};
 			
-			// Add method to setup dynamic connections
 			nodeType.prototype.setupDynamicConnections = function(count) {
 				const isInput = nodeData.name === "mbBatchInput";
 				
 				if (isInput) {
-					// Setup dynamic inputs for mbBatchInput
-					// Count current dynamic inputs
-					const currentDynamicInputs = this.inputs.filter(input => 
-						input.name.startsWith("input_")).length;
-					
-					// Only modify if the count is different
-					if (currentDynamicInputs !== count) {
-						// Remove existing optional inputs
+					const currentCount = this.inputs.filter(input => input.name.startsWith("input_")).length;
+					if (currentCount !== count) {
+						// Remove existing dynamic inputs
 						for (let i = this.inputs.length - 1; i >= 0; i--) {
 							if (this.inputs[i].name.startsWith("input_")) {
 								this.removeInput(i);
 							}
 						}
-						
 						// Add new inputs
 						for (let i = 0; i < count; i++) {
 							this.addInput(`input_${i+1}`, "*");
 						}
 					}
 				} else {
-					// Setup dynamic outputs for mbBatchOutput
-					// Count current dynamic outputs
-					const currentDynamicOutputs = this.outputs.filter(output => 
-						output.name.startsWith("output_")).length;
-					
-					// Only modify if the count is different
-					if (currentDynamicOutputs !== count) {
-						// Store connections before removing outputs
-						const connections = [];
-						for (let i = 0; i < this.outputs.length; i++) {
-							if (this.outputs[i].name.startsWith("output_") && this.outputs[i].links) {
-								connections[i] = [...this.outputs[i].links];
-							}
-						}
-						
-						// Remove existing outputs
+					const currentCount = this.outputs.filter(output => output.name.startsWith("output_")).length;
+					if (currentCount !== count) {
+						// Remove existing dynamic outputs
 						for (let i = this.outputs.length - 1; i >= 0; i--) {
 							if (this.outputs[i].name.startsWith("output_")) {
 								this.removeOutput(i);
 							}
 						}
-						
 						// Add new outputs
 						for (let i = 0; i < count; i++) {
 							this.addOutput(`output_${i+1}`, "*");
 						}
-						
-						// Restore connections that are still valid
-						setTimeout(() => {
-							for (let i = 0; i < connections.length && i < this.outputs.length; i++) {
-								if (connections[i] && this.outputs[i]) {
-									// ComfyUI will automatically reconnect valid links
-								}
-							}
-						}, 10);
 					}
 				}
 				
-				// Trigger graph update
-				if (app.graph) {
-					app.graph.setDirtyCanvas(true, true);
-				}
+				app.graph?.setDirtyCanvas(true, true);
 			};
 		}
 	}
