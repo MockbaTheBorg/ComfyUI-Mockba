@@ -111,6 +111,7 @@ mbDebug = import_and_register('.modules.mbDebug', category)
 mbDisplay = import_and_register('.modules.mbDisplay', category)
 mbEval = import_and_register('.modules.mbEval', category)
 mbExec = import_and_register('.modules.mbExec', category)
+mbPlotter = import_and_register('.modules.mbPlotter', category)
 mbValue = import_and_register('.modules.mbValue', category)
 
 # === File Operations ===

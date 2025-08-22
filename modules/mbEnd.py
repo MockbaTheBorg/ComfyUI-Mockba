@@ -19,8 +19,10 @@ class mbEnd:
         """Define input types."""
         return {
             "required": {
-                "input": (any_typ),
-            }
+                "input": (any_typ, {
+                    "tooltip": "Any type of data"
+                }),
+            },
         }
 
     # Node metadata
@@ -42,6 +44,4 @@ class mbEnd:
         Returns:
             None: No output as this is an end node
         """
-        return {
-            "ui": {"value": ""},
-        }
+        return (None,)

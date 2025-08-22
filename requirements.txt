@@ -8,3 +8,4 @@ torch>=1.9.0
 requests
 onnxruntime
 pdf417gen
+matplotlib
