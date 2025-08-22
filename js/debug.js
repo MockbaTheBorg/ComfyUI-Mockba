@@ -12,7 +12,7 @@ class mbDebug {
         // Initialize properties with defaults
         this.node.properties.max_length = this.node.properties.max_length ?? DEFAULT_MAX_LENGTH;
 
-        // Create the debug output widget
+        // Create the value display widget
         ComfyWidgets["STRING"](this.node, "value", ["STRING", {
             multiline: true, 
             default: " "
