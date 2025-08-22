@@ -34,7 +34,7 @@ class mbEval:
     def INPUT_TYPES(cls):
         """Define input types for Python expression evaluation."""
         return {
-            "required": {
+            "optional": {
                 "i1": (any_typ, {
                     "tooltip": "First input variable (accessible as 'i1' in expression)"
                 }),
