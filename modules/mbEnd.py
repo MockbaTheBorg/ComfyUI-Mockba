@@ -7,7 +7,7 @@ Used as an endpoint to force the execution of upstream nodes.
 # Local imports
 from .common import any_typ
 
-class mEnd:
+class mbEnd:
     """Simple end node that does nothing"""
     
     def __init__(self):
@@ -18,10 +18,8 @@ class mEnd:
     def INPUT_TYPES(cls):
         """Define input types."""
         return {
-            "optional": {
-                "input": (any_typ, {
-                    "tooltip": "Any data type to pass through"
-                }),
+            "required": {
+                "input": (any_typ),
             }
         }
 
@@ -34,7 +32,7 @@ class mEnd:
     DESCRIPTION = "Simple end node that does nothing and is always executed."
     OUTPUT_NODE = True
 
-    def end(self, input=None):
+    def end(self, **kwargs):
         """
         Does nothing - this is just an end point to force execution.
         
@@ -44,4 +42,6 @@ class mEnd:
         Returns:
             None: No output as this is an end node
         """
-        pass
+        return {
+            "ui": {"value": ""},
+        }
