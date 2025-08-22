@@ -161,6 +161,7 @@ mbTextbox = import_and_register('.modules.mbTextbox', category)
 # === Tools ===
 category = CATEGORIES["TOOLS"]
 mbColorPicker = import_and_register('.modules.mbColorPicker', category)
+mbEnd = import_and_register('.modules.mbEnd', category)
 mbMemoryUnload = import_and_register('.modules.mbMemoryUnload', category)
 mbSlider = import_and_register('.modules.mbSlider', category)
 mbSubmit = import_and_register('.modules.mbSubmit', category)
