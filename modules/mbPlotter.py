@@ -49,60 +49,15 @@ class mbPlotter:
                 "value": ("FLOAT", {
                     "forceInput": True,
                     "tooltip": "Value to plot on the chart"
-                }),
-             },
-            "hidden": {
-                "plot_name": ("STRING", {
-                    "default": "Plot",
-                    "tooltip": "Name of the plot"
-                }),
-               "history_size": ("INT", {
-                    "default": cls.DEFAULT_HISTORY_SIZE,
-                    "min": 50,
-                    "max": 2048,
-                    "tooltip": "Number of data points to keep in history"
-                }),
-                "width": ("INT", {
-                    "default": cls.DEFAULT_WIDTH,
-                    "min": 200,
-                    "max": 1024,
-                    "tooltip": "Width of the plot image"
-                }),
-                "height": ("INT", {
-                    "default": cls.DEFAULT_HEIGHT,
-                    "min": 150,
-                    "max": 512,
-                    "tooltip": "Height of the plot image"
-                }),
-                "line_color": ("STRING", {
-                    "default": "#00FF00",
-                    "tooltip": "Line color (hex format with #)"
-                }),
-                "background_color": ("STRING", {
-                    "default": "#222222",
-                    "tooltip": "Background color (hex format with #)"
-                }),
-                "auto_scale": ("BOOLEAN", {
-                    "default": True,
-                    "tooltip": "Automatically scale Y-axis to fit data"
-                }),
-                "y_min": ("FLOAT", {
-                    "default": -1.0,
-                    "tooltip": "Y-axis minimum (used when auto_scale is False)"
-                }),
-                "y_max": ("FLOAT", {
-                    "default": 1.0,
-                    "tooltip": "Y-axis maximum (used when auto_scale is False)"
-                }),
-                "show_grid": ("BOOLEAN", {
-                    "default": True,
-                    "tooltip": "Show grid lines"
-                }),
-                "reset_plot": ("BOOLEAN", {
-                    "default": False,
-                    "tooltip": "Reset the plot data"
-                }),
+                })
             },
+            "optional": {
+                "plot_name": ("STRING", {
+                    "forceInput": True,
+                    "default": "Value Plotter",
+                    "tooltip": "Title of the plot"
+                })
+             }
         }
 
     # Node metadata
@@ -120,15 +75,26 @@ class mbPlotter:
         import time
         return time.time()
 
-    def plot_value(self, value, plot_name=None, history_size=None, width=None, height=None,
-                   line_color=None, background_color=None, auto_scale=None, 
-                   y_min=None, y_max=None, show_grid=None, reset_plot=None):
+    def plot_value(self, value, plot_name="Value Plotter"):
         """
         Plot a value on the time-series chart using matplotlib.
         
         Returns:
             A dictionary containing the UI data and the result tuple.
         """
+
+        # Default parameters
+        history_size = self.DEFAULT_HISTORY_SIZE
+        width = self.DEFAULT_WIDTH
+        height = self.DEFAULT_HEIGHT
+        line_color = "#00FF00"
+        background_color = "#222222"
+        auto_scale = True
+        y_min = -1.0
+        y_max = 1.0
+        show_grid = True
+        reset_plot = False
+
         if not MATPLOTLIB_AVAILABLE:
             # Return error image
             error_img = np.zeros((height or self.DEFAULT_HEIGHT, width or self.DEFAULT_WIDTH, 3), dtype=np.uint8)
