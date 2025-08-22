@@ -334,6 +334,7 @@ app.registerExtension({
 					}
 				}
 
+				// Rename the dynamic inputs
 				let slot_i = 1;
 				for (let i = 0; i < this.inputs.length; i++) {
 					let input_i = this.inputs[i];
@@ -343,26 +344,38 @@ app.registerExtension({
 					}
 				}
 
-				let last_slot = this.inputs[this.inputs.length - 1]; // last slot
+				// Create a new empty last slot
+				let last_slot = this.inputs[this.inputs.length - 1]; // select the last slot
 				if (
 					(last_slot.name == 'select' && this.inputs[this.inputs.length - 2].link != undefined) ||
 					(last_slot.name == 'code' && this.inputs[this.inputs.length - 2].link != undefined) ||
 					(last_slot.name != 'select' && last_slot.name != 'code' && last_slot.link != undefined)) {
-					if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
-						this.addInput(`${input_name}${slot_i}`, this.outputs[0].type);
+					if (nodeData.name == 'mbImageBatch') {
+						this.addInput(`${input_name}${slot_i}`, 'IMAGE');
 					} else {
 						this.addInput(`${input_name}${slot_i}`);
 					}
 				}
 
-				if (nodeData.name == 'mbSelect' || nodeData.name == 'mbDemux') {
+				// Fix the limits of the select widget: locate it by name, ensure min=1 and max=dynamic inputs
+				if (nodeData.name == 'mbSelect') {
 					if (this.widgets) {
-						this.widgets[0].options.max = select_slot ? this.inputs.length - 2 : this.inputs.length - 1;
-						this.widgets[0].value = Math.min(this.widgets[0].value, this.widgets[0].options.max);
-						if (this.widgets[0].options.max > 0 && this.widgets[0].value == 0)
-							this.widgets[0].value = 1;
+						const selectWidget = this.widgets.find(w => w.name === 'select');
+						if (selectWidget) {
+							// Number of selectable dynamic inputs (exclude trailing special slots)
+							const dynamicCount = select_slot ? this.inputs.length - 2 : this.inputs.length - 1;
+							selectWidget.options = selectWidget.options || {};
+							selectWidget.options.min = 1; // always enforce minimum 1
+							selectWidget.options.max = Math.max(0, dynamicCount);
+							// Clamp the current value between min and max when possible
+							if (selectWidget.options.max >= selectWidget.options.min) {
+								selectWidget.value = Math.min(Math.max(selectWidget.value || 0, selectWidget.options.min), selectWidget.options.max);
+							} else {
+								// no selectable inputs -> set value to 0 to indicate 'none'
+								selectWidget.value = 0;
+							}
+						}
 					}
-
 				}
 			}
 		}
