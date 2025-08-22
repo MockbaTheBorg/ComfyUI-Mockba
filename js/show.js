@@ -24,13 +24,35 @@ class mbImageShow {
                             value: "",
                             draw: function(ctx, node, widgetWidth, y) {
                                 if (this.image) {
-                                    const aspectRatio = this.image.width / this.image.height;
-                                    const maxWidth = widgetWidth - 20;
-                                    const drawWidth = Math.min(maxWidth, 400);
-                                    const drawHeight = drawWidth / aspectRatio;
+                                    // Determine node dimensions (fallback to widgetWidth)
+                                    const nodeWidth = (node && node.size && node.size[0]) ? node.size[0] : widgetWidth;
+                                    const nodeHeight = (node && node.size && node.size[1]) ? node.size[1] : (this.image.height + 20);
 
-                                    ctx.drawImage(this.image, 10, y + 5, drawWidth, drawHeight);
-                                    return [drawWidth + 20, drawHeight + 10];
+                                    const padding = 8;
+
+                                    // Available drawing area inside the node for this widget
+                                    const availW = Math.max(20, nodeWidth - padding * 2);
+                                    // Compute available height below the widget y coordinate
+                                    const availH = Math.max(20, nodeHeight - y - padding - 4);
+
+                                    const aspectRatio = this.image.width / this.image.height;
+
+                                    // Fit preserving aspect ratio within availW x availH
+                                    let drawWidth = availW;
+                                    let drawHeight = drawWidth / aspectRatio;
+                                    if (drawHeight > availH) {
+                                        drawHeight = availH;
+                                        drawWidth = drawHeight * aspectRatio;
+                                    }
+
+                                    // Center the image inside the node area
+                                    const drawX = Math.round((nodeWidth - drawWidth) / 2);
+                                    const drawY = Math.round(y + ((availH - drawHeight) / 2) + 4);
+
+                                    ctx.drawImage(this.image, drawX, drawY, drawWidth, drawHeight);
+
+                                    // Return widget used width and height (system uses this to layout)
+                                    return [widgetWidth, drawHeight + 10];
                                 }
                                 return [widgetWidth, 30];
                             }
