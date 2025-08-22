@@ -191,6 +191,7 @@ app.registerExtension({
 					this.onResize?.(this.size);
 				});
 				break;
+
 			case 'mbExec':
 			case 'mbEval':
 				addNodeCreatedHook(function () {
@@ -240,6 +241,7 @@ app.registerExtension({
 					};
 				});
 				break;
+
 			case 'mbSubmit':
 				addNodeCreatedHook(function () {
 					this.addWidget("button", "Submit Workflow", "Submit Workflow", () => app.queuePrompt(0));
@@ -256,6 +258,7 @@ app.registerExtension({
 					this.size = [180, 55];
 				});
 				break;
+
 			case "mbColorPicker":
 			case "mbMaskFromColor":
 				addNodeCreatedHook(function () {
@@ -264,14 +267,18 @@ app.registerExtension({
 					});
 				});
 				break;
+
 		}
+
+		// Manage nodes with dynamic inputs
 		if (nodeData.name === 'mbImageBatch' ||
 			nodeData.name === 'mbSelect' ||
 			nodeData.name === 'mbDemux' ||
 			nodeData.name === 'mbEval' ||
 			nodeData.name === 'mbExec') {
-			var input_name = "input";
 
+			// Name the dynamic inputs according to the node type
+			var input_name = "input";
 			switch (nodeData.name) {
 				case 'mbImageBatch':
 					input_name = "image";
@@ -282,6 +289,7 @@ app.registerExtension({
 					break;
 			}
 
+			// Handle connections change
 			const onConnectionsChange = nodeType.prototype.onConnectionsChange;
 			nodeType.prototype.onConnectionsChange = function (type, index, connected, link_info) {
 				if (!link_info)
