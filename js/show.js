@@ -65,8 +65,23 @@ class mbImageShow {
                     const img = new Image();
                     img.onload = () => {
                         imageWidget.image = img;
+                        // Try node-level redraw API first, then fallback to graph-level
+                        try {
+                            if (typeof this.setDirtyCanvas === 'function') {
+                                this.setDirtyCanvas(true, true);
+                                return;
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+
                         if (this.graph && this.graph.canvas) {
                             this.graph.canvas.setDirty(true);
+                        }
+
+                        // Final fallback: global app graph helper
+                        if (app && app.graph && typeof app.graph.setDirtyCanvas === 'function') {
+                            app.graph.setDirtyCanvas(true, true);
                         }
                     };
                     img.onerror = (e) => {
