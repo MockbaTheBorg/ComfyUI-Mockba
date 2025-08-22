@@ -1,8 +1,10 @@
 import { app } from "../../scripts/app.js";
 import { sprintf } from "./sprintf.js";
 
-// Define a maximum length for displayed strings
-const MAX_DISPLAY_LENGTH = 25;
+// Define the defaults
+const DEFAULT_FORMAT = "";
+const DEFAULT_SHOW_TYPE = false;
+const DEFAULT_MAX_LENGTH = 25;
 
 class mbValue {
     constructor(node) {
@@ -10,8 +12,9 @@ class mbValue {
         this.node.properties = this.node.properties || {};
         
         // Initialize properties with defaults
-        this.node.properties.format = this.node.properties.format || "";
-        this.node.properties.show_type = this.node.properties.show_type || false;
+        this.node.properties.format = this.node.properties.format || DEFAULT_FORMAT;
+        this.node.properties.show_type = this.node.properties.show_type || DEFAULT_SHOW_TYPE;
+        this.node.properties.max_length = this.node.properties.max_length || DEFAULT_MAX_LENGTH;
 
         this.node.onAdded = function() {
             // Collapse the node by default
@@ -22,8 +25,9 @@ class mbValue {
         this.node.onConfigure = function() {
             // Called when loading from workflow - ensure properties are valid
             this.properties = this.properties || {};
-            this.properties.format = this.properties.format || "";
-            this.properties.show_type = this.properties.show_type || false;
+            this.properties.format = this.properties.format || DEFAULT_FORMAT;
+            this.properties.show_type = this.properties.show_type || DEFAULT_SHOW_TYPE;
+            this.properties.max_length = this.properties.max_length || DEFAULT_MAX_LENGTH;
         };
 
         this.node.onGraphConfigured = function() {
@@ -36,10 +40,13 @@ class mbValue {
             
             // Validate properties
             if (typeof this.properties.format !== 'string') {
-                this.properties.format = "";
+                this.properties.format = DEFAULT_FORMAT;
             }
             if (typeof this.properties.show_type !== 'boolean') {
-                this.properties.show_type = false;
+                this.properties.show_type = DEFAULT_SHOW_TYPE;
+            }
+            if (typeof this.properties.max_length !== 'number') {
+                this.properties.max_length = DEFAULT_MAX_LENGTH;
             }
         };
 
@@ -47,18 +54,17 @@ class mbValue {
         this.node.onExecuted = function(message) {
             if (message && message.value !== undefined) {
                 const value = message.value[0];
-                const format = this.properties.format || "";
-                const showType = this.properties.show_type || false;
+                const format = this.properties.format || DEFAULT_FORMAT;
+                const showType = this.properties.show_type || DEFAULT_SHOW_TYPE;
+                const maxLength = this.properties.max_length || DEFAULT_MAX_LENGTH;
+
                 let displayTitle = "Value";
                 
                 try {
                     if (typeof value === 'number') {
                         displayTitle = showType ? `${Number.isInteger(value) ? 'INT' : 'FLOAT'}: ${value}` : `${value}`;
-                        if (format !== "") {
-                            displayTitle = sprintf(format, displayTitle);
-                        }
                     } else if (typeof value === 'string') {
-                        const displayStr = value.length > MAX_DISPLAY_LENGTH ? value.substring(0, MAX_DISPLAY_LENGTH) + "..." : value;
+                        const displayStr = value.length > maxLength ? value.substring(0, maxLength) + "..." : value;
                         displayTitle = showType ? `STRING: ${displayStr}` : displayStr;
                     } else if (Array.isArray(value)) {
                         displayTitle = showType ? `LIST: [${value.length} items]` : `[${value.length} items]`;
@@ -79,7 +85,11 @@ class mbValue {
                     displayTitle = "UNKNOWN: <error>";
                     console.error("Error formatting value for mbValue node title:", e);
                 }
-                
+                if (typeof value === 'number' || typeof value === 'string') {
+                    if (format !== "") {
+                        displayTitle = sprintf(format, displayTitle);
+                    }
+                }
                 this.title = `${displayTitle}`;
                 this.setDirtyCanvas(true, true);
             }
