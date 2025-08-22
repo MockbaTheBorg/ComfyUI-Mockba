@@ -36,9 +36,6 @@ class mbImageShow:
         return {
             "required": {
                 "images": (any_typ,)
-            },
-            "optional": {
-                "title": ("STRING", {"default": "Image Show"})
             }
         }
 
