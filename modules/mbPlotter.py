@@ -32,12 +32,14 @@ class mbPlotter:
     DEFAULT_HEIGHT = 256
     DEFAULT_HISTORY_SIZE = DEFAULT_WIDTH
     
-    # Global storage for plot data (keyed by plot_name)
+    # Global storage for plot data (keyed by unique_id)
     _plot_data = {}
     
     def __init__(self):
         """Initialize the plotter node."""
-        pass
+        # Generate a unique identifier for this node instance
+        import uuid
+        self._unique_id = str(uuid.uuid4())[:8]  # Short unique ID
         
     @classmethod
     def INPUT_TYPES(cls):
@@ -48,12 +50,12 @@ class mbPlotter:
                     "forceInput": True,
                     "tooltip": "Value to plot on the chart"
                 }),
-                "plot_name": ("STRING", {
-                    "default": "plot",
-                    "tooltip": "Name of the plot (for multiple plots)"
-                }),
              },
             "hidden": {
+                "plot_name": ("STRING", {
+                    "default": "Plot",
+                    "tooltip": "Name of the plot"
+                }),
                "history_size": ("INT", {
                     "default": cls.DEFAULT_HISTORY_SIZE,
                     "min": 50,
@@ -118,7 +120,7 @@ class mbPlotter:
         import time
         return time.time()
 
-    def plot_value(self, value, plot_name, history_size=None, width=None, height=None,
+    def plot_value(self, value, plot_name=None, history_size=None, width=None, height=None,
                    line_color=None, background_color=None, auto_scale=None, 
                    y_min=None, y_max=None, show_grid=None, reset_plot=None):
         """
@@ -135,7 +137,11 @@ class mbPlotter:
             return {"ui": {"plot_image": "matplotlib not available"}, "result": (image_tensor, value, "error")}
         
         try:
+            # Use unique node ID as key instead of plot_name
+            node_key = self._unique_id
+            
             # Use defaults for hidden parameters
+            plot_name = plot_name or "Plot"  # Default plot name if not provided
             history_size = history_size or self.DEFAULT_HISTORY_SIZE
             width = width or self.DEFAULT_WIDTH
             height = height or self.DEFAULT_HEIGHT
@@ -147,24 +153,24 @@ class mbPlotter:
             show_grid = show_grid if show_grid is not None else True
             reset_plot = reset_plot if reset_plot is not None else False
             
-            # Initialize or reset plot data
-            if reset_plot or plot_name not in self._plot_data:
-                self._plot_data[plot_name] = {
+            # Initialize or reset plot data using unique node key
+            if reset_plot or node_key not in self._plot_data:
+                self._plot_data[node_key] = {
                     'values': deque(maxlen=history_size),
                     'min_val': float('inf'),
                     'max_val': float('-inf')
                 }
             
             # Update history size if changed
-            if len(self._plot_data[plot_name]['values']) > 0:
-                current_maxlen = self._plot_data[plot_name]['values'].maxlen
+            if len(self._plot_data[node_key]['values']) > 0:
+                current_maxlen = self._plot_data[node_key]['values'].maxlen
                 if current_maxlen != history_size:
                     # Convert to list, update maxlen, convert back
-                    old_values = list(self._plot_data[plot_name]['values'])
-                    self._plot_data[plot_name]['values'] = deque(old_values, maxlen=history_size)
+                    old_values = list(self._plot_data[node_key]['values'])
+                    self._plot_data[node_key]['values'] = deque(old_values, maxlen=history_size)
             
             # Add new value
-            plot_data = self._plot_data[plot_name]
+            plot_data = self._plot_data[node_key]
             plot_data['values'].append(value)
             
             # Update min/max for auto-scaling
@@ -193,7 +199,7 @@ class mbPlotter:
                 width, height, 
                 line_color, background_color, 
                 current_y_min, current_y_max, 
-                show_grid, plot_name
+                show_grid, f"Plot {node_key}" if plot_name == "Plot" else plot_name
             )
             
             # Convert plot to tensor for output
@@ -201,7 +207,7 @@ class mbPlotter:
             
             # Prepare data for JavaScript display
             plot_data_json = {
-                'plot_name': plot_name,
+                'plot_name': f"Plot {node_key}" if plot_name == "Plot" else plot_name,
                 'current_value': float(value),
                 'data_points': len(plot_data['values']),
                 'y_min': float(current_y_min),
@@ -229,6 +235,7 @@ class mbPlotter:
         
         # Import matplotlib locally to avoid linting issues
         import matplotlib.pyplot as plt
+        from matplotlib.ticker import MaxNLocator
             
         # Create figure with specified size
         dpi = 100
@@ -249,19 +256,25 @@ class mbPlotter:
         ax.set_ylim(y_min, y_max)
         ax.set_xlim(0, len(values) if len(values) > 1 else 1)
         
-        # Grid
+        # Add title
+        ax.set_title(title, color='white', fontsize=10, pad=10)
+        
+        # Grid and axes styling
         if show_grid:
             ax.grid(True, alpha=0.3, color='white', linestyle='--', linewidth=0.5)
-            # Keep minimal ticks for grid reference, but make them invisible
-            ax.tick_params(axis='both', which='both', length=0, labelsize=0)
-            # Keep axis spines very subtle for grid anchoring
+            # Show ticks and labels for better readability
+            ax.tick_params(axis='both', which='major', labelsize=8, colors='white', length=3)
+            # Set tick positions for better scale visibility
+            ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+            ax.xaxis.set_major_locator(MaxNLocator(nbins=6))
+            # Keep axis spines subtle but visible
             for spine in ax.spines.values():
                 spine.set_visible(True)
-                spine.set_linewidth(0.5)
-                spine.set_alpha(0.2)
+                spine.set_linewidth(0.8)
+                spine.set_alpha(0.4)
                 spine.set_color('white')
         else:
-            # Remove ticks and labels for cleaner look when no grid
+            # Minimal styling when no grid
             ax.set_xticks([])
             ax.set_yticks([])
             # Remove axes completely when no grid
@@ -269,6 +282,15 @@ class mbPlotter:
             ax.spines['right'].set_visible(False)
             ax.spines['bottom'].set_visible(False)
             ax.spines['left'].set_visible(False)
+        
+        # Add current value annotation if we have data
+        if len(values) > 0:
+            current_val = values[-1]
+            ax.annotate(f'{current_val:.3f}', 
+                       xy=(len(values)-1, current_val),
+                       xytext=(10, 10), textcoords='offset points',
+                       bbox=dict(boxstyle='round,pad=0.3', facecolor='black', alpha=0.7),
+                       color='white', fontsize=8, ha='left')
         
         # Tight layout
         plt.tight_layout(pad=0)
