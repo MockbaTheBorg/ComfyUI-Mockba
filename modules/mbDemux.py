@@ -21,11 +21,7 @@ class mbDemux:
                 "input1": (any_typ, {
                     "tooltip": "First optional input"
                 }),
-            },
-            "hidden": {
-                "unique_id": "UNIQUE_ID", 
-                "extra_pnginfo": "EXTRA_PNGINFO"
-            },
+            }
         }
 
     # Node metadata
@@ -49,7 +45,7 @@ class mbDemux:
         try:
             # Iterate through inputs and return first non-None value
             for key, value in kwargs.items():
-                if self._is_valid_input(key, value):
+                if value is not None:
                     return (value,)
                     
             # No valid inputs found
@@ -60,13 +56,3 @@ class mbDemux:
             error_msg = f"Failed to demultiplex inputs: {str(e)}"
             print(error_msg)
             return (None,)
-
-    def _is_valid_input(self, key, value):
-        """Check if input is valid (not None and not a hidden parameter)."""
-        # Skip hidden parameters
-        if key in ["unique_id", "extra_pnginfo"]:
-            
-            return False
-        
-        # Check if value is not None
-        return value is not None
