@@ -35,16 +35,14 @@ class mbEval:
         """Define input types for Python expression evaluation."""
         return {
             "required": {
+                "i1": (any_typ, {
+                    "tooltip": "First input variable (accessible as 'i1' in expression)"
+                }),
                 "code": ("STRING", {
                     "default": cls.DEFAULT_CODE,
                     "multiline": True,
                     "tooltip": "Python expression to evaluate (e.g., 'i1 + i2', 'len(i1)', 'max(i1, i2)')"
-                }),
-            },
-            "optional": {
-                "i1": (any_typ, {
-                    "tooltip": "First input variable (accessible as 'i1' in expression)"
-                }),
+                })
             }
         }
 

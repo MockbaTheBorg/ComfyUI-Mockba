@@ -295,77 +295,41 @@ app.registerExtension({
 				if (!link_info)
 					return;
 
-				if (type == 2) {
-					// connect output
-					if (connected && index == 0) {
-						if ((nodeData.name == 'mbSelect' || nodeData.name == 'mbDemux') && app.graph._nodes_by_id[link_info.target_id]?.type == 'Reroute') {
-							app.graph._nodes_by_id[link_info.target_id].disconnectInput(link_info.target_slot);
-						}
-
-						if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
-							if (this.outputs[0].type == '*') {
-								if (link_info.type == '*') {
-									app.graph._nodes_by_id[link_info.target_id].disconnectInput(link_info.target_slot);
-								}
-								else {
-									for (let i in this.inputs) {
-										let input_i = this.inputs[i];
-										if (input_i.name != 'select')
-											input_i.type = link_info.type;
-									}
-									this.outputs[0].type = link_info.type;
-									this.outputs[0].label = link_info.type;
-									this.outputs[0].name = link_info.type;
-								}
-							}
-						}
-					}
-					return;
-				} else {
-					// connect input
-					if ((nodeData.name == 'mbSelect' || nodeData.name == 'mbDemux') && app.graph._nodes_by_id[link_info.origin_id].type == 'Reroute')
-						this.disconnectInput(link_info.target_slot);
-
+				// type==1 -> Connecting an input
+				if (type == 1) {
+					// Do not trigger the dynamic process for 'select' and 'code' inputs
 					if (this.inputs[index].name == 'select' ||
 						this.inputs[index].name == 'code')
 						return;
 
-					if (this.inputs[0].type == '*') {
-						const node = app.graph.getNodeById(link_info.origin_id);
-						let origin_type = node.outputs[link_info.origin_slot].type;
-
-						if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
-							if (origin_type == '*') {
-								this.disconnectInput(link_info.target_slot);
-								return;
-							}
-							for (let i in this.inputs) {
-								let input_i = this.inputs[i];
-								if (input_i.name != 'select')
-									input_i.type = origin_type;
-							}
-							this.outputs[0].type = origin_type;
-							this.outputs[0].label = origin_type;
-							this.outputs[0].name = origin_type;
-						}
+					// If the input type is '*', set it to the origin type
+					if (this.inputs[index].type == '*') {
+						const origin_node = app.graph.getNodeById(link_info.origin_id);
+						let origin_type = origin_node.outputs[link_info.origin_slot].type;
+						this.inputs[index].type = origin_type;
 					}
 				}
 
+				// find the slots of the 'select' and 'code' inputs
 				let select_slot = this.inputs.find(x => x.name == "select");
 				let code_slot = this.inputs.find(x => x.name == "code");
 
-				let converted_count = 0;
-				converted_count += select_slot ? 1 : 0;
-				converted_count += code_slot ? 1 : 0;
+				// Count the number of extra inputs
+				let extra_inputs = 0;
+				extra_inputs += select_slot ? 1 : 0;
+				extra_inputs += code_slot ? 1 : 0;
 
-				if (!connected && (this.inputs.length > 1 + converted_count)) {
+				// !connected = Is disconnecting
+				if (!connected && (this.inputs.length > 1 + extra_inputs)) {
 					const stackTrace = new Error().stack;
 
 					if (
 						!stackTrace.includes('LGraphNode.prototype.connect') && // for touch device
 						!stackTrace.includes('LGraphNode.connect') && // for mouse device
 						!stackTrace.includes('loadGraphData') &&
-						this.inputs[index].name != 'select') {
+						this.inputs[index].name != 'select' &&
+						this.inputs[index].name != 'code'
+					) {
 						this.removeInput(index);
 					}
 				}

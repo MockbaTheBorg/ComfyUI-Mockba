@@ -37,16 +37,14 @@ class mbExec:
         """Define input types for Python code execution."""
         return {
             "required": {
+                "i1": (any_typ, {
+                    "tooltip": "First input variable (accessible as 'i1' in code)"
+                }),
                 "code": ("STRING", {
                     "default": cls.DEFAULT_CODE,
                     "multiline": True,
                     "tooltip": "Python code to execute. Set 'out' variable to return result (e.g., 'out = i1 + i2')"
-                }),
-            },
-            "optional": {
-                "i1": (any_typ, {
-                    "tooltip": "First input variable (accessible as 'i1' in code)"
-                }),
+                })
             }
         }
 
