@@ -15,7 +15,6 @@ import torch
 try:
     import matplotlib
     matplotlib.use('Agg')  # Use non-interactive backend
-    import matplotlib.pyplot as plt
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
@@ -112,7 +111,12 @@ class mbPlotter:
     CATEGORY = CATEGORIES["DEVELOPMENT"]
     DESCRIPTION = "Plot values over time using matplotlib with real-time JavaScript display."
     OUTPUT_NODE = True
-    ALWAYS_EXECUTE = True
+    
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        """Force execution every time by returning a unique value."""
+        import time
+        return time.time()
 
     def plot_value(self, value, plot_name, history_size=None, width=None, height=None,
                    line_color=None, background_color=None, auto_scale=None, 
@@ -247,17 +251,24 @@ class mbPlotter:
         
         # Grid
         if show_grid:
-            ax.grid(True, alpha=0.3, color='white' if bg_color == '#000000' else 'gray')
-        
-        # Remove ticks and labels for cleaner look
-        ax.set_xticks([])
-        ax.set_yticks([])
-        
-        # Remove axes
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-        ax.spines['left'].set_visible(False)
+            ax.grid(True, alpha=0.3, color='white', linestyle='--', linewidth=0.5)
+            # Keep minimal ticks for grid reference, but make them invisible
+            ax.tick_params(axis='both', which='both', length=0, labelsize=0)
+            # Keep axis spines very subtle for grid anchoring
+            for spine in ax.spines.values():
+                spine.set_visible(True)
+                spine.set_linewidth(0.5)
+                spine.set_alpha(0.2)
+                spine.set_color('white')
+        else:
+            # Remove ticks and labels for cleaner look when no grid
+            ax.set_xticks([])
+            ax.set_yticks([])
+            # Remove axes completely when no grid
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.spines['bottom'].set_visible(False)
+            ax.spines['left'].set_visible(False)
         
         # Tight layout
         plt.tight_layout(pad=0)

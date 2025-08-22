@@ -1,6 +1,70 @@
 import { app } from "../../scripts/app.js";
 import { ComfyWidgets } from "../../scripts/widgets.js";
 
+class mbPlotterController {
+    constructor(node) {
+        this.node = node;
+        
+        // Initialize properties for right-click configuration
+        this.node.properties = this.node.properties || {};
+        this.node.properties.history_size = 512;
+        this.node.properties.width = 512;
+        this.node.properties.height = 256;
+        this.node.properties.line_color = "#00FF00";
+        this.node.properties.background_color = "#222222";
+        this.node.properties.auto_scale = true;
+        this.node.properties.y_min = -1.0;
+        this.node.properties.y_max = 1.0;
+        this.node.properties.show_grid = true;
+        
+        this.setupPropertyHandlers();
+    }
+    
+    setupPropertyHandlers() {
+        // Handle property changes to update hidden widgets
+        this.node.onPropertyChanged = function(propName) {
+            console.log("Property changed:", propName, this.properties[propName]);
+            
+            // Update the corresponding hidden widgets with new property values
+            const propertyToWidget = {
+                'history_size': 1,
+                'width': 2, 
+                'height': 3,
+                'line_color': 4,
+                'background_color': 5,
+                'auto_scale': 6,
+                'y_min': 7,
+                'y_max': 8,
+                'show_grid': 9
+            };
+            
+            if (propertyToWidget[propName] !== undefined) {
+                const widgetIndex = propertyToWidget[propName];
+                if (this.widgets[widgetIndex]) {
+                    this.widgets[widgetIndex].value = this.properties[propName];
+                }
+            }
+            
+            // Force graph to recognize changes
+            if (this.graph) {
+                this.graph.setisChangedFlag(this.id);
+            }
+        };
+        
+        // Initialize widget values from properties
+        this.node.onGraphConfigured = function() {
+            this.configured = true;
+            // Update all hidden widgets with property values
+            const properties = ['history_size', 'width', 'height', 'line_color', 'background_color', 'auto_scale', 'y_min', 'y_max', 'show_grid'];
+            properties.forEach((prop, index) => {
+                if (this.widgets[index + 1]) {
+                    this.widgets[index + 1].value = this.properties[prop];
+                }
+            });
+        };
+    }
+}
+
 // Register the node extension
 app.registerExtension({
     name: "Mockba.Plotter",
@@ -13,6 +77,9 @@ app.registerExtension({
                 console.log("mbPlotter node created");
                 
                 const result = onNodeCreated?.apply(this, arguments);
+                
+                // Create the plotter controller for property management
+                this.plotterController = new mbPlotterController(this);
                 
                 // Handle execution results
                 const originalOnExecuted = this.onExecuted;
@@ -91,10 +158,24 @@ app.registerExtension({
                         // Update the widget size now that we have image dimensions
                         imageWidget.size = imageWidget.computeSize();
                         
-                        // Force a redraw
+                        // Force immediate redraw with multiple methods
                         if (this.graph && this.graph.canvas) {
                             this.graph.canvas.setDirty(true, true);
+                            this.graph.canvas.draw(true, true);
                         }
+                        
+                        // Also force node redraw
+                        if (this.setDirtyCanvas) {
+                            this.setDirtyCanvas(true, true);
+                        }
+                        
+                        // Schedule a redraw on the next frame
+                        requestAnimationFrame(() => {
+                            if (this.graph && this.graph.canvas) {
+                                this.graph.canvas.setDirty(true, true);
+                                this.graph.canvas.draw(true, true);
+                            }
+                        });
                     };
                     
                     img.onerror = (error) => {
