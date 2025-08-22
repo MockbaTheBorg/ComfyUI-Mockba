@@ -192,6 +192,7 @@ app.registerExtension({
 				});
 				break;
 			case 'mbExec':
+			case 'mbEval':
 				addNodeCreatedHook(function () {
 					const HIDDEN_MARKER = "# __HIDDEN__";
 					const isCodeHidden = (code) => code.startsWith(HIDDEN_MARKER);
