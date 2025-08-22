@@ -22,13 +22,6 @@ class mbColorPicker:
                     "default": cls.DEFAULT_COLOR,
                     "tooltip": "Selected color in hex format (e.g., #FF0000 for red)"
                 }),
-            },
-            "optional": {
-            },
-            "hidden": {
-                "pick_color": ("STRING", {
-                    "default": "Pick Color"
-                }),
             }
         }
 
@@ -40,7 +33,7 @@ class mbColorPicker:
     CATEGORY = "unset"
     DESCRIPTION = "Pick colors from images using a visual color picker and output them in #RRGGBB format."
 
-    def output_color(self, color, pick_color=None):
+    def output_color(self, color):
         """
         Output the selected color in #RRGGBB format.
         

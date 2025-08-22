@@ -65,6 +65,7 @@ class mbDemux:
         """Check if input is valid (not None and not a hidden parameter)."""
         # Skip hidden parameters
         if key in ["unique_id", "extra_pnginfo"]:
+            
             return False
         
         # Check if value is not None
