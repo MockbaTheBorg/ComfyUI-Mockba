@@ -24,22 +24,42 @@ class mbPlotter {
                     
                     if (!imageWidget) {
                         imageWidget = {
-                            type: "image",
-                            name: "plot_image",
-                            value: "",
-                            draw: function(ctx, node, widgetWidth, y) {
-                                if (this.image) {
-                                    const aspectRatio = this.image.width / this.image.height;
-                                    const maxWidth = widgetWidth - 20;
-                                    const drawWidth = Math.min(maxWidth, 400);
-                                    const drawHeight = drawWidth / aspectRatio;
-                                    
-                                    ctx.drawImage(this.image, 10, y + 5, drawWidth, drawHeight);
-                                    return [drawWidth + 20, drawHeight + 10];
+                                type: "image",
+                                name: "plot_image",
+                                value: "",
+                                draw: function(ctx, node, widgetWidth, y) {
+                                    if (this.image) {
+                                        // Determine node dimensions (fallback to widgetWidth)
+                                        const nodeWidth = (node && node.size && node.size[0]) ? node.size[0] : widgetWidth;
+                                        const nodeHeight = (node && node.size && node.size[1]) ? node.size[1] : (this.image.height + 20);
+
+                                        const padding = 8;
+
+                                        // Available drawing area inside the node for this widget
+                                        const availW = Math.max(20, nodeWidth - padding * 2);
+                                        // Compute available height below the widget y coordinate
+                                        const availH = Math.max(20, nodeHeight - y - padding - 4);
+
+                                        const aspectRatio = this.image.width / this.image.height;
+
+                                        // Fit preserving aspect ratio within availW x availH
+                                        let drawWidth = availW;
+                                        let drawHeight = drawWidth / aspectRatio;
+                                        if (drawHeight > availH) {
+                                            drawHeight = availH;
+                                            drawWidth = drawHeight * aspectRatio;
+                                        }
+
+                                        // Center the image inside the node area
+                                        const drawX = Math.round((nodeWidth - drawWidth) / 2);
+                                        const drawY = Math.round(y + ((availH - drawHeight) / 2) + 4);
+
+                                        ctx.drawImage(this.image, drawX, drawY, drawWidth, drawHeight);
+                                        return [widgetWidth, drawHeight + 10];
+                                    }
+                                    return [widgetWidth, 30];
                                 }
-                                return [widgetWidth, 30];
-                            }
-                        };
+                            };
                         
                         this.widgets = this.widgets || [];
                         this.widgets.push(imageWidget);
@@ -51,10 +71,22 @@ class mbPlotter {
                     img.onload = () => {
                         console.log("Image loaded successfully");
                         imageWidget.image = img;
-                        
-                        // Force redraw
+                        // Try node-level redraw API first, then fallback to graph-level
+                        try {
+                            if (typeof this.setDirtyCanvas === 'function') {
+                                this.setDirtyCanvas(true, true);
+                                return;
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+
                         if (this.graph && this.graph.canvas) {
                             this.graph.canvas.setDirty(true);
+                        }
+
+                        if (app && app.graph && typeof app.graph.setDirtyCanvas === 'function') {
+                            app.graph.setDirtyCanvas(true, true);
                         }
                     };
                     
