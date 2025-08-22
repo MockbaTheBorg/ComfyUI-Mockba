@@ -9,12 +9,6 @@ from .common import any_typ
 class mbSelect:
     """Select one output from multiple inputs based on index."""
     
-    # Class constants
-    DEFAULT_SELECT = 1
-    MIN_SELECT = 1
-    MAX_SELECT = 100
-    SELECT_STEP = 1
-    
     def __init__(self):
         """Initialize the select node."""
         pass
@@ -24,23 +18,17 @@ class mbSelect:
         """Define input types for selection."""
         return {
             "required": {
-                "select": ("INT", {
-                    "default": cls.DEFAULT_SELECT, 
-                    "min": cls.MIN_SELECT, 
-                    "max": cls.MAX_SELECT, 
-                    "step": cls.SELECT_STEP,
-                    "tooltip": "Index of input to select (1-based)"
-                }),
-            },
-            "optional": {
                 "input1": (any_typ, {
                     "tooltip": "First input option"
                 }),
-            },
-            "hidden": {
-                "unique_id": "UNIQUE_ID", 
-                "extra_pnginfo": "EXTRA_PNGINFO"
-            },
+                "select": ("INT", {
+                    "default": 0, 
+                    "min": 0, 
+                    "max": 0, 
+                    "step": 1,
+                    "tooltip": "Index of input to select (1-based)"
+                })
+            }
         }
 
     # Node metadata
