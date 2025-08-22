@@ -1,7 +1,7 @@
 import { app } from "../../scripts/app.js";
 import { sprintf } from "./sprintf.js";
 
-// Define the defaults
+// Define default properties
 const DEFAULT_FORMAT = "";
 const DEFAULT_SHOW_TYPE = false;
 const DEFAULT_MAX_LENGTH = 25;

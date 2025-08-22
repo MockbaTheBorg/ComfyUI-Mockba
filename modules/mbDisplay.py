@@ -31,19 +31,6 @@ class mbDisplay:
                 "input": (any_typ, {
                     "tooltip": "Any type of data to display"
                 }),
-            },
-            "hidden": {
-                "console_output": ("BOOLEAN", {
-                    "default": False,
-                    "tooltip": "Also print display information to console"
-                }),
-                "truncate_size": ("INT", {
-                    "default": 500,
-                    "min": 0,
-                    "max": 10000,
-                    "step": 1,
-                    "tooltip": "Maximum characters for truncation (0 = no truncation)"
-                }),
             }
         }
 
@@ -56,7 +43,13 @@ class mbDisplay:
     DESCRIPTION = "Display anything node that shows information about any input type - strings, numbers, images, tensors, etc."
     OUTPUT_NODE = True
 
-    def display_data(self, input, console_output=False, truncate_size=500):
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        """Force execution every time by returning a unique value."""
+        import time
+        return time.time()
+
+    def display_data(self, input):
         """
         Display information about the input data.
         
@@ -70,22 +63,10 @@ class mbDisplay:
         """
         try:
             display_text = self._format_data(input)
-            
-            # Apply truncation if specified
-            if truncate_size > 0 and len(display_text) > truncate_size:
-                display_text = display_text[:truncate_size] + "... (truncated)"
-                
+                            
         except Exception as e:
             display_text = f"Error: {str(e)}"
-        
-        # Print to console if requested
-        if console_output:
-            print("=" * 50)
-            print("mbDisplay Console Output:")
-            print("=" * 50)
-            print(display_text)
-            print("=" * 50)
-        
+                
         return {
             "ui": {"value": [display_text]},
             "result": (display_text,)
