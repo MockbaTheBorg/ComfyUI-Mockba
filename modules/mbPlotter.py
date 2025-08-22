@@ -180,9 +180,10 @@ class mbPlotter:
                 'image_b64': plot_image_b64
             }
             
+            # Return the plot image, the current value, and the raw data points list
             return {
                 "ui": {"plot_data": [plot_data_json]}, 
-                "result": (image_tensor, value, json.dumps(plot_data_json))
+                "result": (image_tensor, value, list(plot_data['values']))
             }
             
         except Exception as e:
@@ -191,7 +192,8 @@ class mbPlotter:
             error_img = np.zeros((height or self.DEFAULT_HEIGHT, width or self.DEFAULT_WIDTH, 3), dtype=np.uint8)
             error_img[:, :, 0] = 255  # Red background
             image_tensor = torch.from_numpy(error_img.astype(np.float32) / 255.0)[None,]
-            return {"ui": {"plot_data": [{"error": str(e)}]}, "result": (image_tensor, value, f"error: {e}")}
+            # On error return an empty data list for the third output for consistency
+            return {"ui": {"plot_data": [{"error": str(e)}]}, "result": (image_tensor, value, [])}
 
     def _generate_matplotlib_plot(self, values, width, height, line_color, bg_color, y_min, y_max, show_grid, title):
         """Generate a plot using matplotlib and return as base64."""
