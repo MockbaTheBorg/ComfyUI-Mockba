@@ -137,11 +137,10 @@ class mbPlotter:
             return {"ui": {"plot_image": "matplotlib not available"}, "result": (image_tensor, value, "error")}
         
         try:
-            # Use unique node ID as key instead of plot_name
+            # Use unique node ID as key
             node_key = self._unique_id
             
-            # Use defaults for hidden parameters
-            plot_name = plot_name or "Plot"  # Default plot name if not provided
+            display_title = plot_name
             history_size = history_size or self.DEFAULT_HISTORY_SIZE
             width = width or self.DEFAULT_WIDTH
             height = height or self.DEFAULT_HEIGHT
@@ -199,7 +198,7 @@ class mbPlotter:
                 width, height, 
                 line_color, background_color, 
                 current_y_min, current_y_max, 
-                show_grid, f"Plot {node_key}" if plot_name == "Plot" else plot_name
+                show_grid, display_title
             )
             
             # Convert plot to tensor for output
@@ -207,7 +206,7 @@ class mbPlotter:
             
             # Prepare data for JavaScript display
             plot_data_json = {
-                'plot_name': f"Plot {node_key}" if plot_name == "Plot" else plot_name,
+                'plot_name': display_title,
                 'current_value': float(value),
                 'data_points': len(plot_data['values']),
                 'y_min': float(current_y_min),

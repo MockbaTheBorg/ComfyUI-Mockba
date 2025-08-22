@@ -44,6 +44,10 @@ app.registerExtension({
                         for (let i = 0; i < this.widgets.length; i++) {
                             if (this.widgets[i] && this.widgets[i].name === propName) {
                                 this.widgets[i].value = this.properties[propName];
+                                // Force the node to be marked as changed so it re-executes
+                                if (this.graph && this.graph.change) {
+                                    this.graph.change();
+                                }
                                 break;
                             }
                         }
@@ -77,6 +81,11 @@ app.registerExtension({
                     if (message && message.plot_data && message.plot_data.length > 0) {
                         const plotData = message.plot_data[0];
                         console.log("Found plot data:", plotData);
+                        
+                        // Update node title to match the actual plot title
+                        if (plotData.plot_name) {
+                            this.title = plotData.plot_name;
+                        }
                         
                         if (plotData.image_b64) {
                             this.displayPlotImage(plotData.image_b64);
