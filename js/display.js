@@ -15,21 +15,21 @@ class mbDisplay {
         // Create the value display widget
         ComfyWidgets["STRING"](this.node, "value", ["STRING", {
             multiline: true,
-            default: ""
+            default: " "
         }], app);
 
-        this.node.onConfigure = function () {
+        this.node.onConfigure = function() {
             // Called when loading from workflow - ensure properties are valid
             this.properties = this.properties || {};
             this.properties.max_length = this.properties.max_length ?? DEFAULT_MAX_LENGTH;
         };
 
-        this.node.onGraphConfigured = function () {
+        this.node.onGraphConfigured = function() {
             this.configured = true;
             this.onPropertyChanged();
         };
 
-        this.node.onPropertyChanged = function (propName) {
+        this.node.onPropertyChanged = function(propName) {
             if (!this.configured) return;
 
             // Validate properties
@@ -61,7 +61,7 @@ app.registerExtension({
     async beforeRegisterNodeDef(nodeType, nodeData, _app) {
         if (nodeData.name === "mbDisplay") {
             const onNodeCreated = nodeType.prototype.onNodeCreated;
-            nodeType.prototype.onNodeCreated = function () {
+            nodeType.prototype.onNodeCreated = function() {
                 if (onNodeCreated) onNodeCreated.apply(this, []);
                 this.mbDisplay = new mbDisplay(this);
             };

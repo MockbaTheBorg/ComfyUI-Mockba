@@ -1,26 +1,27 @@
 import { app } from "../../scripts/app.js";
 import { ComfyWidgets } from "../../scripts/widgets.js";
 
+// Define default properties
+const DEFAULT_MAX_LENGTH = 500;
+
 class mbDebug {
     constructor(node) {
         this.node = node;
         this.node.properties = this.node.properties || {};
         
         // Initialize properties with defaults
-        this.node.properties.console_output = this.node.properties.console_output ?? false;
-        this.node.properties.truncate_size = this.node.properties.truncate_size ?? 500;
+        this.node.properties.max_length = this.node.properties.max_length ?? DEFAULT_MAX_LENGTH;
 
         // Create the debug output widget
-        ComfyWidgets["STRING"](this.node, "debug_output", ["STRING", {
+        ComfyWidgets["STRING"](this.node, "value", ["STRING", {
             multiline: true, 
-            default: "Debug output will appear here after execution..."
+            default: " "
         }], app);
 
         this.node.onConfigure = function() {
             // Called when loading from workflow - ensure properties are valid
             this.properties = this.properties || {};
-            this.properties.console_output = this.properties.console_output ?? false;
-            this.properties.truncate_size = this.properties.truncate_size ?? 500;
+            this.properties.max_length = this.properties.max_length ?? DEFAULT_MAX_LENGTH;
         };
 
         this.node.onGraphConfigured = function() {
@@ -32,22 +33,23 @@ class mbDebug {
             if (!this.configured) return;
             
             // Validate properties
-            if (typeof this.properties.console_output !== 'boolean') {
-                this.properties.console_output = false;
-            }
-            if (typeof this.properties.truncate_size !== 'number' || this.properties.truncate_size < 0 || this.properties.truncate_size > 10000) {
-                this.properties.truncate_size = 500;
+            if (typeof this.properties.max_length !== 'number') {
+                this.properties.max_length = DEFAULT_MAX_LENGTH;
             }
         };
 
-        // Handle execution output to update debug_output widget
+        // Handle execution output to update value widget
         this.node.onExecuted = function (message) {
-            if (this.widgets && message?.debug_output) {
-                const debugWidget = this.widgets.find(w => w.name === "debug_output");
-                if (debugWidget) {
-                    debugWidget.value = message.debug_output[0];
+            if (this.widgets && message?.value) {
+                const newValue = message.value[0];
+
+                const valueWidget = this.widgets.find(w => w.name === "value");
+                if (valueWidget) {
+                    const maxLength = this.properties.max_length || DEFAULT_MAX_LENGTH;
+                    valueWidget.value = newValue.length > maxLength ? newValue.substring(0, maxLength) + "..." : newValue;
                 }
-                this.onResize?.(this.size);
+
+                this.setDirtyCanvas(true, true);
             }
         };
     }

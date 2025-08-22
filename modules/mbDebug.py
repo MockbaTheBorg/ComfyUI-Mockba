@@ -28,19 +28,6 @@ class mbDebug:
                 "input": (any_typ, {
                     "tooltip": "Any object to debug and analyze"
                 }),
-            },
-            "hidden": {
-                "console_output": ("BOOLEAN", {
-                    "default": False,
-                    "tooltip": "Also print debug information to console"
-                }),
-                "truncate_size": ("INT", {
-                    "default": 500,
-                    "min": 0,
-                    "max": 10000,
-                    "step": 1,
-                    "tooltip": "Maximum characters for truncation (0 = no truncation)"
-                }),
             }
         }
 
@@ -53,7 +40,13 @@ class mbDebug:
     DESCRIPTION = "Display comprehensive debug information about any input object in a text widget."
     OUTPUT_NODE = True
 
-    def debug_object(self, input, console_output=False, truncate_size=500):
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        """Force execution every time by returning a unique value."""
+        import time
+        return time.time()
+
+    def debug_object(self, input):
         """
         Generate debug information for the input object.
         
@@ -69,25 +62,13 @@ class mbDebug:
             debug_lines = self._generate_debug_info(input)
             debug_text = "\n".join(debug_lines)
             
-            # Apply truncation if specified
-            if truncate_size > 0 and len(debug_text) > truncate_size:
-                debug_text = debug_text[:truncate_size] + "... (truncated)"
-            
-            # Print to console if requested
-            if console_output:
-                print("=" * 50)
-                print("mbDebug Console Output:")
-                print("=" * 50)
-                print(debug_text)
-                print("=" * 50)
-            
-            return {"ui": {"debug_output": [debug_text]}}
-            
         except Exception as e:
-            error_msg = f"Error generating debug info: {str(e)}"
-            if console_output:
-                print(f"mbDebug Error: {error_msg}")
-            return {"ui": {"debug_output": [error_msg]}}
+            debug_text = f"Error: {str(e)}"
+
+        return {
+            "ui": {"value": [debug_text]},
+            "result": (debug_text,)
+        }
 
     def _generate_debug_info(self, obj):
         """Generate comprehensive debug information for an object."""
