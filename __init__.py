@@ -143,6 +143,7 @@ mbImageFilmEffect = import_and_register('.modules.mbImageFilmEffect', category)
 mbImageFlip = import_and_register('.modules.mbImageFlip', category)
 mbImagePreview = import_and_register('.modules.mbImagePreview', category)
 mbImageRotate = import_and_register('.modules.mbImageRotate', category)
+mbImageShow = import_and_register('.modules.mbImageShow', category)
 mbImageSize = import_and_register('.modules.mbImageSize', category)
 mbImageSubtract = import_and_register('.modules.mbImageSubtract', category)
 
@@ -169,7 +170,6 @@ mbSubmit = import_and_register('.modules.mbSubmit', category)
 
 # === Tests ===
 category = CATEGORIES["TEST"]
-mbImageShow = import_and_register('.modules.mbImageShow', category)
 
 # Web directory for static files
 WEB_DIRECTORY = "js"
