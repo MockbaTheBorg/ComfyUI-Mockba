@@ -1,6 +1,56 @@
 import { app } from "../../scripts/app.js";
 import { ComfyWidgets } from "../../scripts/widgets.js";
 
+function node_info_copy(src, dest, connect_both, copy_shape) {
+	// copy input connections
+	for(let i in src.inputs) {
+		let input = src.inputs[i];
+		if (input.widget !== undefined) {
+			const destWidget = dest.widgets.find(x => x.name === input.widget.name);
+			dest.convertWidgetToInput(destWidget);
+		}
+		if(input.link) {
+			let link = app.graph.links[input.link];
+			let src_node = app.graph.getNodeById(link.origin_id);
+			src_node.connect(link.origin_slot, dest.id, input.name);
+		}
+	}
+
+	// copy output connections
+	if(connect_both) {
+		let output_links = {};
+		for(let i in src.outputs) {
+			let output = src.outputs[i];
+			if(output.links) {
+				let links = [];
+				for(let j in output.links) {
+					links.push(app.graph.links[output.links[j]]);
+				}
+				output_links[output.name] = links;
+			}
+		}
+
+		for(let i in dest.outputs) {
+			let links = output_links[dest.outputs[i].name];
+			if(links) {
+				for(let j in links) {
+					let link = links[j];
+					let target_node = app.graph.getNodeById(link.target_id);
+					dest.connect(parseInt(i), target_node, link.target_slot);
+				}
+			}
+		}
+	}
+
+	if(copy_shape) {
+		dest.color = src.color;
+		dest.bgcolor = src.bgcolor;
+		dest.size = max(src.size, dest.size);
+	}
+
+	app.graph.afterChange();
+}
+
 // Shared color picking functionality for Mask from Color and Color Picker nodes
 const ColorPickerUtils = {
 	startColorPicking: function(node) {
@@ -290,7 +340,6 @@ app.registerExtension({
 			}
 
 			// Handle connections change
-			const onConnectionsChange = nodeType.prototype.onConnectionsChange;
 			nodeType.prototype.onConnectionsChange = function (type, index, connected, link_info) {
 				if (!link_info)
 					return;
@@ -376,6 +425,21 @@ app.registerExtension({
 							}
 						}
 					}
+				}
+
+				// If disconnecting, recreate the node to recover its previous size
+				if (!connected) {
+					if (this.title != "dead") {
+						let new_node = LiteGraph.createNode(nodeType.comfyClass);
+						new_node.pos = [this.pos[0], this.pos[1]];
+						app.canvas.graph.add(new_node, false);
+						let prevTitle = this.title;
+						this.title = "dead";
+						node_info_copy(this, new_node, true);
+						new_node.title = prevTitle;
+						app.canvas.graph.remove(this);
+					}
+					requestAnimationFrame(() => app.canvas.setDirty(true, true))
 				}
 			}
 		}
