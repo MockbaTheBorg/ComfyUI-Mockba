@@ -384,14 +384,39 @@ app.registerExtension({
 					}
 				}
 
-				if (nodeData.name == 'mbSelect' || nodeData.name == 'mbDemux') {
+				// Adjust the 'select' widget range only for mbSelect nodes and only if the widget exists.
+				if (nodeData.name == 'mbSelect') {
 					if (this.widgets) {
-						this.widgets[0].options.max = select_slot ? this.inputs.length - 2 : this.inputs.length - 1;
-						this.widgets[0].value = Math.min(this.widgets[0].value, this.widgets[0].options.max);
-						if (this.widgets[0].options.max > 0 && this.widgets[0].value == 0)
-							this.widgets[0].value = 1;
-					}
+						const selectWidget = this.widgets.find(w => w.name === 'select');
+						if (selectWidget) {
+							// Recompute the current dynamic inputs (after possible add/remove above)
+							const currentDynamics = [];
+							for (let i = 0; i < this.inputs.length; i++) {
+								const inp = this.inputs[i];
+								if (!inp) continue;
+								if (inp.name != 'select' && inp.name != 'code') currentDynamics.push(inp);
+							}
 
+							let lastConnected = -1;
+							for (let i = 0; i < currentDynamics.length; i++) {
+								if (currentDynamics[i].link != undefined) lastConnected = i;
+							}
+
+							selectWidget.options = selectWidget.options || {};
+							if (lastConnected === -1) {
+								// no connected dynamic inputs -> select has no valid range
+								selectWidget.options.min = 0;
+								selectWidget.options.max = 0;
+								selectWidget.value = 0;
+							} else {
+								// at least one connected input: min is 1, max is index-of-last-connected (1-based)
+								selectWidget.options.min = 1;
+								selectWidget.options.max = lastConnected + 1;
+								// clamp current value into new range
+								selectWidget.value = Math.min(Math.max(selectWidget.value || 0, selectWidget.options.min), selectWidget.options.max);
+							}
+						}
+					}
 				}
 
 				if (!connected) {
