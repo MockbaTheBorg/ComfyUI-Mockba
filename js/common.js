@@ -295,6 +295,7 @@ app.registerExtension({
 				if (!link_info)
 					return;
 
+				// Only handle input connections
 				if (type != 1)
 					return;
 
@@ -366,7 +367,8 @@ app.registerExtension({
 					// add missing inputs to reach desired count
 					for (let i = 0; i < (desiredDynamicCount - currentDynamicCount); i++) {
 						const outType = (this.outputs && this.outputs[0]) ? this.outputs[0].type : undefined;
-						if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
+						// only forward a concrete string type and avoid propagating '*' or non-strings
+						if (typeof outType === 'string' && outType !== '*') {
 							this.addInput(`${input_name}${currentDynamicCount + i + 1}`, outType);
 						} else {
 							this.addInput(`${input_name}${currentDynamicCount + i + 1}`);
@@ -419,6 +421,7 @@ app.registerExtension({
 					}
 				}
 
+				// Resize the select widget
 				if (!connected) {
 					this.setSize(this.computeSize());
 					this.setDirtyCanvas(true, true);
