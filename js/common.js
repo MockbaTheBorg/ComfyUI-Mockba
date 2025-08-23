@@ -3,13 +3,13 @@ import { ComfyWidgets } from "../../scripts/widgets.js";
 
 function node_info_copy(src, dest, connect_both, copy_shape) {
 	// copy input connections
-	for(let i in src.inputs) {
+	for (let i in src.inputs) {
 		let input = src.inputs[i];
 		if (input.widget !== undefined) {
 			const destWidget = dest.widgets.find(x => x.name === input.widget.name);
 			dest.convertWidgetToInput(destWidget);
 		}
-		if(input.link) {
+		if (input.link) {
 			let link = app.graph.links[input.link];
 			let src_node = app.graph.getNodeById(link.origin_id);
 			src_node.connect(link.origin_slot, dest.id, input.name);
@@ -17,23 +17,23 @@ function node_info_copy(src, dest, connect_both, copy_shape) {
 	}
 
 	// copy output connections
-	if(connect_both) {
+	if (connect_both) {
 		let output_links = {};
-		for(let i in src.outputs) {
+		for (let i in src.outputs) {
 			let output = src.outputs[i];
-			if(output.links) {
+			if (output.links) {
 				let links = [];
-				for(let j in output.links) {
+				for (let j in output.links) {
 					links.push(app.graph.links[output.links[j]]);
 				}
 				output_links[output.name] = links;
 			}
 		}
 
-		for(let i in dest.outputs) {
+		for (let i in dest.outputs) {
 			let links = output_links[dest.outputs[i].name];
-			if(links) {
-				for(let j in links) {
+			if (links) {
+				for (let j in links) {
 					let link = links[j];
 					let target_node = app.graph.getNodeById(link.target_id);
 					dest.connect(parseInt(i), target_node, link.target_slot);
@@ -42,7 +42,7 @@ function node_info_copy(src, dest, connect_both, copy_shape) {
 		}
 	}
 
-	if(copy_shape) {
+	if (copy_shape) {
 		dest.color = src.color;
 		dest.bgcolor = src.bgcolor;
 		dest.size = max(src.size, dest.size);
@@ -53,54 +53,54 @@ function node_info_copy(src, dest, connect_both, copy_shape) {
 
 // Shared color picking functionality for Mask from Color and Color Picker nodes
 const ColorPickerUtils = {
-	startColorPicking: function(node) {
+	startColorPicking: function (node) {
 		// Create variables to store references for proper cleanup
 		let isPickingActive = true;
-		
+
 		// Change cursor to indicate picking mode - use a more aggressive approach
 		const originalBodyCursor = document.body.style.cursor;
 		const originalDocumentCursor = document.documentElement.style.cursor;
 		document.body.style.cursor = 'crosshair !important';
 		document.documentElement.style.cursor = 'crosshair !important';
-		
+
 		// Add a global style to override all cursor styles during picking
 		const cursorStyle = document.createElement('style');
 		cursorStyle.textContent = '* { cursor: crosshair !important; }';
 		document.head.appendChild(cursorStyle);
-		
+
 		// Find all image elements in the page (ComfyUI image previews)
 		const imageElements = document.querySelectorAll('img, canvas');
 		const originalPointerEvents = [];
-		
+
 		// Store original pointer events and make images clickable
 		imageElements.forEach((img, index) => {
 			originalPointerEvents[index] = img.style.pointerEvents;
 			img.style.pointerEvents = 'auto';
 		});
-		
+
 		// Create a temporary canvas for color sampling
 		const tempCanvas = document.createElement('canvas');
 		const tempCtx = tempCanvas.getContext('2d');
-		
+
 		const pickColor = (event) => {
 			if (!isPickingActive) return;
-			
+
 			const target = event.target;
-			
+
 			// Check if clicked on an image or canvas
 			if (target.tagName === 'IMG' || target.tagName === 'CANVAS') {
 				event.preventDefault();
 				event.stopPropagation();
-				
+
 				let imageData;
 				let x, y;
-				
+
 				if (target.tagName === 'IMG') {
 					// For IMG elements, draw to temporary canvas and sample
 					const rect = target.getBoundingClientRect();
 					x = Math.floor((event.clientX - rect.left) * (target.naturalWidth / rect.width));
 					y = Math.floor((event.clientY - rect.top) * (target.naturalHeight / rect.height));
-					
+
 					tempCanvas.width = target.naturalWidth;
 					tempCanvas.height = target.naturalHeight;
 					tempCtx.drawImage(target, 0, 0);
@@ -110,65 +110,65 @@ const ColorPickerUtils = {
 					const rect = target.getBoundingClientRect();
 					x = Math.floor((event.clientX - rect.left) * (target.width / rect.width));
 					y = Math.floor((event.clientY - rect.top) * (target.height / rect.height));
-					
+
 					const ctx = target.getContext('2d');
 					imageData = ctx.getImageData(x, y, 1, 1);
 				}
-				
+
 				if (imageData) {
 					const data = imageData.data;
 					const r = data[0];
 					const g = data[1];
 					const b = data[2];
 					const hexColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-					
+
 					// Update color widget
 					const colorWidget = node.widgets.find(w => w.name === "color");
 					if (colorWidget) {
 						colorWidget.value = hexColor;
 						node.setDirtyCanvas(true, true);
 					}
-					
+
 					// Clean up immediately after successful color pick
 					stopColorPicking();
 					return; // Exit the function to prevent further processing
 				}
 			}
-			
+
 			// If we clicked on something that's not an image/canvas, also stop picking
 			stopColorPicking();
 		};
-		
+
 		const cancelPicking = (event) => {
 			if (event.key === 'Escape') {
 				stopColorPicking();
 			}
 		};
-		
+
 		// Centralized cleanup function
 		const stopColorPicking = () => {
 			if (!isPickingActive) return;
 			isPickingActive = false;
-			
+
 			// Remove global cursor style
 			if (cursorStyle.parentNode) {
 				cursorStyle.parentNode.removeChild(cursorStyle);
 			}
-			
+
 			// Restore original cursors
 			document.body.style.cursor = originalBodyCursor;
 			document.documentElement.style.cursor = originalDocumentCursor;
-			
+
 			// Restore original pointer events
 			imageElements.forEach((img, index) => {
 				img.style.pointerEvents = originalPointerEvents[index];
 			});
-			
+
 			// Remove all event listeners
 			document.removeEventListener('click', pickColor, true);
 			document.removeEventListener('keydown', cancelPicking);
 		};
-		
+
 		// Add event listeners - delay to avoid catching the button click
 		setTimeout(() => {
 			if (isPickingActive) {
@@ -278,7 +278,7 @@ app.registerExtension({
 					}, 100);
 
 					const originalSerialize = this.serialize;
-					this.serialize = function() {
+					this.serialize = function () {
 						const data = originalSerialize.apply(this, arguments);
 						const codeWidget = this.widgets.find(w => w.name === "code");
 						if (codeWidget && codeWidget.type === "hidden" && data.widgets_values) {
@@ -302,10 +302,10 @@ app.registerExtension({
 							app.canvas.setDirty(true, true);
 						}
 					});
-					this.size = [180, 55];
+					this.size = [180, 55]; // Increased height to accommodate slider
 				});
 				addNodeDrawForegroundHook(function () {
-					this.size = [180, 55];
+					this.size = [180, 55]; // Updated size here too
 				});
 				break;
 
