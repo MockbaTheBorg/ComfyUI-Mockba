@@ -308,33 +308,79 @@ app.registerExtension({
 				if (!connected && (this.inputs.length > 1 + converted_count)) {
 					const stackTrace = new Error().stack;
 
+					// be defensive: ensure stackTrace is a string and the input at index exists
+					const trace = stackTrace || "";
+					const inputAtIndex = this.inputs[index];
 					if (
-						!stackTrace.includes('LGraphNode.prototype.connect') && // for touch device
-						!stackTrace.includes('LGraphNode.connect') && // for mouse device
-						!stackTrace.includes('loadGraphData') &&
-						this.inputs[index].name != 'select') {
-						this.removeInput(index);
+						!trace.includes('LGraphNode.prototype.connect') && // for touch device
+						!trace.includes('LGraphNode.connect') && // for mouse device
+						!trace.includes('loadGraphData') &&
+						inputAtIndex && inputAtIndex.name != 'select' && inputAtIndex.name != 'code') {
+						// compute the last dynamic input index (skip 'select' and 'code')
+						let lastDynamicIndex = -1;
+						for (let i = this.inputs.length - 1; i >= 0; i--) {
+							const inpt = this.inputs[i];
+							if (inpt && inpt.name != 'select' && inpt.name != 'code') {
+								lastDynamicIndex = i;
+								break;
+							}
+						}
+						// Only remove the input if it's the last dynamic slot. This prevents a disconnect
+						// in the middle from collapsing subsequent inputs and losing their links.
+						if (index === lastDynamicIndex) {
+							this.removeInput(index);
+						}
 					}
 				}
 
+
+				// Enforce there is exactly one free dynamic input after the last connected input.
+				// Build a list of dynamic inputs (skip 'select' and 'code') with their global indices.
+				const dynamicEntries = [];
+				for (let i = 0; i < this.inputs.length; i++) {
+					const inp = this.inputs[i];
+					if (!inp) continue;
+					if (inp.name != 'select' && inp.name != 'code')
+						dynamicEntries.push({ inp, idx: i });
+				}
+
+				// find last connected dynamic position (index into dynamicEntries)
+				let lastConnectedPos = -1;
+				for (let i = 0; i < dynamicEntries.length; i++) {
+					if (dynamicEntries[i].inp.link != undefined) lastConnectedPos = i;
+				}
+
+				const desiredDynamicCount = Math.max(1, lastConnectedPos + 2); // one free after last connected
+				const currentDynamicCount = dynamicEntries.length;
+
+				if (currentDynamicCount > desiredDynamicCount) {
+					// remove trailing dynamic inputs (from the end) until we reach desired count
+					for (let i = currentDynamicCount - 1; i >= desiredDynamicCount; i--) {
+						const globalIndex = dynamicEntries[i].idx;
+						// double-check it's free before removing
+						if (this.inputs[globalIndex] && this.inputs[globalIndex].link == undefined) {
+							this.removeInput(globalIndex);
+						}
+					}
+				} else if (currentDynamicCount < desiredDynamicCount) {
+					// add missing inputs to reach desired count
+					for (let i = 0; i < (desiredDynamicCount - currentDynamicCount); i++) {
+						const outType = (this.outputs && this.outputs[0]) ? this.outputs[0].type : undefined;
+						if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
+							this.addInput(`${input_name}${currentDynamicCount + i + 1}`, outType);
+						} else {
+							this.addInput(`${input_name}${currentDynamicCount + i + 1}`);
+						}
+					}
+				}
+
+				// rename dynamic inputs sequentially
 				let slot_i = 1;
 				for (let i = 0; i < this.inputs.length; i++) {
 					let input_i = this.inputs[i];
 					if (input_i.name != 'select' && input_i.name != 'code') {
-						input_i.name = `${input_name}${slot_i}`
+						input_i.name = `${input_name}${slot_i}`;
 						slot_i++;
-					}
-				}
-
-				let last_slot = this.inputs[this.inputs.length - 1]; // last slot
-				if (
-					(last_slot.name == 'select' && this.inputs[this.inputs.length - 2].link != undefined) ||
-					(last_slot.name == 'code' && this.inputs[this.inputs.length - 2].link != undefined) ||
-					(last_slot.name != 'select' && last_slot.name != 'code' && last_slot.link != undefined)) {
-					if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
-						this.addInput(`${input_name}${slot_i}`, this.outputs[0].type);
-					} else {
-						this.addInput(`${input_name}${slot_i}`);
 					}
 				}
 
