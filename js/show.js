@@ -1,8 +1,35 @@
 import { app } from "../../scripts/app.js";
 
+// Define default properties
+const SHOW_DIMENSIONS = false;
+
 class mbImageShow {
     constructor(node) {
         this.node = node;
+        this.node.properties = this.node.properties || {};
+
+        // Initialize properties with defaults
+        this.node.properties.show_dimensions = this.node.properties.show_dimensions ?? SHOW_DIMENSIONS;
+
+        this.node.onConfigure = function() {
+            // Called when loading from workflow - ensure properties are valid
+            this.properties = this.properties || {};
+            this.properties.show_dimensions = this.properties.show_dimensions ?? SHOW_DIMENSIONS;
+        };
+
+        this.node.onGraphConfigured = function() {
+            this.configured = true;
+            this.onPropertyChanged();
+        };
+
+        this.node.onPropertyChanged = function(propName) {
+            if (!this.configured) return;
+            
+            // Validate properties
+            if (typeof this.properties.show_dimensions !== 'boolean') {
+                this.properties.show_dimensions = SHOW_DIMENSIONS;
+            }
+        };
 
         this.node.onExecuted = function(message) {
             if (message && message.image_show && message.image_show.length > 0) {
@@ -37,11 +64,17 @@ class mbImageShow {
 
                                     const aspectRatio = this.image.width / this.image.height;
 
-                                    // Fit preserving aspect ratio within availW x availH
+                                    // If dimensions text will be shown, reserve vertical space so the text fits
+                                    const showDims = node && node.properties && node.properties.show_dimensions;
+                                    const dimFontSize = 10; // slightly smaller font
+                                    const reservedTextHeight = showDims ? (dimFontSize + 8) : 0;
+
+                                    // Fit preserving aspect ratio within availW x (availH - reservedTextHeight)
+                                    const imageAvailH = Math.max(10, availH - reservedTextHeight);
                                     let drawWidth = availW;
                                     let drawHeight = drawWidth / aspectRatio;
-                                    if (drawHeight > availH) {
-                                        drawHeight = availH;
+                                    if (drawHeight > imageAvailH) {
+                                        drawHeight = imageAvailH;
                                         drawWidth = drawHeight * aspectRatio;
                                     }
 
@@ -51,8 +84,36 @@ class mbImageShow {
 
                                     ctx.drawImage(this.image, drawX, drawY, drawWidth, drawHeight);
 
+                                    // Optionally draw image dimensions centered below the image
+                                    let extraHeight = 10;
+                                    try {
+                                        if (showDims) {
+                                            const text = `${this.image.width}×${this.image.height}`;
+                                            const fontSize = dimFontSize;
+                                            // Save/restore canvas state
+                                            ctx.save();
+                                            ctx.font = `${fontSize}px sans-serif`;
+                                            ctx.textAlign = 'center';
+                                            ctx.textBaseline = 'top';
+                                            // Semi-opaque text color for readability
+                                            ctx.fillStyle = 'rgba(170,170,170,0.85)';
+
+                                            const textX = Math.round(drawX + drawWidth / 2);
+                                            const textY = Math.round(drawY + drawHeight + 3);
+
+                                            // Draw text
+                                            ctx.fillText(text, textX, textY);
+                                            ctx.restore();
+
+                                            extraHeight = fontSize + 8; // include small padding
+                                        }
+                                    } catch (e) {
+                                        // If anything goes wrong, fall back to default spacing
+                                        extraHeight = 10;
+                                    }
+
                                     // Return widget used width and height (system uses this to layout)
-                                    return [widgetWidth, drawHeight + 10];
+                                    return [widgetWidth, drawHeight + extraHeight];
                                 }
                                 return [widgetWidth, 30];
                             }
