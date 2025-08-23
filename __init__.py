@@ -132,6 +132,7 @@ mbBarcode = import_and_register('.modules.mbBarcode', category)
 mbEmptyLatentImage = import_and_register('.modules.mbEmptyLatentImage', category)
 mbKSampler = import_and_register('.modules.mbKSampler', category)
 mbQRCode = import_and_register('.modules.mbQRCode', category)
+mbRandom = import_and_register('.modules.mbRandom', category)
 
 # === Image Processing ===
 category = CATEGORIES["IMAGE_PROCESSING"]
