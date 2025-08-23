@@ -295,61 +295,8 @@ app.registerExtension({
 				if (!link_info)
 					return;
 
-				if (type == 2) {
-					// connect output
-					if (connected && index == 0) {
-						if ((nodeData.name == 'mbSelect' || nodeData.name == 'mbDemux') && app.graph._nodes_by_id[link_info.target_id]?.type == 'Reroute') {
-							app.graph._nodes_by_id[link_info.target_id].disconnectInput(link_info.target_slot);
-						}
-
-						if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
-							if (this.outputs[0].type == '*') {
-								if (link_info.type == '*') {
-									app.graph._nodes_by_id[link_info.target_id].disconnectInput(link_info.target_slot);
-								}
-								else {
-									for (let i in this.inputs) {
-										let input_i = this.inputs[i];
-										if (input_i.name != 'select')
-											input_i.type = link_info.type;
-									}
-									this.outputs[0].type = link_info.type;
-									this.outputs[0].label = link_info.type;
-									this.outputs[0].name = link_info.type;
-								}
-							}
-						}
-					}
+				if (type != 1)
 					return;
-				} else {
-					// connect input
-					if ((nodeData.name == 'mbSelect' || nodeData.name == 'mbDemux') && app.graph._nodes_by_id[link_info.origin_id].type == 'Reroute')
-						this.disconnectInput(link_info.target_slot);
-
-					if (this.inputs[index].name == 'select' ||
-						this.inputs[index].name == 'code')
-						return;
-
-					if (this.inputs[0].type == '*') {
-						const node = app.graph.getNodeById(link_info.origin_id);
-						let origin_type = node.outputs[link_info.origin_slot].type;
-
-						if (nodeData.name != 'mbEval' && nodeData.name != 'mbExec') {
-							if (origin_type == '*') {
-								this.disconnectInput(link_info.target_slot);
-								return;
-							}
-							for (let i in this.inputs) {
-								let input_i = this.inputs[i];
-								if (input_i.name != 'select')
-									input_i.type = origin_type;
-							}
-							this.outputs[0].type = origin_type;
-							this.outputs[0].label = origin_type;
-							this.outputs[0].name = origin_type;
-						}
-					}
-				}
 
 				let select_slot = this.inputs.find(x => x.name == "select");
 				let code_slot = this.inputs.find(x => x.name == "code");
@@ -399,6 +346,11 @@ app.registerExtension({
 							this.widgets[0].value = 1;
 					}
 
+				}
+
+				if (!connected) {
+					this.setSize(this.computeSize());
+					this.setDirtyCanvas(true, true);
 				}
 			}
 		}
