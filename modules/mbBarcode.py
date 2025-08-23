@@ -49,12 +49,14 @@ class mbBarcode:
                 "fontsize": ("INT", {
                     "default": cls.DEFAULT_FONT_SIZE,
                     **cls.FONT_SIZE_RANGE,
-                    "tooltip": "Font size for barcode text (1D barcodes only)"
+                    "tooltip": "Font size for barcode text (1D barcodes only)",
+                    "display": "slider"
                 }),
                 "textdistance": ("INT", {
                     "default": cls.DEFAULT_TEXT_DISTANCE,
                     **cls.TEXT_DISTANCE_RANGE,
-                    "tooltip": "Distance between barcode and text (1D barcodes only)"
+                    "tooltip": "Distance between barcode and text (1D barcodes only)",
+                    "display": "slider"
                 }),
                 "foreground_color": ("STRING", {
                     "default": cls.DEFAULT_FOREGROUND_COLOR,
@@ -70,19 +72,22 @@ class mbBarcode:
                     "default": 3,
                     "min": 1,
                     "max": 30,
-                    "tooltip": "Number of columns for PDF417 (1-30, lower values for more data)"
+                    "tooltip": "Number of columns for PDF417 (1-30, lower values for more data)",
+                    "display": "slider"
                 }),
                 "pdf417_security_level": ("INT", {
                     "default": 2,
                     "min": 0,
                     "max": 8,
-                    "tooltip": "Error correction level for PDF417 (0-8)"
+                    "tooltip": "Error correction level for PDF417 (0-8)",
+                    "display": "slider"
                 }),
                 "pdf417_scale": ("INT", {
                     "default": 3,
                     "min": 1,
                     "max": 10,
-                    "tooltip": "Scale factor for PDF417"
+                    "tooltip": "Scale factor for PDF417",
+                    "display": "slider"
                 }),
             }
         }

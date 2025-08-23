@@ -51,7 +51,8 @@ class mbQRCode:
                 "version": ("INT", {
                     "default": cls.DEFAULT_VERSION,
                     **cls.VERSION_RANGE,
-                    "tooltip": "QR code version (1-40, higher = more data capacity)"
+                    "tooltip": "QR code version (1-40, higher = more data capacity)",
+                    "display": "slider"
                 }),
                 "error_correction": (list(cls.ERROR_CORRECTION_MAP.keys()), {
                     "default": cls.DEFAULT_ERROR_CORRECTION,
@@ -60,12 +61,14 @@ class mbQRCode:
                 "box_size": ("INT", {
                     "default": cls.DEFAULT_BOX_SIZE,
                     **cls.BOX_SIZE_RANGE,
-                    "tooltip": "Size of each box in pixels"
+                    "tooltip": "Size of each box in pixels",
+                    "display": "slider"
                 }),
                 "border": ("INT", {
                     "default": cls.DEFAULT_BORDER,
                     **cls.BORDER_RANGE,
-                    "tooltip": "Border size in boxes"
+                    "tooltip": "Border size in boxes",
+                    "display": "slider"
                 }),
                 "foreground_color": ("STRING", {
                     "default": cls.DEFAULT_FILL_COLOR,
