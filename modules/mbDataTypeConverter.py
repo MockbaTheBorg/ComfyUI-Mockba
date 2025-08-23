@@ -5,6 +5,7 @@ Converts tensor data types for memory optimization and performance tuning with d
 
 # Standard library imports
 import torch
+import numpy as np
 
 # Local imports
 from .common import any_typ
@@ -86,15 +87,39 @@ class mbDataTypeConverter:
             tuple: (converted_tensor, memory_info_string)
         """
         try:
-            # Validate tensor input
-            if not self._is_convertible_tensor(tensor):
-                return (tensor, "Input is not a tensor - no conversion needed")
-            
-            # Get tensor information
-            tensor_info = self._analyze_tensor(tensor)
-            
-            # Perform conversion
-            converted_tensor, conversion_status = self._perform_conversion(tensor, target_dtype, tensor_info)
+            # If input is a container like dict/list/tuple, skip coercion and handle recursively
+            original_input = tensor
+            if isinstance(tensor, (dict, list, tuple)):
+                target_torch_dtype = self.DTYPE_MAPPING.get(target_dtype)
+                converted_tensor, conversion_status = self._convert_item(tensor, target_torch_dtype)
+                tensor_info = self._analyze_tensor(converted_tensor) if isinstance(converted_tensor, torch.Tensor) else {'original_dtype': None, 'device': None, 'shape': None, 'original_size': 0}
+            else:
+                original_device = None
+                if isinstance(tensor, torch.Tensor):
+                    original_device = tensor.device if hasattr(tensor, 'device') else None
+                else:
+                    # Try to coerce numpy arrays and other array-like objects to torch.Tensor
+                    try:
+                        if isinstance(tensor, np.ndarray):
+                            tensor = torch.from_numpy(tensor)
+                        else:
+                            tensor = torch.as_tensor(tensor)
+                    except Exception:
+                        return (original_input, "Input is not a tensor and could not be converted to torch.Tensor")
+
+                # If the original was a torch tensor on a device, ensure coerced tensor lives on same device
+                if original_device is not None and isinstance(tensor, torch.Tensor) and tensor.device != original_device:
+                    try:
+                        tensor = tensor.to(original_device)
+                    except Exception:
+                        pass
+
+                # Get tensor information
+                tensor_info = self._analyze_tensor(tensor)
+
+                # Perform conversion
+                target_torch_dtype = self.DTYPE_MAPPING.get(target_dtype)
+                converted_tensor, conversion_status = self._convert_item(tensor, target_torch_dtype)
             
             # Generate memory analysis
             memory_info = self._generate_memory_analysis(
@@ -111,7 +136,118 @@ class mbDataTypeConverter:
 
     def _is_convertible_tensor(self, obj):
         """Check if object is a convertible tensor."""
-        return hasattr(obj, 'dtype')
+        # Accept torch tensors, numpy arrays, and array-like objects with dtype/shape
+        if isinstance(obj, torch.Tensor):
+            return True
+        if isinstance(obj, np.ndarray):
+            return True
+        # Fallback: check for attributes commonly present on tensor-like objects
+        return hasattr(obj, 'dtype') and hasattr(obj, 'shape')
+
+    def _convert_item(self, item, target_torch_dtype, parent_key=None):
+        """Recursively convert tensors inside containers or single tensor-like items.
+
+        Returns (converted_item, status_message)
+        """
+        # Handle torch.Tensor
+        if isinstance(item, torch.Tensor):
+            return self._convert_tensor(item, target_torch_dtype)
+
+        # Handle numpy arrays
+        if isinstance(item, np.ndarray):
+            t = torch.from_numpy(item)
+            converted, status = self._convert_tensor(t, target_torch_dtype)
+            # Return as torch tensor (consistent with other nodes)
+            return converted, status
+
+        # Handle dict-like audio container
+        if isinstance(item, dict):
+            status_msgs = []
+            result = {}
+            for k, v in item.items():
+                converted_v, status = self._convert_item(v, target_torch_dtype, parent_key=k)
+                result[k] = converted_v
+                if status:
+                    status_msgs.append(f"{k}: {status}")
+            return result, '; '.join(status_msgs) if status_msgs else 'Conversion applied to dict items'
+
+        # Handle list/tuple
+        if isinstance(item, list):
+            out_list = []
+            statuses = []
+            for v in item:
+                converted_v, status = self._convert_item(v, target_torch_dtype)
+                out_list.append(converted_v)
+                if status:
+                    statuses.append(status)
+            return out_list, '; '.join(statuses)
+
+        if isinstance(item, tuple):
+            out_list = []
+            statuses = []
+            for v in item:
+                converted_v, status = self._convert_item(v, target_torch_dtype)
+                out_list.append(converted_v)
+                if status:
+                    statuses.append(status)
+            return tuple(out_list), '; '.join(statuses)
+
+        # Not convertible
+        return item, ''
+
+    def _convert_tensor(self, tensor, target_torch_dtype):
+        """Convert a single torch tensor, with audio-aware scaling for float->int conversions."""
+        try:
+            original_dtype = tensor.dtype
+            original_device = tensor.device if hasattr(tensor, 'device') else None
+
+            # If already the target dtype, return as-is
+            if original_dtype == target_torch_dtype:
+                return tensor, 'No conversion needed - already target type'
+
+            # If converting float -> integer, handle rounding and optional scaling for audio
+            if torch.is_floating_point(tensor) and not torch.is_floating_point(torch.empty(1, dtype=target_torch_dtype)):
+                # Default: round then cast
+                t = tensor.round()
+
+                # Audio-specific heuristic: if parent key indicated 'waveform' or values appear normalized, scale to integer range
+                # (caller can pass parent_key by using _convert_item for dicts)
+                # Determine scale based on target dtype
+                scale_map = {
+                    torch.int8: 127,
+                    torch.uint8: 255,
+                    torch.int16: 32767
+                }
+
+                if target_torch_dtype in scale_map:
+                    # If tensor values look normalized in [-1,1], apply scaling
+                    try:
+                        max_abs = float(t.abs().max())
+                    except Exception:
+                        max_abs = None
+
+                    if max_abs is not None and max_abs <= 1.5:
+                        scale = scale_map[target_torch_dtype]
+                        t = (tensor * scale).round()
+                    else:
+                        # Keep rounded values as-is (no scaling)
+                        t = tensor.round()
+
+                converted = t.to(target_torch_dtype)
+            else:
+                # Generic conversion
+                converted = tensor.to(target_torch_dtype)
+
+            # Ensure device preservation
+            if original_device is not None and converted.device != original_device:
+                try:
+                    converted = converted.to(original_device)
+                except Exception:
+                    pass
+
+            return converted, 'Conversion successful'
+        except Exception as e:
+            return tensor, f'Conversion failed: {e}'
 
     def _analyze_tensor(self, tensor):
         """Analyze tensor properties for conversion."""
@@ -141,9 +277,23 @@ class mbDataTypeConverter:
     def _generate_memory_analysis(self, original_tensor, converted_tensor, tensor_info, 
                                 target_dtype, conversion_status, show_detailed_info):
         """Generate comprehensive memory usage analysis."""
+        # If outputs are not torch tensors (e.g., dict/list containers), avoid tensor-specific analysis
+        if not isinstance(converted_tensor, torch.Tensor) or not isinstance(original_tensor, torch.Tensor):
+            # Provide a concise summary for containers or mixed types
+            if show_detailed_info:
+                if isinstance(converted_tensor, dict):
+                    keys = ','.join(map(str, converted_tensor.keys()))
+                    return f"Converted container with keys: {keys}\nStatus: {conversion_status}"
+                elif isinstance(converted_tensor, list):
+                    return f"Converted list with {len(converted_tensor)} items\nStatus: {conversion_status}"
+                else:
+                    return f"Converted type: {type(converted_tensor).__name__}\nStatus: {conversion_status}"
+            else:
+                return f"{conversion_status}"
+
         new_size = converted_tensor.numel() * converted_tensor.element_size()
         original_size = tensor_info['original_size']
-        
+
         if show_detailed_info:
             return self._create_detailed_memory_report(
                 tensor_info, target_dtype, original_size, new_size, conversion_status
