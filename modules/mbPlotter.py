@@ -65,7 +65,7 @@ class mbPlotter:
     RETURN_TYPES = ("IMAGE", "FLOAT", "STRING")
     RETURN_NAMES = ("image", "current_value", "plot_data")
     FUNCTION = "plot_value"
-    CATEGORY = CATEGORIES["DEVELOPMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Plot values over time using matplotlib with real-time JavaScript display."
     OUTPUT_NODE = True
     

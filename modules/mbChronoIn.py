@@ -33,7 +33,7 @@ class mbChronoIn:
     RETURN_TYPES = (any_typ, "INT")
     RETURN_NAMES = ("out", "time")
     FUNCTION = "chrono_in"
-    CATEGORY = CATEGORIES["TOOLS"]
+    CATEGORY = "unset"
     DESCRIPTION = "Pass input through and output a high-resolution timestamp (nanoseconds)."
 
     @classmethod

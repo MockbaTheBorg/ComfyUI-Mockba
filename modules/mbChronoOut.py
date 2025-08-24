@@ -40,7 +40,7 @@ class mbChronoOut:
     RETURN_TYPES = (any_typ, "FLOAT")
     RETURN_NAMES = ("out", "elapsed")
     FUNCTION = "chrono_out"
-    CATEGORY = CATEGORIES["TOOLS"]
+    CATEGORY = "unset"
     DESCRIPTION = "Pass input through and output elapsed time in seconds since provided timestamp."
     OUTPUT_NODE = True  # Marks this node as an output node in the UI
 

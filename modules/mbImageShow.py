@@ -44,7 +44,7 @@ class mbImageShow:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "show_image"
-    CATEGORY = CATEGORIES["IMAGE_PROCESSING"]
+    CATEGORY = "unset"
     DESCRIPTION = "Send a preview of the input image to the UI (base64 PNG) for inline display."
     OUTPUT_NODE = True
 

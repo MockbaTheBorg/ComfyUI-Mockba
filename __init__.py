@@ -171,6 +171,11 @@ mbMemoryUnload = import_and_register('.modules.mbMemoryUnload', category)
 mbSlider = import_and_register('.modules.mbSlider', category)
 mbSubmit = import_and_register('.modules.mbSubmit', category)
 
+# === Test ===
+category = CATEGORIES["TEST"]
+# Small/testing nodes
+
+
 # Web directory for static files
 WEB_DIRECTORY = "js"
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
