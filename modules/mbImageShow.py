@@ -79,10 +79,24 @@ class mbImageShow:
 
             # Prepare the first image for display
             pixels = images
-            display = images[0].cpu().numpy()
 
-            # Convert to 8-bit array
-            img_array = np.clip(display * 255.0, 0, 255).astype(np.uint8)
+            # Ensure we convert bfloat16/other torch-only dtypes to float32 before
+            # moving to NumPy (NumPy/PIL may not support torch.bfloat16)
+            try:
+                # Work on a CPU float32 copy for display only (don't mutate original `pixels`)
+                display_tensor = images[0].cpu().to(torch.float32)
+            except Exception:
+                # Fallback: try plain cpu() then hope for the best
+                display_tensor = images[0].cpu()
+
+            display = display_tensor.numpy()
+
+            # Convert to 8-bit array. If the incoming array is already integer/uint8,
+            # don't multiply by 255 again. Otherwise assume normalized floats [0..1].
+            if np.issubdtype(display.dtype, np.floating):
+                img_array = np.clip(display * 255.0, 0, 255).astype(np.uint8)
+            else:
+                img_array = np.clip(display, 0, 255).astype(np.uint8)
 
             # Handle channel layout - expected [H, W, C]
             if img_array.ndim == 3 and img_array.shape[-1] in (3, 4):

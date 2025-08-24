@@ -186,7 +186,19 @@ class mbImageToFile:
     def _save_image_tensor(self, img_tensor, filepath, format, jpeg_quality, remove_ai_metadata, embed_exif, exif_profile):
         """Convert tensor to PIL image and save with specified format."""
         # Convert tensor to numpy array and denormalize
-        image_np = (self.IMAGE_DENORMALIZE_FACTOR * img_tensor.cpu().numpy()).astype(np.uint8)
+        # Convert tensor to CPU float32 before turning into numpy to handle
+        # torch.bfloat16 or other torch-specific dtypes which numpy/PIL may not
+        # understand. If it's already integer-like, avoid double-scaling.
+        try:
+            tmp = img_tensor.cpu().to(torch.float32)
+        except Exception:
+            tmp = img_tensor.cpu()
+
+        arr = tmp.numpy()
+        if np.issubdtype(arr.dtype, np.floating):
+            image_np = (self.IMAGE_DENORMALIZE_FACTOR * arr).astype(np.uint8)
+        else:
+            image_np = arr.astype(np.uint8)
         
         # Create PIL image
         if len(image_np.shape) == 3 and image_np.shape[2] == 3:
