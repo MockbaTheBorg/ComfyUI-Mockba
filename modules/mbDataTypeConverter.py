@@ -1,29 +1,28 @@
 """
-Data Type Converter Node for ComfyUI
-Converts tensor data types for memory optimization and performance tuning with detailed analysis.
+Simple Data Type Converter Node for ComfyUI
+This simplified node converts any tensor-like input to the requested torch dtype.
+It intentionally treats any tensor-like value as a tensor and converts it without
+special-casing images, audio, masks, or containers.
 """
-
-# Standard library imports
-import torch
-import numpy as np
 
 # Local imports
 from .common import any_typ
 
+# Standard/third-party
+import torch
+import numpy as np
+
+
 class mbDataTypeConverter:
-    """Convert tensor data types with comprehensive memory analysis and optimization reporting."""
-    
-    # Class constants
+    """Minimal converter: coerce input to torch.Tensor and convert dtype."""
+
     SUPPORTED_DTYPES = [
         "float32", "float16", "bfloat16",
-        "int32", "int16", "int8", 
+        "int32", "int16", "int8",
         "uint8", "bool",
         "float64", "int64"
     ]
-    DEFAULT_DTYPE = "float16"
-    DEFAULT_SHOW_MEMORY = True
-    
-    # Data type mapping and information
+
     DTYPE_MAPPING = {
         "float32": torch.float32,
         "float16": torch.float16,
@@ -36,331 +35,215 @@ class mbDataTypeConverter:
         "float64": torch.float64,
         "int64": torch.int64
     }
-    
-    # Memory unit thresholds
-    BYTES_PER_KB = 1024
-    BYTES_PER_MB = 1024 ** 2
-    BYTES_PER_GB = 1024 ** 3
-    
+
+    DEFAULT_DTYPE = "float16"
+
     def __init__(self):
-        """Initialize the data type converter node."""
         pass
 
     @classmethod
     def INPUT_TYPES(cls):
-        """Define input types for data type conversion."""
         return {
             "required": {
                 "tensor": (any_typ, {
-                    "tooltip": "Input tensor to convert (any tensor type)"
+                    "tooltip": "Tensor-like input to convert (torch.Tensor, numpy array, list, etc.)"
                 }),
                 "target_dtype": (cls.SUPPORTED_DTYPES, {
                     "default": cls.DEFAULT_DTYPE,
-                    "tooltip": "Target data type for conversion"
-                }),
-                "show_memory_info": ("BOOLEAN", {
-                    "default": cls.DEFAULT_SHOW_MEMORY,
-                    "tooltip": "Display detailed memory usage analysis"
-                }),
+                    "tooltip": "Target dtype to convert the tensor to"
+                })
             }
         }
 
-    # Node metadata
     TITLE = "Data Type Converter"
     RETURN_TYPES = (any_typ, "STRING")
-    RETURN_NAMES = ("converted_tensor", "memory_info")
-    FUNCTION = "convert_data_type"
+    RETURN_NAMES = ("converted_tensor", "status")
+    FUNCTION = "convert"
     CATEGORY = "unset"
-    DESCRIPTION = "Convert tensor data types for memory optimization and performance tuning with detailed memory analysis."
-    OUTPUT_NODE = True
+    DESCRIPTION = "Convert any tensor-like input to the chosen torch dtype (minimal, no heuristics)."
 
-    def convert_data_type(self, tensor, target_dtype, show_memory_info):
+    def convert(self, tensor, target_dtype):
         """
-        Convert tensor to target data type with memory analysis.
-        
-        Args:
-            tensor: Input tensor to convert
-            target_dtype: Target data type string
-            show_memory_info: Whether to show detailed memory information
-            
-        Returns:
-            tuple: (converted_tensor, memory_info_string)
+        Convert input to target dtype.
+        If input is not convertible to a torch tensor, returns original input and an error message.
         """
         try:
-            # If input is a container like dict/list/tuple, skip coercion and handle recursively
-            original_input = tensor
+            # Resolve target dtype
+            if target_dtype not in self.DTYPE_MAPPING:
+                return (tensor, f"Unsupported target dtype: {target_dtype}")
+
+            target_torch_dtype = self.DTYPE_MAPPING[target_dtype]
+
+            # If input is a container, recursively convert contained tensors
             if isinstance(tensor, (dict, list, tuple)):
-                target_torch_dtype = self.DTYPE_MAPPING.get(target_dtype)
-                converted_tensor, conversion_status = self._convert_item(tensor, target_torch_dtype)
-                tensor_info = self._analyze_tensor(converted_tensor) if isinstance(converted_tensor, torch.Tensor) else {'original_dtype': None, 'device': None, 'shape': None, 'original_size': 0}
+                converted, count = self._convert_any_item(tensor, target_torch_dtype)
+                status = f"Converted {count} tensor(s) to {target_torch_dtype}"
+                return (converted, status)
+
+            # Single item: try to coerce to tensor and convert
+            if isinstance(tensor, torch.Tensor):
+                t = tensor
             else:
-                original_device = None
-                if isinstance(tensor, torch.Tensor):
-                    original_device = tensor.device if hasattr(tensor, 'device') else None
-                else:
-                    # Try to coerce numpy arrays and other array-like objects to torch.Tensor
-                    try:
-                        if isinstance(tensor, np.ndarray):
-                            tensor = torch.from_numpy(tensor)
-                        else:
-                            tensor = torch.as_tensor(tensor)
-                    except Exception:
-                        return (original_input, "Input is not a tensor and could not be converted to torch.Tensor")
-
-                # If the original was a torch tensor on a device, ensure coerced tensor lives on same device
-                if original_device is not None and isinstance(tensor, torch.Tensor) and tensor.device != original_device:
-                    try:
-                        tensor = tensor.to(original_device)
-                    except Exception:
-                        pass
-
-                # Get tensor information
-                tensor_info = self._analyze_tensor(tensor)
-
-                # Perform conversion
-                target_torch_dtype = self.DTYPE_MAPPING.get(target_dtype)
-                converted_tensor, conversion_status = self._convert_item(tensor, target_torch_dtype)
-            
-            # Generate memory analysis
-            memory_info = self._generate_memory_analysis(
-                tensor, converted_tensor, tensor_info, target_dtype, 
-                conversion_status, show_memory_info
-            )
-            
-            return (converted_tensor, memory_info)
-            
-        except Exception as e:
-            error_msg = f"Error converting data type: {str(e)}"
-            print(error_msg)
-            return (tensor, error_msg)
-
-    def _is_convertible_tensor(self, obj):
-        """Check if object is a convertible tensor."""
-        # Accept torch tensors, numpy arrays, and array-like objects with dtype/shape
-        if isinstance(obj, torch.Tensor):
-            return True
-        if isinstance(obj, np.ndarray):
-            return True
-        # Fallback: check for attributes commonly present on tensor-like objects
-        return hasattr(obj, 'dtype') and hasattr(obj, 'shape')
-
-    def _convert_item(self, item, target_torch_dtype, parent_key=None):
-        """Recursively convert tensors inside containers or single tensor-like items.
-
-        Returns (converted_item, status_message)
-        """
-        # Handle torch.Tensor
-        if isinstance(item, torch.Tensor):
-            return self._convert_tensor(item, target_torch_dtype)
-
-        # Handle numpy arrays
-        if isinstance(item, np.ndarray):
-            t = torch.from_numpy(item)
-            converted, status = self._convert_tensor(t, target_torch_dtype)
-            # Return as torch tensor (consistent with other nodes)
-            return converted, status
-
-        # Handle dict-like audio container
-        if isinstance(item, dict):
-            status_msgs = []
-            result = {}
-            for k, v in item.items():
-                converted_v, status = self._convert_item(v, target_torch_dtype, parent_key=k)
-                result[k] = converted_v
-                if status:
-                    status_msgs.append(f"{k}: {status}")
-            return result, '; '.join(status_msgs) if status_msgs else 'Conversion applied to dict items'
-
-        # Handle list/tuple
-        if isinstance(item, list):
-            out_list = []
-            statuses = []
-            for v in item:
-                converted_v, status = self._convert_item(v, target_torch_dtype)
-                out_list.append(converted_v)
-                if status:
-                    statuses.append(status)
-            return out_list, '; '.join(statuses)
-
-        if isinstance(item, tuple):
-            out_list = []
-            statuses = []
-            for v in item:
-                converted_v, status = self._convert_item(v, target_torch_dtype)
-                out_list.append(converted_v)
-                if status:
-                    statuses.append(status)
-            return tuple(out_list), '; '.join(statuses)
-
-        # Not convertible
-        return item, ''
-
-    def _convert_tensor(self, tensor, target_torch_dtype):
-        """Convert a single torch tensor, with audio-aware scaling for float->int conversions."""
-        try:
-            original_dtype = tensor.dtype
-            original_device = tensor.device if hasattr(tensor, 'device') else None
-
-            # If already the target dtype, return as-is
-            if original_dtype == target_torch_dtype:
-                return tensor, 'No conversion needed - already target type'
-
-            # If converting float -> integer, handle rounding and optional scaling for audio
-            if torch.is_floating_point(tensor) and not torch.is_floating_point(torch.empty(1, dtype=target_torch_dtype)):
-                # Default: round then cast
-                t = tensor.round()
-
-                # Audio-specific heuristic: if parent key indicated 'waveform' or values appear normalized, scale to integer range
-                # (caller can pass parent_key by using _convert_item for dicts)
-                # Determine scale based on target dtype
-                scale_map = {
-                    torch.int8: 127,
-                    torch.uint8: 255,
-                    torch.int16: 32767
-                }
-
-                if target_torch_dtype in scale_map:
-                    # If tensor values look normalized in [-1,1], apply scaling
-                    try:
-                        max_abs = float(t.abs().max())
-                    except Exception:
-                        max_abs = None
-
-                    if max_abs is not None and max_abs <= 1.5:
-                        scale = scale_map[target_torch_dtype]
-                        t = (tensor * scale).round()
-                    else:
-                        # Keep rounded values as-is (no scaling)
-                        t = tensor.round()
-
-                converted = t.to(target_torch_dtype)
-            else:
-                # Generic conversion
-                converted = tensor.to(target_torch_dtype)
-
-            # Ensure device preservation
-            if original_device is not None and converted.device != original_device:
                 try:
-                    converted = converted.to(original_device)
+                    if isinstance(tensor, np.ndarray):
+                        t = torch.from_numpy(tensor)
+                    else:
+                        t = torch.as_tensor(tensor)
+                except Exception as e:
+                    return (tensor, f"Not convertible to torch.Tensor: {e}")
+
+            # Preserve device if possible
+            orig_device = t.device if hasattr(t, 'device') else None
+
+            # Perform conversion with value-range mapping
+            converted = self._map_tensor_dtype(t, target_torch_dtype)
+
+            # Move back to original device if needed
+            if orig_device is not None and converted.device != orig_device:
+                try:
+                    converted = converted.to(orig_device)
                 except Exception:
                     pass
 
-            return converted, 'Conversion successful'
+            return (converted, f"Converted to {target_torch_dtype}")
+
         except Exception as e:
-            return tensor, f'Conversion failed: {e}'
+            return (tensor, f"Error during conversion: {e}")
 
-    def _analyze_tensor(self, tensor):
-        """Analyze tensor properties for conversion."""
-        return {
-            'original_dtype': tensor.dtype,
-            'device': tensor.device if hasattr(tensor, 'device') else 'unknown',
-            'shape': tuple(tensor.shape),
-            'original_size': tensor.numel() * tensor.element_size() if hasattr(tensor, 'numel') else 0
-        }
+    def _convert_any_item(self, item, target_torch_dtype):
+        """Recursively convert tensors/numpy arrays inside containers.
 
-    def _perform_conversion(self, tensor, target_dtype, tensor_info):
-        """Perform the actual data type conversion."""
-        # Validate target data type
-        if target_dtype not in self.DTYPE_MAPPING:
-            raise ValueError(f"Unsupported data type: {target_dtype}")
-        
-        target_torch_dtype = self.DTYPE_MAPPING[target_dtype]
-        
-        # Check if conversion is needed
-        if tensor_info['original_dtype'] == target_torch_dtype:
-            return tensor, "No conversion needed - already target type"
-        
-        # Perform conversion
-        converted_tensor = tensor.to(target_torch_dtype)
-        return converted_tensor, "Conversion successful"
-
-    def _generate_memory_analysis(self, original_tensor, converted_tensor, tensor_info, 
-                                target_dtype, conversion_status, show_detailed_info):
-        """Generate comprehensive memory usage analysis."""
-        # If outputs are not torch tensors (e.g., dict/list containers), avoid tensor-specific analysis
-        if not isinstance(converted_tensor, torch.Tensor) or not isinstance(original_tensor, torch.Tensor):
-            # Provide a concise summary for containers or mixed types
-            if show_detailed_info:
-                if isinstance(converted_tensor, dict):
-                    keys = ','.join(map(str, converted_tensor.keys()))
-                    return f"Converted container with keys: {keys}\nStatus: {conversion_status}"
-                elif isinstance(converted_tensor, list):
-                    return f"Converted list with {len(converted_tensor)} items\nStatus: {conversion_status}"
-                else:
-                    return f"Converted type: {type(converted_tensor).__name__}\nStatus: {conversion_status}"
-            else:
-                return f"{conversion_status}"
-
-        new_size = converted_tensor.numel() * converted_tensor.element_size()
-        original_size = tensor_info['original_size']
-
-        if show_detailed_info:
-            return self._create_detailed_memory_report(
-                tensor_info, target_dtype, original_size, new_size, conversion_status
-            )
-        else:
-            return f"{tensor_info['original_dtype']} → {self.DTYPE_MAPPING[target_dtype]}"
-
-    def _create_detailed_memory_report(self, tensor_info, target_dtype, original_size, new_size, status):
-        """Create detailed memory usage report."""
-        memory_ratio = new_size / original_size if original_size > 0 else 1.0
-        memory_saved = original_size - new_size
-        
-        info_lines = [
-            "Data Type Conversion:",
-            f"  {tensor_info['original_dtype']} → {self.DTYPE_MAPPING[target_dtype]}",
-            f"  Device: {tensor_info['device']}",
-            f"  Shape: {tensor_info['shape']}",
-            "",
-            "Memory Usage:",
-            f"  Original: {self._format_bytes(original_size)}",
-            f"  New: {self._format_bytes(new_size)}",
-            f"  Ratio: {memory_ratio:.2f}x",
-        ]
-        
-        # Add memory change information
-        if memory_saved > 0:
-            info_lines.append(f"  Saved: {self._format_bytes(memory_saved)} ({(1-memory_ratio)*100:.1f}%)")
-        elif memory_saved < 0:
-            info_lines.append(f"  Increased: {self._format_bytes(-memory_saved)} ({(memory_ratio-1)*100:.1f}%)")
-        else:
-            info_lines.append("  No change")
-        
-        info_lines.extend([
-            "",
-            f"Status: {status}"
-        ])
-        
-        return "\n".join(info_lines)
-
-    def _format_bytes(self, bytes_val):
-        """Format byte values in human-readable format."""
-        if bytes_val < self.BYTES_PER_KB:
-            return f"{bytes_val} B"
-        elif bytes_val < self.BYTES_PER_MB:
-            return f"{bytes_val/self.BYTES_PER_KB:.1f} KB"
-        elif bytes_val < self.BYTES_PER_GB:
-            return f"{bytes_val/self.BYTES_PER_MB:.1f} MB"
-        else:
-            return f"{bytes_val/self.BYTES_PER_GB:.1f} GB"
-
-    @classmethod
-    def get_dtype_info(cls):
+        Returns (converted_item, count_of_converted_tensors)
         """
-        Get comprehensive information about supported data types.
-        
-        Returns:
-            dict: Data type information including memory usage, range, and precision
+        count = 0
+
+        # Torch tensor
+        if isinstance(item, torch.Tensor):
+            try:
+                converted = self._map_tensor_dtype(item, target_torch_dtype)
+                return converted, 1
+            except Exception:
+                return item, 0
+
+        # Numpy array -> torch
+        if isinstance(item, np.ndarray):
+            try:
+                t = torch.from_numpy(item)
+                conv, c = self._convert_any_item(t, target_torch_dtype)
+                return conv, c
+            except Exception:
+                return item, 0
+
+        # dict
+        if isinstance(item, dict):
+            out = {}
+            for k, v in item.items():
+                conv_v, c = self._convert_any_item(v, target_torch_dtype)
+                out[k] = conv_v
+                count += c
+            return out, count
+
+        # list
+        if isinstance(item, list):
+            out_list = []
+            for v in item:
+                conv_v, c = self._convert_any_item(v, target_torch_dtype)
+                out_list.append(conv_v)
+                count += c
+            return out_list, count
+
+        # tuple
+        if isinstance(item, tuple):
+            out_list = []
+            for v in item:
+                conv_v, c = self._convert_any_item(v, target_torch_dtype)
+                out_list.append(conv_v)
+                count += c
+            return tuple(out_list), count
+
+        # not convertible
+        return item, 0
+
+    def _get_dtype_limits(self, torch_dtype, sample_tensor=None):
+        """Return (min, max) representable values for a torch dtype.
+
+        For floating types, if a sample_tensor is provided and its absolute max <= 1.5,
+        the function assumes a normalized range (-1,1) for mapping purposes; otherwise
+        it uses the dtype's full finfo range.
         """
-        return {
-            "float32": {"bytes": 4, "range": "±1.2e-38 to ±3.4e+38", "precision": "~7 decimal digits"},
-            "float16": {"bytes": 2, "range": "±6.1e-5 to ±6.5e+4", "precision": "~3 decimal digits"},
-            "bfloat16": {"bytes": 2, "range": "±1.2e-38 to ±3.4e+38", "precision": "~2 decimal digits"},
-            "int32": {"bytes": 4, "range": "-2,147,483,648 to 2,147,483,647", "precision": "exact"},
-            "int16": {"bytes": 2, "range": "-32,768 to 32,767", "precision": "exact"},
-            "int8": {"bytes": 1, "range": "-128 to 127", "precision": "exact"},
-            "uint8": {"bytes": 1, "range": "0 to 255", "precision": "exact"},
-            "bool": {"bytes": 1, "range": "True/False", "precision": "exact"},
-            "float64": {"bytes": 8, "range": "±2.2e-308 to ±1.8e+308", "precision": "~15 decimal digits"},
-            "int64": {"bytes": 8, "range": "±9.2e+18", "precision": "exact"}
-        }
+        if torch_dtype == torch.bool:
+            return 0.0, 1.0
+
+        if torch.is_floating_point(torch.empty(1, dtype=torch_dtype)):
+            # Heuristic: treat small-magnitude floats as normalized audio [-1,1]
+            if sample_tensor is not None:
+                try:
+                    max_abs = float(sample_tensor.abs().max())
+                except Exception:
+                    max_abs = None
+                if max_abs is not None and max_abs <= 1.5:
+                    return -1.0, 1.0
+
+            info = torch.finfo(torch_dtype)
+            return float(info.min), float(info.max)
+
+        # Integer types
+        info = torch.iinfo(torch_dtype)
+        return float(info.min), float(info.max)
+
+    def _map_tensor_dtype(self, tensor, target_torch_dtype):
+        """Map tensor values from source dtype range to target dtype range and cast.
+
+        Uses float64 intermediate math to avoid precision loss, clamps to target range,
+        and rounds when converting to integer target dtypes.
+        """
+        # If dtypes are equal, just return a copy / same tensor
+        src_dtype = tensor.dtype
+        tgt_dtype = target_torch_dtype
+        if src_dtype == tgt_dtype:
+            return tensor
+
+        # Get device to preserve
+        device = tensor.device if hasattr(tensor, 'device') else None
+
+        # If both source and target are floating point, preserve numeric values (no full-range mapping)
+        if torch.is_floating_point(torch.empty(1, dtype=src_dtype)) and torch.is_floating_point(torch.empty(1, dtype=tgt_dtype)):
+            out = tensor.to(tgt_dtype)
+            if device is not None and out.device != device:
+                try:
+                    out = out.to(device)
+                except Exception:
+                    pass
+            return out
+
+        # Determine numeric ranges
+        src_min, src_max = self._get_dtype_limits(src_dtype, sample_tensor=tensor if torch.is_floating_point(tensor) else None)
+        tgt_min, tgt_max = self._get_dtype_limits(tgt_dtype)
+
+        # Avoid zero division
+        if src_max == src_min:
+            frac = torch.full_like(tensor, 0.5, dtype=torch.float64)
+        else:
+            # Perform mapping in float64
+            x = tensor.to(torch.float64)
+            frac = (x - src_min) / (src_max - src_min)
+
+        frac = frac.clamp(0.0, 1.0)
+
+        mapped = frac * (tgt_max - tgt_min) + tgt_min
+
+        # Cast to target dtype
+        if torch.is_floating_point(torch.empty(1, dtype=tgt_dtype)):
+            out = mapped.to(tgt_dtype)
+        else:
+            # integer or bool: round then cast
+            out = mapped.round().to(tgt_dtype)
+
+        # Ensure device preservation
+        if device is not None and out.device != device:
+            try:
+                out = out.to(device)
+            except Exception:
+                pass
+
+        return out
