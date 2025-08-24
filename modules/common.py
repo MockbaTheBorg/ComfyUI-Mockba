@@ -328,3 +328,53 @@ def convert_mask_to_image_enhanced(mask):
     # Use the global mask_to_image function
     return mask_to_image(mask)
 
+
+def tensor_to_pil_image(tensor):
+    """
+    Convert a torch image tensor to a PIL Image suitable for display/saving.
+
+    Accepts tensors in either HxWxC or BxHxWxC form (ComfyUI uses B,H,W,C).
+    Handles torch-only dtypes such as bfloat16 by converting to float32 on CPU
+    before converting to a NumPy array. Float tensors are assumed to be in
+    normalized [0..1] range and are scaled to 0..255 for uint8 image output.
+
+    Returns:
+        PIL.Image.Image
+    """
+    # Allow passing either a torch tensor or array-like
+    # If it's a batch (4D) and batch size 1, unwrap it
+    t = tensor
+    try:
+        if hasattr(t, 'ndim') and t.ndim == 4 and t.shape[0] == 1:
+            t = t[0]
+    except Exception:
+        # Not a torch tensor or unexpected shape
+        pass
+
+    # Convert torch tensors to CPU NumPy-compatible dtype
+    if hasattr(t, 'cpu') and hasattr(t, 'numpy') or hasattr(t, 'to'):
+        try:
+            # Prefer making a float32 CPU copy for NumPy compatibility
+            t_cpu = t.cpu().to(torch.float32)
+        except Exception:
+            t_cpu = t.cpu()
+        arr = t_cpu.numpy()
+    else:
+        arr = np.array(t)
+
+    # Scale floats from [0..1] -> [0..255]; leave integer types alone
+    if np.issubdtype(arr.dtype, np.floating):
+        img_arr = np.clip(arr * 255.0, 0, 255).astype(np.uint8)
+    else:
+        img_arr = np.clip(arr, 0, 255).astype(np.uint8)
+
+    # Handle channel layout and return PIL Image
+    if img_arr.ndim == 3 and img_arr.shape[-1] in (3, 4):
+        mode = 'RGBA' if img_arr.shape[-1] == 4 else 'RGB'
+        return Image.fromarray(img_arr, mode=mode)
+    elif img_arr.ndim == 2:
+        return Image.fromarray(img_arr).convert('RGB')
+    else:
+        # Fallback: coerce to uint8 and let PIL try to interpret
+        return Image.fromarray(img_arr.astype(np.uint8))
+

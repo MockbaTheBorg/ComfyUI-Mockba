@@ -29,6 +29,7 @@ from .common import (
     convert_mask_to_image_enhanced,
     create_empty_image_and_mask
 )
+from .common import tensor_to_pil_image
 
 # Global cache for mask preservation functionality
 preview_cache = {}
@@ -333,26 +334,8 @@ class mbImagePreview:
 
                 results = []
                 for batch_number, display_image in enumerate(display_images):
-                    # Ensure we convert bfloat16/other torch-only dtypes to float32 before
-                    # converting to NumPy. Do not mutate the original tensor used
-                    # elsewhere (work on a CPU copy).
-                    try:
-                        disp = display_image.cpu().to(torch.float32)
-                    except Exception:
-                        disp = display_image.cpu()
-
-                    display_np = disp.numpy()
-
-                    if np.issubdtype(display_np.dtype, np.floating):
-                        img_array = 255.0 * display_np
-                    else:
-                        img_array = display_np
-                    
-                    # Handle RGBA images (with alpha channel)
-                    if img_array.shape[-1] == 4:
-                        img = Image.fromarray(np.clip(img_array, 0, 255).astype(np.uint8), 'RGBA')
-                    else:
-                        img = Image.fromarray(np.clip(img_array, 0, 255).astype(np.uint8))
+                    # Use the shared helper to convert the tensor to a PIL image.
+                    img = tensor_to_pil_image(display_image)
 
                     metadata = None
                     if not args.disable_metadata:
