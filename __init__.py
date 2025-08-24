@@ -170,6 +170,7 @@ mbEnd = import_and_register('.modules.mbEnd', category)
 mbMemoryUnload = import_and_register('.modules.mbMemoryUnload', category)
 mbSlider = import_and_register('.modules.mbSlider', category)
 mbSubmit = import_and_register('.modules.mbSubmit', category)
+mbAudioMixer = import_and_register('.modules.mbAudioMixer', category)
 
 # === Test ===
 category = CATEGORIES["TEST"]
