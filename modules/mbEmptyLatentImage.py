@@ -35,15 +35,19 @@ class mbEmptyLatentImage:
 
     @classmethod
     def INPUT_TYPES(cls):
-        """Define input types for latent image generation."""
+        """Define input types for latent image generation.
+
+        This method gathers available devices and resolutions and returns the
+        input schema expected by ComfyUI.
+        """
         # Get available devices
         devices = cls._get_available_devices()
-        default_device = devices[0]
-        
+        default_device = devices[0] if devices else "cpu"
+
         # Load available resolutions
         resolutions = cls._load_resolutions()
         default_resolution = resolutions[0] if resolutions else "custom"
-        
+
         return {
             "required": {
                 "size": (resolutions, {
@@ -114,9 +118,9 @@ class mbEmptyLatentImage:
             # Validate dimensions
             self._validate_dimensions(final_width, final_height, batch_size)
             
-            # Calculate latent dimensions
-            latent_width = final_width // self.LATENT_SCALE_FACTOR
-            latent_height = final_height // self.LATENT_SCALE_FACTOR
+            # Calculate latent dimensions (ensure at least 1)
+            latent_width = max(1, final_width // self.LATENT_SCALE_FACTOR)
+            latent_height = max(1, final_height // self.LATENT_SCALE_FACTOR)
             
             # Create empty latent tensor
             latent_tensor = self._create_latent_tensor(
@@ -155,15 +159,17 @@ class mbEmptyLatentImage:
         resolutions = ["custom"]  # Always include custom option
         
         try:
-            # Try multiple possible paths for the resolutions file
+            # Try several sensible locations for the resolutions file, normalized to absolute paths
+            repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
             possible_paths = [
-                cls.RESOLUTIONS_FILE,
-                f"ComfyUI/custom_nodes/ComfyUI-Mockba/{cls.RESOLUTIONS_FILE}",
-                f"custom_nodes/ComfyUI-Mockba/{cls.RESOLUTIONS_FILE}",
-                os.path.join(os.path.dirname(__file__), "..", cls.RESOLUTIONS_FILE)
+                os.path.abspath(cls.RESOLUTIONS_FILE),
+                os.path.join(repo_root, cls.RESOLUTIONS_FILE),
+                os.path.join(os.getcwd(), cls.RESOLUTIONS_FILE),
+                os.path.join(os.path.dirname(__file__), cls.RESOLUTIONS_FILE),
             ]
-            
+
             for file_path in possible_paths:
+                file_path = os.path.normpath(file_path)
                 if os.path.exists(file_path):
                     with open(file_path, "r", encoding="utf-8") as f:
                         for line in f:
@@ -206,9 +212,10 @@ class mbEmptyLatentImage:
             return width, height
         
         try:
-            # Parse resolution string (e.g., "512x768")
-            if "x" in size:
-                size_width, size_height = size.split("x", 1)
+            # Parse resolution string (e.g., "512x768" or "512X768"), be tolerant of whitespace
+            if isinstance(size, str) and ('x' in size.lower()):
+                parts = size.lower().replace(' ', '').split('x', 1)
+                size_width, size_height = parts[0], parts[1]
                 return int(size_width), int(size_height)
             else:
                 # Fallback to custom dimensions if parsing fails
