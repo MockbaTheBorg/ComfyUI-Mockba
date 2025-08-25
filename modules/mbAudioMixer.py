@@ -28,7 +28,7 @@ class mbAudioMixer:
         }
 
     # Node metadata
-    TITLE = "MB 4-Input Audio Mixer"
+    TITLE = "Audio Mixer"
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("mixed",)
     FUNCTION = "mix"
