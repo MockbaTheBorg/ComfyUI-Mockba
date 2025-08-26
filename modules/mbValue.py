@@ -1,7 +1,7 @@
 """
 Value Display Node for ComfyUI
 A node that displays any value in its title without outputs, created collapsed by default.
-Supports custom Python formatting strings for value display.
+Supports sprintf formatting strings for value display.
 """
 
 # Local imports
@@ -31,7 +31,7 @@ class mbValue:
     RETURN_NAMES = ()
     FUNCTION = "display_value"
     CATEGORY = "unset"
-    DESCRIPTION = "Display any value in the node title without producing outputs. Supports custom Python formatting strings for value display. Useful for debugging and monitoring values in workflows."
+    DESCRIPTION = "Display any value in the node title without producing outputs. Supports sprintf formatting strings for value display. Useful for debugging and monitoring values in workflows."
     OUTPUT_NODE = True
 
     def display_value(self, value):
