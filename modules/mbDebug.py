@@ -13,7 +13,6 @@ class mbDebug:
     """Display comprehensive debug information about any input object."""
     
     # Class constants
-    DEFAULT_DEBUG_MESSAGE = "Debug output will appear here after execution..."
     SEPARATOR_LINE = "-" * 40
     
     def __init__(self):

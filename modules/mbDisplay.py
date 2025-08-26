@@ -14,7 +14,6 @@ class mbDisplay:
     """Universal display node that shows information about any input type."""
     
     # Class constants
-    DEFAULT_MESSAGE = "Display output will appear here after execution..."
     MAX_DICT_KEYS = 10
     PFORMAT_WIDTH = 60
     PFORMAT_DEPTH = 2
