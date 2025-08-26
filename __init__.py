@@ -175,6 +175,7 @@ mbAudioMixer = import_and_register('.modules.mbAudioMixer', category)
 # === Test ===
 category = CATEGORIES["TEST"]
 # Small/testing nodes
+mbTest = import_and_register('.modules.mbTest', category)
 
 
 # Web directory for static files
