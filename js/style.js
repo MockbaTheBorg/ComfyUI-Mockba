@@ -3,9 +3,9 @@ import { ComfyWidgets } from "../../scripts/widgets.js";
 
 // Default colors
 const DEFAULT_SELECTED_COLOR = "#ffffffff";
-const DEFAULT_TITLE_COLOR = "#ffffffc7";
-const DEFAULT_BACKGROUND_COLOR = "#573717ff";
-const DEFAULT_BOX_COLOR = "#b86a1dff";
+const DEFAULT_TITLE_COLOR = "#ffffffb4";
+const DEFAULT_BACKGROUND_COLOR = "#573d17ff";
+const DEFAULT_BOX_COLOR = "#b8751dff";
 
 // Truncate text to fit within a maximum width
 function truncateText(ctx, text, maxWidth, ellipsis = '...') {
