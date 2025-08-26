@@ -163,14 +163,15 @@ mbTextbox = import_and_register('.modules.mbTextbox', category)
 
 # === Tools ===
 category = CATEGORIES["TOOLS"]
+mbAudioMixer = import_and_register('.modules.mbAudioMixer', category)
 mbColorPicker = import_and_register('.modules.mbColorPicker', category)
 mbChronoIn = import_and_register('.modules.mbChronoIn', category)
 mbChronoOut = import_and_register('.modules.mbChronoOut', category)
 mbEnd = import_and_register('.modules.mbEnd', category)
+mbFilmDevelop = import_and_register('.modules.mbFilmDevelop', category)
 mbMemoryUnload = import_and_register('.modules.mbMemoryUnload', category)
 mbSlider = import_and_register('.modules.mbSlider', category)
 mbSubmit = import_and_register('.modules.mbSubmit', category)
-mbAudioMixer = import_and_register('.modules.mbAudioMixer', category)
 
 # === Test ===
 category = CATEGORIES["TEST"]
