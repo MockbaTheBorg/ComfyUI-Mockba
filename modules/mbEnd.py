@@ -34,12 +34,6 @@ class mbEnd:
     DESCRIPTION = "Simple end node that does nothing and is always executed."
     OUTPUT_NODE = True
 
-    @classmethod
-    def IS_CHANGED(cls, **kwargs):
-        """Force execution every time by returning a unique value."""
-        import time
-        return time.time()
-
     def end(self, **kwargs):
         """
         Does nothing - this is just an end point to force execution.
@@ -51,3 +45,9 @@ class mbEnd:
             None: No output as this is an end node
         """
         return (None,)
+    
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        """Force execution every time by returning a unique value."""
+        import random
+        return random.randint(0, 32768)

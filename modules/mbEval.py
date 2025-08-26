@@ -49,3 +49,9 @@ class mbEval:
             return (eval(code), None)
         except Exception as e:
             return (None, str(e))
+        
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        """Force execution every time by returning a unique value."""
+        import random
+        return random.randint(0, 32768)

@@ -56,3 +56,9 @@ class mbExec:
         if "out" in locals:
             out = locals["out"]
         return (out, error)
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        """Force execution every time by returning a unique value."""
+        import random
+        return random.randint(0, 32768)
