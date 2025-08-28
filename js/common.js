@@ -244,6 +244,11 @@ app.registerExtension({
 
 			case 'mbSubmit':
 				addNodeCreatedHook(function () {
+					// Hide the Queue Panel when mbSubmit is added
+					const queuePanel = document.querySelector('div.p-panel-content');
+					if (queuePanel) {
+						queuePanel.style.display = 'none';
+					}
 					this.addWidget("button", "Submit Workflow", "Submit Workflow", () => app.queuePrompt(0));
 					this.addWidget("button", "Reset Canvas", "Reset Canvas", () => {
 						if (app.canvas) {
