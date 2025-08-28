@@ -17,13 +17,15 @@ class mbAudioMixer:
         return {
             "required": {
                 "in1": (any_typ,),
-                "in2": (any_typ,),
-                "in3": (any_typ,),
-                "in4": (any_typ,),
                 "vol1": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0}),
                 "vol2": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0}),
                 "vol3": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0}),
                 "vol4": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0}),
+            },
+            "optional": {
+                "in2": (any_typ,),
+                "in3": (any_typ,),
+                "in4": (any_typ,),
             }
         }
 
@@ -35,7 +37,7 @@ class mbAudioMixer:
     CATEGORY = "unset"
     DESCRIPTION = "Mix up to four audio inputs with per-input volume sliders."
 
-    def mix(self, in1, in2, in3, in4, vol1, vol2, vol3, vol4):
+    def mix(self, in1, in2=None, in3=None, in4=None, vol1=1.0, vol2=1.0, vol3=1.0, vol4=1.0):
         inputs = [in1, in2, in3, in4]
         vols = [vol1, vol2, vol3, vol4]
 
