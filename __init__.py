@@ -111,6 +111,7 @@ mbDebug = import_and_register('.modules.mbDebug', category)
 mbDisplay = import_and_register('.modules.mbDisplay', category)
 mbEval = import_and_register('.modules.mbEval', category)
 mbExec = import_and_register('.modules.mbExec', category)
+mbBash = import_and_register('.modules.mbBash', category)
 mbPlotter = import_and_register('.modules.mbPlotter', category)
 mbValue = import_and_register('.modules.mbValue', category)
 
@@ -160,6 +161,7 @@ mbCLIPTextEncode = import_and_register('.modules.mbCLIPTextEncode', category)
 mbString = import_and_register('.modules.mbString', category)
 mbText = import_and_register('.modules.mbText', category)
 mbTextbox = import_and_register('.modules.mbTextbox', category)
+mbJson = import_and_register('.modules.mbJson', category)
 
 # === Tools ===
 category = CATEGORIES["TOOLS"]
