@@ -165,6 +165,7 @@ mbJson = import_and_register('.modules.mbJson', category)
 
 # === Tools ===
 category = CATEGORIES["TOOLS"]
+mbAudioCat = import_and_register('.modules.mbAudioCat', category)
 mbAudioMixer = import_and_register('.modules.mbAudioMixer', category)
 mbColorPicker = import_and_register('.modules.mbColorPicker', category)
 mbChronoIn = import_and_register('.modules.mbChronoIn', category)

@@ -277,6 +277,7 @@ app.registerExtension({
 
 		// Manage nodes with dynamic inputs
 		if (nodeData.name === 'mbImageBatch' ||
+			nodeData.name === 'mbAudioCat' ||
 			nodeData.name === 'mbSelect' ||
 			nodeData.name === 'mbDemux' ||
 			nodeData.name === 'mbEval' ||
@@ -287,6 +288,9 @@ app.registerExtension({
 			switch (nodeData.name) {
 				case 'mbImageBatch':
 					input_name = "image";
+					break;
+				case 'mbAudioCat':
+					input_name = "audio";
 					break;
 				case 'mbEval':
 				case 'mbExec':
