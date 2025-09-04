@@ -6,6 +6,9 @@ Delays the passthrough of any input by a specified number of seconds.
 # Standard library imports
 import time
 
+# ComfyUI imports
+import comfy.utils
+
 # Local imports
 from .common import any_typ
 
@@ -58,8 +61,30 @@ class mbDelay:
         Returns:
             tuple: The input object unchanged
         """
-        # Use time.sleep for proper delay (not a tight loop)
-        time.sleep(seconds)
+        if seconds <= 0:
+            return (input,)
+        
+        # Check if progress bar is enabled
+        if not comfy.utils.PROGRESS_BAR_ENABLED:
+            time.sleep(seconds)
+            return (input,)
+        
+        # Create progress bar for the delay
+        step_time = 0.1  # Update every 0.1 seconds
+        total_steps = max(1, int(seconds / step_time))
+        pbar = comfy.utils.ProgressBar(total_steps)
+        
+        remaining_time = seconds
+        for step in range(total_steps):
+            sleep_time = min(step_time, remaining_time)
+            time.sleep(sleep_time)
+            remaining_time -= sleep_time
+            pbar.update_absolute(step + 1, total_steps)
+        
+        # Sleep any remaining fractional time
+        if remaining_time > 0:
+            time.sleep(remaining_time)
+            pbar.update_absolute(total_steps, total_steps)
         
         # Return the input unchanged
         return (input,)
