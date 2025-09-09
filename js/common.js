@@ -250,6 +250,35 @@ app.registerExtension({
 						queuePanel.style.display = 'none';
 					}
 					this.addWidget("button", "Submit Workflow", "Submit Workflow", () => app.queuePrompt(0));
+			        this.addWidget("button", "Cancel Workflow", "Cancel Workflow", async () => {
+			            try {
+			                const response = await fetch('/api/interrupt', {
+			                    method: 'POST',
+			                    headers: {
+			                        'Content-Type': 'application/json',
+			                    }
+			                });
+			                if (response.ok) {
+								app.extensionManager.toast.add({
+								  severity: "info",
+								  summary: "Information",
+								  detail: "Workflow cancellation sent"
+								});
+			                } else {
+								app.extensionManager.toast.add({
+								  severity: "error",
+								  summary: "Information",
+								  detail: "Workflow cancellation failed"
+								});
+			                }
+			            } catch (error) {
+							app.extensionManager.toast.add({
+							  severity: "error",
+							  summary: "Information",
+							  detail: "Workflow cancellation request failed"
+							});
+						}
+			        });
 					this.addWidget("button", "Reset Canvas", "Reset Canvas", () => {
 						if (app.canvas) {
 							app.canvas.ds.offset = [0, 0];
