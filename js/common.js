@@ -262,20 +262,23 @@ app.registerExtension({
 								app.extensionManager.toast.add({
 								  severity: "info",
 								  summary: "Information",
-								  detail: "Workflow cancellation sent"
+								  detail: "Workflow cancellation sent",
+								  life: 3000
 								});
 			                } else {
 								app.extensionManager.toast.add({
 								  severity: "error",
 								  summary: "Information",
-								  detail: "Workflow cancellation failed"
+								  detail: "Workflow cancellation failed",
+								  life: 3000
 								});
 			                }
 			            } catch (error) {
 							app.extensionManager.toast.add({
 							  severity: "error",
 							  summary: "Information",
-							  detail: "Workflow cancellation request failed"
+							  detail: "Workflow cancellation request failed",
+							  life: 3000
 							});
 						}
 			        });
