@@ -47,7 +47,7 @@ class mbDelay:
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("output",)
     FUNCTION = "delay_passthrough"
-    CATEGORY = "🖖 Mockba/tools"
+    CATEGORY = "unset"
     DESCRIPTION = "Delays the passthrough of any input by a specified number of seconds using a proper sleep function."
 
     def delay_passthrough(self, input, seconds):
