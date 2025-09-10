@@ -148,6 +148,7 @@ mbImageRotate = import_and_register('.modules.mbImageRotate', category)
 mbImageShow = import_and_register('.modules.mbImageShow', category)
 mbImageSize = import_and_register('.modules.mbImageSize', category)
 mbImageSubtract = import_and_register('.modules.mbImageSubtract', category)
+mbLastFrame = import_and_register('.modules.mbLastFrame', category)
 
 # === Mask Processing ===
 category = CATEGORIES["MASK_PROCESSING"]
