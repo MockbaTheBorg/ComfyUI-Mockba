@@ -118,8 +118,8 @@ class mbKSampler:
     DESCRIPTION = "Enhanced K-Sampler with advanced noise control, partial sampling, preview options, and performance monitoring."
 
     def enhanced_sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, 
-                       latent_image, denoise=1.0, disable_noise=False, start_step=None, last_step=None, 
-                       force_full_denoise=False, preview_method="auto"):
+                   latent_image, denoise=1.0, disable_noise=False, start_step=None, last_step=None, 
+                   force_full_denoise=False, preview_method="auto"):
         """
         Perform enhanced K-sampling with comprehensive parameter control.
         
@@ -153,7 +153,7 @@ class mbKSampler:
             
             # Generate noise
             noise = self._prepare_sampling_noise(
-                latent_image, seed, disable_noise
+                model, latent_image, seed, disable_noise
             )
             
             # Setup preview callback
@@ -228,9 +228,12 @@ class mbKSampler:
             "last_step": validated_last_step
         }
 
-    def _prepare_sampling_noise(self, latent_image, seed, disable_noise):
+    def _prepare_sampling_noise(self, model, latent_image, seed, disable_noise):
         """Prepare noise for sampling with enhanced control."""
         latent_samples = latent_image["samples"]
+        
+        # Fix empty latent channels to match model requirements
+        latent_samples = comfy.sample.fix_empty_latent_channels(model, latent_samples)
         
         if disable_noise:
             # Create zero noise for deterministic results

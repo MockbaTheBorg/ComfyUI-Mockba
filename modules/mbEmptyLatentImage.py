@@ -17,7 +17,6 @@ class mbEmptyLatentImage:
     MAX_RESOLUTION = 4096
     MIN_RESOLUTION = 64
     RESOLUTION_STEP = 8
-    LATENT_CHANNELS = 4
     LATENT_SCALE_FACTOR = 8
     MAX_BATCH_SIZE = 64
     
@@ -50,6 +49,10 @@ class mbEmptyLatentImage:
 
         return {
             "required": {
+                "latent_type": (["regular", "sd3"], {
+                    "default": "regular",
+                    "tooltip": "Type of latent format: regular (SD1/SD2, 4 channels) or SD3 (16 channels)"
+                }),
                 "size": (resolutions, {
                     "default": default_resolution,
                     "tooltip": "Predefined resolution or 'custom' for manual width/height"
@@ -91,13 +94,14 @@ class mbEmptyLatentImage:
     RETURN_NAMES = ("latent_image",)
     FUNCTION = "generate_empty_latent"
     CATEGORY = "unset"
-    DESCRIPTION = "Create empty latent tensors for diffusion models with device placement and memory management options."
+    DESCRIPTION = "Create empty latent tensors for diffusion models with device placement and memory management options. Supports regular (SD1/SD2) and SD3 latent formats."
 
-    def generate_empty_latent(self, size, width, height, batch_size, device, memory_management):
+    def generate_empty_latent(self, latent_type, size, width, height, batch_size, device, memory_management):
         """
         Generate empty latent image tensor.
         
         Args:
+            latent_type: Type of latent format ("regular" or "sd3")
             size: Predefined resolution string or "custom"
             width: Custom width (used when size is "custom")
             height: Custom height (used when size is "custom") 
@@ -115,6 +119,9 @@ class mbEmptyLatentImage:
             # Determine final dimensions
             final_width, final_height = self._resolve_dimensions(size, width, height)
             
+            # Get latent channels based on type
+            latent_channels = self._get_latent_channels(latent_type)
+            
             # Validate dimensions
             self._validate_dimensions(final_width, final_height, batch_size)
             
@@ -124,10 +131,10 @@ class mbEmptyLatentImage:
             
             # Create empty latent tensor
             latent_tensor = self._create_latent_tensor(
-                batch_size, latent_height, latent_width, device
+                batch_size, latent_channels, latent_height, latent_width, device
             )
             
-            print(f"Created empty latent: {batch_size}x{self.LATENT_CHANNELS}x{latent_height}x{latent_width} on {device}")
+            print(f"Created empty latent ({latent_type}): {batch_size}x{latent_channels}x{latent_height}x{latent_width} on {device}")
             
             return ({"samples": latent_tensor},)
             
@@ -135,8 +142,16 @@ class mbEmptyLatentImage:
             error_msg = f"Failed to generate empty latent: {str(e)}"
             print(error_msg)
             # Return a minimal fallback latent
-            fallback_latent = torch.zeros([1, self.LATENT_CHANNELS, 64, 64], device="cpu")
+            fallback_channels = self._get_latent_channels(latent_type)
+            fallback_latent = torch.zeros([1, fallback_channels, 64, 64], device="cpu")
             return ({"samples": fallback_latent},)
+
+    def _get_latent_channels(self, latent_type):
+        """Get the number of latent channels based on type."""
+        if latent_type == "sd3":
+            return 16
+        else:  # regular
+            return 4
 
     @classmethod
     def _get_available_devices(cls):
@@ -239,7 +254,7 @@ class mbEmptyLatentImage:
         if width % self.LATENT_SCALE_FACTOR != 0 or height % self.LATENT_SCALE_FACTOR != 0:
             print(f"Warning: Dimensions {width}x{height} not divisible by {self.LATENT_SCALE_FACTOR}, may cause issues")
 
-    def _create_latent_tensor(self, batch_size, latent_height, latent_width, device):
+    def _create_latent_tensor(self, batch_size, latent_channels, latent_height, latent_width, device):
         """Create the empty latent tensor with specified dimensions."""
         try:
             # Validate device availability
@@ -249,7 +264,7 @@ class mbEmptyLatentImage:
             
             # Create tensor
             latent_tensor = torch.zeros(
-                [batch_size, self.LATENT_CHANNELS, latent_height, latent_width],
+                [batch_size, latent_channels, latent_height, latent_width],
                 device=device,
                 dtype=torch.float32
             )
@@ -260,7 +275,7 @@ class mbEmptyLatentImage:
             if "out of memory" in str(e).lower():
                 print(f"CUDA out of memory, falling back to CPU")
                 return torch.zeros(
-                    [batch_size, self.LATENT_CHANNELS, latent_height, latent_width],
+                    [batch_size, latent_channels, latent_height, latent_width],
                     device="cpu",
                     dtype=torch.float32
                 )

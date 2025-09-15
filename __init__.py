@@ -113,6 +113,7 @@ mbEval = import_and_register('.modules.mbEval', category)
 mbExec = import_and_register('.modules.mbExec', category)
 mbBash = import_and_register('.modules.mbBash', category)
 mbPlotter = import_and_register('.modules.mbPlotter', category)
+mbLatentInspector = import_and_register('.modules.mbLatentInspector', category)
 mbValue = import_and_register('.modules.mbValue', category)
 
 # === File Operations ===
@@ -134,6 +135,8 @@ mbEmptyLatentImage = import_and_register('.modules.mbEmptyLatentImage', category
 mbKSampler = import_and_register('.modules.mbKSampler', category)
 mbQRCode = import_and_register('.modules.mbQRCode', category)
 mbRandom = import_and_register('.modules.mbRandom', category)
+mbVAEDecode = import_and_register('.modules.mbVAEDecode', category)
+mbVAEEncode = import_and_register('.modules.mbVAEEncode', category)
 
 # === Image Processing ===
 category = CATEGORIES["IMAGE_PROCESSING"]
