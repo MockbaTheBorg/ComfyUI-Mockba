@@ -60,10 +60,10 @@ class mbImagePreview:
                 "images": (any_typ,),
             },
             "optional": {
-                "restore_mask": (["never", "always", "if_same_size"], {"default": "never", "tooltip": "if_same_size: If the input image is the same size as the previous image, restore using the last saved mask\nalways: Whenever the input image changes, always restore using the last saved mask\nnever: Do not restore the mask"}),
+                "image": ("STRING", {"default": ""}),
+                "restore_mask": (["never", "always", "if_same_size"], {"default": "never", "tooltip": "if_same_size: If the input image is the same size as the previous image, restore using the last saved mask\nalways: Whenever the input image changes, always restore using the last saved mask\nnever: Do not restore the mask"})
             },
             "hidden": {
-                "image": ("STRING", {"default": ""}),
                 "prompt": "PROMPT",
                 "extra_pnginfo": "EXTRA_PNGINFO",
                 "unique_id": "UNIQUE_ID"
@@ -121,98 +121,6 @@ class mbImagePreview:
         except Exception as e:
             print(f"Error loading image and mask from {image_path}: {e}")
             return create_empty_image_and_mask()
-
-    def get_cached_mask_path(self, node_id):
-        """
-        Get the path for storing cached mask for a node.
-        
-        Args:
-            node_id: Unique node identifier
-            
-        Returns:
-            str: Path to the cache file
-        """
-        cache_dir = os.path.join(self.output_dir, "mask_cache")
-        os.makedirs(cache_dir, exist_ok=True)
-        return os.path.join(cache_dir, f"{node_id}_mask.pt")
-
-    def load_cached_mask(self, node_id):
-        """
-        Load cached mask from file for persistence across workflow runs.
-        
-        Args:
-            node_id: Unique node identifier
-            
-        Returns:
-            torch.Tensor or None: Cached mask tensor or None if not found
-        """
-        cache_path = self.get_cached_mask_path(node_id)
-        if os.path.isfile(cache_path):
-            try:
-                mask = torch.load(cache_path, map_location="cpu")
-                print(f"Loaded cached mask for node {node_id}")
-                return mask
-            except Exception as e:
-                print(f"Error loading cached mask: {e}")
-        return None
-
-    def save_cached_mask(self, node_id, mask):
-        """
-        Save mask to cache file for persistence across workflow runs.
-        
-        Args:
-            node_id: Unique node identifier
-            mask: Mask tensor to save
-        """
-        if mask is None or torch.all(mask == 0):
-            return
-            
-        cache_path = self.get_cached_mask_path(node_id)
-        try:
-            torch.save(mask, cache_path)
-            print(f"Saved cached mask for node {node_id}")
-        except Exception as e:
-            print(f"Error saving cached mask: {e}")
-
-    def get_mask_for_images(self, images, restore_mask, unique_id):
-        """
-        Get the appropriate mask based on restore_mask setting and cached data.
-        
-        Args:
-            images: Input image tensor
-            restore_mask: Mask restoration setting ("never", "always", "if_same_size")
-            unique_id: Unique node identifier
-            
-        Returns:
-            tuple: (mask_tensor, should_save_cache) - mask to use and whether to save it
-        """
-        # Load cached mask from file (for persistence across workflow runs)
-        cached_mask = self.load_cached_mask(unique_id) if unique_id else None
-        
-        if restore_mask == "never":
-            # Never restore - always use empty mask, don't save
-            return create_empty_mask(images.shape[1], images.shape[2]), False
-        
-        elif restore_mask == "always":
-            # Always try to restore from cache
-            if cached_mask is not None:
-                # Use cached mask, don't overwrite it
-                return resize_mask_to_image(cached_mask, images.shape), False
-            else:
-                # No cache exists, create empty and save it
-                return create_empty_mask(images.shape[1], images.shape[2]), True
-        
-        elif restore_mask == "if_same_size":
-            # Only restore if dimensions match
-            if cached_mask is not None and cached_mask.shape[1:] == images.shape[1:3]:
-                # Dimensions match, use cached mask but don't save (already cached)
-                return cached_mask, False
-            else:
-                # Dimensions don't match or no cache, create empty and save it
-                return create_empty_mask(images.shape[1], images.shape[2]), True
-        
-        # Fallback to empty mask, don't save
-        return create_empty_mask(images.shape[1], images.shape[2]), False
 
     def register_clipspace_image(self, clipspace_path, node_id):
         """
@@ -344,6 +252,12 @@ class mbImagePreview:
                 need_refresh = True
                 images_changed = True
 
+            # If images changed, clear the mask cache to ensure fresh start behavior
+            # This restores the original behavior where new images start with empty masks
+            # unless restore_mask is set to "always" or "if_same_size"
+            if images_changed and restore_mask not in ["always", "if_same_size"] and unique_id in last_mask_cache:
+                del last_mask_cache[unique_id]
+
             # Handle clipspace files that aren't registered in the preview bridge system
             # This only applies when images haven't changed (same image, new mask scenario)
             if not need_refresh and image and image not in image_id_map:
@@ -359,7 +273,6 @@ class mbImagePreview:
             if not need_refresh and image:
                 pixels, mask, path_item = self.load_image_and_mask(image)
                 display_images = [path_item]
-                should_save_cache = False  # Don't save when loading from existing image
             else:
                 # Process the input images
                 is_tensor = hasattr(images, 'shape') and hasattr(images, 'cpu')
@@ -386,8 +299,20 @@ class mbImagePreview:
                 if len(images.shape) == 3:
                     images = images.unsqueeze(0)
 
-                # Get the appropriate mask using simplified logic
-                mask, should_save_cache = self.get_mask_for_images(images, restore_mask, unique_id)
+                # Handle mask restoration
+                if restore_mask != "never" and (not images_changed or restore_mask in ["always", "if_same_size"]):
+                    mask = last_mask_cache.get(unique_id)
+                    if mask is None:
+                        mask = None
+                    elif restore_mask == "if_same_size" and mask.shape[1:] != images.shape[1:3]:
+                        # For if_same_size, clear mask if dimensions don't match
+                        mask = None
+                    elif mask is not None:
+                        # For both "always" and "if_same_size" (when dimensions match), 
+                        # resize mask to exactly match image dimensions
+                        mask = resize_mask_to_image(mask, images.shape)
+                else:
+                    mask = None
 
                 if mask is None:
                     mask = create_empty_mask(images.shape[1], images.shape[2])
@@ -444,9 +369,12 @@ class mbImagePreview:
                 # Update cache with both images and results (like bridge nodes)
                 preview_cache[unique_id] = (images, results)
 
-            # Save the current mask to cache only when needed for persistence across workflow runs
-            if unique_id is not None and should_save_cache:
-                self.save_cached_mask(unique_id, mask)
+            # Check if mask is empty
+            is_empty_mask = torch.all(mask == 0)
+
+            # Save mask for future restoration (only if it's not empty)
+            if not is_empty_mask and unique_id is not None:
+                last_mask_cache[unique_id] = mask.clone()
 
             return {"ui": {"images": display_images}, "result": (pixels, mask)}
             
