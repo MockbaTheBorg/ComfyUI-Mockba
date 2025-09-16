@@ -19,10 +19,10 @@ class mbLastFrame:
         """Define input types for the last frame extraction."""
         return {
             "required": {
-                "image": ("IMAGE", {
+                "images": ("IMAGE", {
                     "tooltip": "Input image batch or single image"
                 }),
-                "keep_last": ("BOOL", {
+                "keep_last": ("BOOLEAN", {
                     "default": False,
                     "tooltip": "When true, keep the last frame in the returned sequence (images_minus_last will include the last frame)"
                 }),
@@ -37,7 +37,7 @@ class mbLastFrame:
     CATEGORY = "unset"
     DESCRIPTION = "Returns the image batch minus the last frame and the last frame separately. If single image, both outputs are the same."
 
-    def get_last_frame(self, image, keep_last=False):
+    def get_last_frame(self, images, keep_last=False):
         """
         Extract the last frame from the image batch and return both the batch minus last frame and the last frame.
         
@@ -50,22 +50,22 @@ class mbLastFrame:
         """
         try:
             # If input is not a tensor, let it raise naturally
-            batch_size = image.shape[0]
+            batch_size = images.shape[0]
 
             # Single image: return the same image for both outputs (preserve original behavior)
             if batch_size == 1:
-                return (image, image)
+                return (images, images)
 
             # Get the last frame (preserve batch dimension for last_frame)
-            last_frame = image[-1:]
+            last_frame = images[-1:]
 
             # Decide whether to keep the last frame in the returned sequence or exclude it
             if keep_last:
                 # Keep the entire original sequence (images_minus_last is effectively the original batch)
-                images_minus_last = image
+                images_minus_last = images
             else:
                 # Exclude the last frame from the sequence
-                images_minus_last = image[:-1]
+                images_minus_last = images[:-1]
 
             return (images_minus_last, last_frame)
             
