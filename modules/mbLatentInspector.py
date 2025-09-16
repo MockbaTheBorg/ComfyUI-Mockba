@@ -34,7 +34,7 @@ class mbLatentInspector:
     RETURN_TYPES = ("LATENT", "STRING")
     RETURN_NAMES = ("latent", "info")
     FUNCTION = "inspect_latent"
-    CATEGORY = CATEGORIES["DEVELOPMENT"]
+    CATEGORY = "unset"
     DESCRIPTION = "Inspect latent tensors and display their shape, channels, and other properties."
 
     def inspect_latent(self, latent, show_details):

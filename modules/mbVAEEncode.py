@@ -42,7 +42,7 @@ class mbVAEEncode:
     RETURN_NAMES = ("latent",)
     OUTPUT_TOOLTIPS = ("The encoded latent representation.",)
     FUNCTION = "encode_with_progress"
-    CATEGORY = CATEGORIES["GENERATION"]
+    CATEGORY = "unset"
     DESCRIPTION = "Enhanced VAE encoder with latent type selection and progress bar visualization during encoding."
 
     def encode_with_progress(self, vae, pixels, latent_type):

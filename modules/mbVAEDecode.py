@@ -38,7 +38,7 @@ class mbVAEDecode:
     RETURN_NAMES = ("images",)
     OUTPUT_TOOLTIPS = ("The decoded image.",)
     FUNCTION = "decode_with_progress"
-    CATEGORY = CATEGORIES["GENERATION"]
+    CATEGORY = "unset"
     DESCRIPTION = "Enhanced VAE decoder with progress bar visualization during the decoding process."
 
     def decode_with_progress(self, vae, samples):
