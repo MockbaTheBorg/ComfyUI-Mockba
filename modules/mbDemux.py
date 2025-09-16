@@ -17,9 +17,9 @@ class mbDemux:
     def INPUT_TYPES(cls):
         """Define input types for demultiplexing."""
         return {
-            "required": {
+            "optional": {
                 "input1": (any_typ, {
-                    "tooltip": "First required input"
+                    "tooltip": "First optional input"
                 }),
             }
         }
