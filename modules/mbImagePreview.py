@@ -60,8 +60,8 @@ class mbImagePreview:
                 "images": (any_typ,),
             },
             "optional": {
-                "image": ("STRING", {"default": ""}),
-                "restore_mask": (["never", "always", "if_same_size"], {"default": "never", "tooltip": "if_same_size: If the input image is the same size as the previous image, restore using the last saved mask\nalways: Whenever the input image changes, always restore using the last saved mask\nnever: Do not restore the mask"})
+                "restore_mask": (["never", "always", "if_same_size"], {"default": "never", "tooltip": "if_same_size: If the input image is the same size as the previous image, restore using the last saved mask\nalways: Whenever the input image changes, always restore using the last saved mask\nnever: Do not restore the mask"}),
+                "image": ("STRING", {"default": ""})
             },
             "hidden": {
                 "prompt": "PROMPT",
@@ -222,7 +222,7 @@ class mbImagePreview:
         
         return rgba_images
 
-    def save_images(self, images, image="", restore_mask="never", filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None, unique_id=None):
+    def save_images(self, images, restore_mask="never", image="", filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None, unique_id=None):
         """
         Saves the preview images to the temporary directory with mask support.
         Handles both tensor images and non-tensor inputs by creating text images.
