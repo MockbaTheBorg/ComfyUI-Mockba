@@ -6,6 +6,11 @@ Encodes text prompts using CLIP models for diffusion model guidance.
 # ComfyUI imports
 from comfy.comfy_types import IO, ComfyNodeABC, InputTypeDict
 
+# Additional imports for caching
+import hashlib
+import os
+import pickle
+
 class mbCLIPTextEncode(ComfyNodeABC):
     """Encode text prompts using CLIP models for diffusion guidance."""
     
@@ -24,6 +29,10 @@ class mbCLIPTextEncode(ComfyNodeABC):
                 }),
                 "clip": (IO.CLIP, {
                     "tooltip": "CLIP model for encoding text into embeddings"
+                }),
+                "cache": ("BOOLEAN", {
+                    "default": True,
+                    "tooltip": "Enable caching of CLIP encodings to speed up repeated encodings"
                 })
             }
         }
@@ -36,16 +45,17 @@ class mbCLIPTextEncode(ComfyNodeABC):
     CATEGORY = "unset"
     DESCRIPTION = (
         "Encode text prompts using CLIP models into embeddings for guiding diffusion model image generation. "
-        "Supports dynamic prompts and multiline text input."
+        "Supports dynamic prompts and multiline text input. Includes caching to avoid recomputing identical encodings."
     )
 
-    def encode_text(self, clip, text):
+    def encode_text(self, clip, text, cache):
         """
-        Encode text using CLIP model.
+        Encode text using CLIP model, with optional caching.
         
         Args:
             clip: CLIP model instance for text encoding
             text: Text prompt to encode
+            cache: Boolean flag to enable/disable caching
             
         Returns:
             tuple: (conditioning embeddings, original text)
@@ -57,10 +67,42 @@ class mbCLIPTextEncode(ComfyNodeABC):
             # Validate CLIP model
             self._validate_clip_model(clip)
             
-            # Tokenize and encode text
-            conditioning = self._encode_text_with_clip(clip, text)
-            
-            return (conditioning, text)
+            if cache:
+                # Compute 32-bit hash (using MD5, which is 128-bit but we'll take first 8 hex chars for 32-bit representation)
+                hash_obj = hashlib.md5(text.encode('utf-8'))
+                hash_hex = hash_obj.hexdigest()[:8]  # Take first 8 hex chars (32 bits)
+                
+                # Define cache directory relative to this module's directory
+                cache_dir = os.path.join(os.path.dirname(__file__), '..', 'cache')
+                cache_file = os.path.join(cache_dir, f"{hash_hex}.clip")
+                
+                if os.path.exists(cache_file):
+                    # Load from cache
+                    with open(cache_file, 'rb') as f:
+                        conditioning = pickle.load(f)
+                    print(f"Loaded CLIP encoding from cache: {cache_file}")
+                    return (conditioning, text)
+                else:
+                    # Encode and cache
+                    conditioning = self._encode_text_with_clip(clip, text)
+                    
+                    # Ensure cache directory exists
+                    os.makedirs(cache_dir, exist_ok=True)
+                    
+                    # Save to cache
+                    with open(cache_file, 'wb') as f:
+                        pickle.dump(conditioning, f)
+                    print(f"Saved CLIP encoding to cache: {cache_file}")
+                    # Save the text to a .txt file
+                    txt_file = cache_file.replace('.clip', '.txt')
+                    with open(txt_file, 'w', encoding='utf-8') as f:
+                        f.write(text)
+                    return (conditioning, text)
+            else:
+                # No caching, encode directly
+                conditioning = self._encode_text_with_clip(clip, text)
+                print("CLIP encoding computed without caching.")
+                return (conditioning, text)
             
         except Exception as e:
             error_msg = f"Failed to encode text with CLIP: {str(e)}"
