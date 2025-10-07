@@ -69,6 +69,12 @@ class mbStringSelector:
     CATEGORY = "unset"
     DESCRIPTION = "Select a string from multiline text input randomly or sequentially."
 
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        """Force execution every time by returning a unique value."""
+        import time
+        return time.time()
+
     def select_string(self, text, mode):
         """
         Select a line from the multiline text based on the mode.
