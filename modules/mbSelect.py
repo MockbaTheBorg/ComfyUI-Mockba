@@ -22,9 +22,9 @@ class mbSelect:
                     "tooltip": "First input option"
                 }),
                 "select": ("INT", {
-                    "default": 0, 
-                    "min": 0, 
-                    "max": 0, 
+                    "default": 1, 
+                    "min": 1, 
+                    "max": 9999999, 
                     "step": 1,
                     "tooltip": "Index of input to select (1-based)"
                 })
