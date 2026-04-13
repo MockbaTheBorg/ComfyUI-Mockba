@@ -122,18 +122,9 @@ class mbHashGenerator:
         components = []
         
         # Add encoded components (maintaining compatibility with original)
-        try:
-            components.append(base64.b64decode("R2FyeQ==").decode("utf-8"))  # "Gary"
-        except Exception:
-            components.append("Gary")  # Fallback
-        
+        components.append(base64.b64decode("R2FyeQ==").decode("utf-8"))
         components.append(clean_seed)
-        
-        try:
-            components.append(base64.b64decode("bWFzdGVy").decode("utf-8"))  # "master"
-        except Exception:
-            components.append("master")  # Fallback
-        
+        components.append(base64.b64decode("bWFzdGVy").decode("utf-8"))
         components.append(base_string)
         
         # Add optional salt
