@@ -47,6 +47,50 @@ def _get_model_names() -> dict:
     return ordered
 
 
+def _resolve_model_path(face_model):
+    if face_model == "none" or face_model is None:
+        return None
+
+    mapping = _get_model_names()
+    match = mapping.get(face_model)
+    if match is None:
+        for path in _get_facemodels_recursive():
+            if os.path.basename(path) == face_model:
+                match = path
+                break
+
+    if match is None:
+        match = os.path.join(FACE_MODELS_PATH, face_model)
+
+    if not os.path.isfile(match):
+        return None
+    return match
+
+
+def _load_face_tensor_data(face_model):
+    match = _resolve_model_path(face_model)
+    if match is None:
+        return None
+
+    from safetensors import safe_open
+
+    data = {}
+    with safe_open(match, framework="pt") as handle:
+        for key in handle.keys():
+            data[key] = handle.get_tensor(key).numpy()
+    return data
+
+
+def load_face_model(face_model):
+    data = _load_face_tensor_data(face_model)
+    if data is None:
+        return None
+
+    from insightface.app.common import Face
+
+    return Face(data)
+
+
 class mbFaceLoad:
     """ComfyUI node that loads a face model from reactor face models folder recursively."""
 
@@ -63,34 +107,7 @@ class mbFaceLoad:
     DESCRIPTION = "Load a face model from the reactor face models folder."
 
     def load_model(self, face_model):
-        if face_model == "none" or face_model is None:
-            return (None,)
-        # Resolve full path from the mapping (display name -> full path)
-        mapping = _get_model_names()
-        match = mapping.get(face_model)
-        if match is None:
-            # fallback: if user provided a basename, try to find it among recursive results
-            for p in _get_facemodels_recursive():
-                if os.path.basename(p) == face_model:
-                    match = p
-                    break
-        if match is None:
-            # final fallback to direct join
-            match = os.path.join(FACE_MODELS_PATH, face_model)
-        if not os.path.isfile(match):
-            # Return None if not found
-            return (None,)
         try:
-            # Lazy import heavy dependencies to avoid import-time failures
-            from safetensors import safe_open
-            from insightface.app.common import Face
-
-            # Read tensors using safetensors' safe_open
-            data = {}
-            with safe_open(match, framework="pt") as f:
-                for k in f.keys():
-                    data[k] = f.get_tensor(k).numpy()
-            face = Face(data)
-            return (face,)
+            return (load_face_model(face_model),)
         except Exception:
             return (None,)

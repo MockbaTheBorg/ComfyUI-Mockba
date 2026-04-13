@@ -7,6 +7,9 @@ A passthrough bridge node that unloads GPU memory and provides statistics.
 import gc
 import torch
 
+# ComfyUI imports
+import comfy.model_management
+
 # Local imports
 from .common import any_typ
 
@@ -56,25 +59,25 @@ class mbMemoryUnload:
     def unload_memory_and_passthrough(self, input, unload_mode, show_stats):
         """
         Unload GPU memory and pass input through unchanged.
-        
+
         Args:
             input: Any object to pass through
             unload_mode: How aggressively to unload memory
             show_stats: Whether to show detailed statistics
-            
+
         Returns:
             tuple: (unchanged_input, memory_statistics_string)
         """
         try:
             # Capture memory stats before unloading
-            stats_before = self._get_memory_stats()
-            
+            stats_before = self._get_memory_stats(show_stats)
+
             # Perform memory unloading based on mode
             unload_actions = self._perform_memory_unload(unload_mode)
-            
+
             # Capture memory stats after unloading
-            stats_after = self._get_memory_stats()
-            
+            stats_after = self._get_memory_stats(show_stats)
+
             # Generate statistics report
             if show_stats:
                 stats_report = self._generate_memory_report(
@@ -82,25 +85,29 @@ class mbMemoryUnload:
                 )
             else:
                 stats_report = f"Memory unload completed ({unload_mode} mode)"
-            
+
             # Pass through the input unchanged
             return (input, stats_report)
-            
+
         except Exception as e:
             error_msg = f"Error during memory unload: {str(e)}"
             print(error_msg)
             return (input, error_msg)
 
-    def _get_memory_stats(self):
-        """Get current memory statistics."""
+    def _get_memory_stats(self, include_objects=True):
+        """Get current memory statistics.
+
+        Args:
+            include_objects: If True, count Python objects (expensive).
+        """
         stats = {
-            'python_objects': len(gc.get_objects()),
+            'python_objects': len(gc.get_objects()) if include_objects else 0,
             'gpu_available': False,
             'gpu_allocated': 0,
             'gpu_cached': 0,
             'gpu_total': 0
         }
-        
+
         # Get GPU memory stats if CUDA is available
         if torch.cuda.is_available():
             stats['gpu_available'] = True
@@ -109,49 +116,44 @@ class mbMemoryUnload:
             stats['gpu_total'] = torch.cuda.memory_reserved()
             stats['gpu_device_count'] = torch.cuda.device_count()
             stats['gpu_device_name'] = torch.cuda.get_device_name(0) if torch.cuda.device_count() > 0 else "Unknown"
-        
+
         return stats
 
     def _perform_memory_unload(self, unload_mode):
         """Perform memory unloading based on the specified mode."""
         actions_performed = []
-        
+
         try:
-            if unload_mode in ["light", "moderate", "aggressive"]:
-                # Always clear CUDA cache
+            if unload_mode == "light":
+                # Clear CUDA cache only
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
                     actions_performed.append("CUDA cache cleared")
                 else:
                     actions_performed.append("No CUDA available")
-            
-            if unload_mode in ["moderate", "aggressive"]:
-                # Force garbage collection
+
+            elif unload_mode == "moderate":
+                # GC first so Python-held GPU tensors are released
                 collected = gc.collect()
                 actions_performed.append(f"Garbage collection: {collected} objects collected")
-            
-            if unload_mode == "aggressive":
-                # Additional aggressive cleanup
-                if torch.cuda.is_available():
-                    # Clear all CUDA memory
-                    for i in range(torch.cuda.device_count()):
-                        with torch.cuda.device(i):
-                            torch.cuda.empty_cache()
-                            torch.cuda.synchronize()
-                    actions_performed.append("Multi-GPU cache cleared")
-                
-                # Force multiple garbage collection passes
+                comfy.model_management.soft_empty_cache()
+                actions_performed.append("ComfyUI soft cache cleared")
+
+            elif unload_mode == "aggressive":
+                # Multiple GC passes to break reference cycles
+                total_collected = 0
                 for _ in range(3):
-                    gc.collect()
-                actions_performed.append("Multiple GC passes completed")
-                
-                # Try to minimize memory fragmentation
-                if hasattr(torch.cuda, 'memory_stats'):
-                    actions_performed.append("Memory defragmentation attempted")
-            
+                    total_collected += gc.collect()
+                actions_performed.append(f"Garbage collection (3 passes): {total_collected} objects collected")
+                # Unload all models from ComfyUI's tracking
+                comfy.model_management.unload_all_models()
+                actions_performed.append("All ComfyUI models unloaded")
+                comfy.model_management.soft_empty_cache()
+                actions_performed.append("ComfyUI soft cache cleared")
+
         except Exception as e:
             actions_performed.append(f"Error during cleanup: {str(e)}")
-        
+
         return actions_performed
 
     def _generate_memory_report(self, stats_before, stats_after, actions, mode):

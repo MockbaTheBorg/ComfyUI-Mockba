@@ -131,6 +131,7 @@ mbTextToFile = import_and_register('.modules.mbTextToFile', category)
 # === Generation & Sampling ===
 category = CATEGORIES["GENERATION"]
 mbBarcode = import_and_register('.modules.mbBarcode', category)
+mbDualFaceLoad = import_and_register('.modules.mbDualFaceLoad', category)
 mbEmptyLatentImage = import_and_register('.modules.mbEmptyLatentImage', category)
 mbFaceLoad = import_and_register('.modules.mbFaceLoad', category)
 mbKSampler = import_and_register('.modules.mbKSampler', category)
